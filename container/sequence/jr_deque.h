@@ -9,7 +9,8 @@
 namespace jr_std {
 
 template<class T, class Allocator = allocator<T>, size_t BufSize = 8>
-class deque{
+class deque
+{
 public:
     // 通用定义
     typedef T value_type;
@@ -134,7 +135,7 @@ public:
             _alloc.deallocate(_map[i], BufSize + 1);
         }
     }
-
+    // 拷贝重载
     deque& operator=( const deque& other ) {
         iterator first = other.begin(), last = other.end();
         _map_size = other._map_size;
@@ -151,7 +152,7 @@ public:
         }
         return *this;
     }
-
+    // 移动重载
     deque& operator=( deque&& other ) {
         _map_size = other._map_size;
         _map = other._map;
@@ -159,7 +160,28 @@ public:
         _finish = other.finish;
         return *this;
     }
+    // 赋值操作
+    void assign( size_type count, const T& value ) {
+        for(size_type i = 0; i <= _map_size; i++) {
+            for(size_type j = 0; j < BufSize; j++)
+                _alloc.destroy(_map[i][j]);
+            _alloc.deallocate(_map[i], BufSize + 1);
+        }
+        _ctor(count, value, std::true_type());
+    }
 
+    template< class InputIt >
+    void assign( InputIt first, InputIt last ) {
+        for(size_type i = 0; i <= _map_size; i++) {
+            for(size_type j = 0; j < BufSize; j++)
+                _alloc.destroy(_map[i][j]);
+            _alloc.deallocate(_map[i], BufSize + 1);
+        }
+        typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
+        _ctor(first, last, type());
+    }
+
+    allocator_type get_allocator() const noexcept { return _alloc; }
     // 迭代器
     iterator begin() noexcept { return _start; }
     const_iterator begin() const noexcept { return const_iterator(_start.control_node); }
@@ -167,6 +189,34 @@ public:
     const_iterator end() const noexcept { return const_iterator(_finish.control_node); }
     const_iterator cbegin() const noexcept { return const_iterator(_start.control_node); }
     const_iterator cend() const noexcept { return const_iterator(_finish.control_node); }
+    // 元素访问
+    reference operator[](size_type n) {
+        iterator it = _start;
+        it += n;
+        return *it;
+    }
+
+    const_reference operator[](size_type n) const {
+        iterator it = _start;
+        it += n;
+        return *it;
+    }
+
+    reference at(size_type n) { return *this[n]; }
+    const_reference at(size_type n) const { return *this[n]; }
+    reference front() { return *_start; }
+    const_reference front() const { return *_start; }
+    reference back() { return *(_finish - 1); }
+    const_reference back() const { return *(_finish - 1); }
+    // 容量
+    bool empty() const noexcept { return _start == _finish;}
+    size_type size() const noexcept { return _finish - _start; }
+    size_type max_size() const noexcept { return UINT_MAX; }
+
+    void resize(size_type sz, const T& c);
+    void resize(size_type sz) { resize(sz, T()); }
+    void shrink_to_fit();
+
 };
 
 }
