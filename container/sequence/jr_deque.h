@@ -1,6 +1,6 @@
 #ifndef JR_DEQUE_H
 #define JR_DEQUE_H
-
+#include <iostream>
 #include <cstddef>
 #include <type_traits>
 #include "../../memory/jr_allocator.h"
@@ -31,38 +31,40 @@ protected:
     size_type _map_size;
     // 标识迭代器位置
     iterator _start, _finish;
-//    const_iterator cstart, cfinish;
     // 空间配置器实例化
     Allocator _alloc;
     // 将内存分配策略重绑定至map数组所分配的连续存储区域
-    typename Allocator::template rebind<_node<T> >::other _alloc_map;
+    typename Allocator::template rebind<pointer>::other _alloc_map;
 
 protected:
     void _ctor(size_type count, const T& value, std::true_type) {
         _map_size = count / BufSize + 1;
-        _map = new T*[_map_size + 1];
+        _map = _alloc_map.allocate(_map_size + 1);
         size_type i, j, cnt = 0;
         for(i = 0; i <= _map_size; i++) {
-            _map[i] = _alloc_map.allocate(BufSize + 1);
+            _map[i] = _alloc.allocate(BufSize + 1);
             for(j = 0; (j < BufSize) && (cnt < count); j++) {
-                _alloc.construct(_map[i][j], value);
+                _alloc.construct(&_map[i][j], value);
                 ++cnt;
             }
         }
-        _start(_map[0]);
-        _finish(_map[count / BufSize]);
+        _start.jmp_node(&_map[0]);
+        _finish.jmp_node(&_map[count / BufSize]);
+        cnt = count % BufSize;;
+        while(cnt--)
+            ++_finish;
     }
 
     template<class InputIt>
     void _ctor(InputIt first, InputIt last, std::false_type) {
         difference_type count = last - first;
         _map_size = count / BufSize + 1;
-        _map = new T*[_map_size + 1];
+        _map = _alloc_map.allocate(_map_size + 1);
         for(size_type i = 0; i <= _map_size; i++) {
-            _map[i] = _alloc_map.allocate(BufSize + 1);
+            _map[i] = _alloc.allocate(BufSize + 1);
         }
-        start(_map[0]);
-        finish(_map[0]);
+        _start.jmp_node(&_map[0]);
+        _finish.jmp_node(&_map[0]);
         while(first != last) {
             _alloc.construct(_finish.cur, *first);
             ++first;
@@ -70,54 +72,93 @@ protected:
         }
     }
 
+    void _free_all() {
+        if(!_map_size)  return;
+        for(size_type i = 0; i <= _map_size; i++) {
+            for(size_type j = 0; j < BufSize; j++)
+                _alloc.destroy(&_map[i][j]);
+            _alloc.deallocate(_map[i], BufSize + 1);
+        }
+        _start.jmp_node(&_map[0]);
+        _finish.jmp_node(&_map[0]);
+    }
+
+    void _copy(const deque& other) {
+        iterator first = other._start;
+        iterator last = other._finish;
+        _free_all();
+        _ctor(first, last, std::false_type());
+    }
+
+    void _move_map(size_type n) {
+        size_type tmp_sz = _map_size;
+        _map_size = n / BufSize + 1;
+        map_pointer _map_tmp = _map;
+        iterator first = _start, last = _finish;
+        _map = _alloc_map.allocate(_map_size + 1);
+        for(size_type i = 0; i <= _map_size; i++) {
+            _map[i] = _alloc.allocate(BufSize + 1);
+        }
+        _start.jmp_node(&_map[0]);
+        _finish.jmp_node(&_map[0]);
+        while(first != last) {
+            _alloc.construct(_finish.cur, *first);
+            ++first;
+            ++_finish;
+        }
+        for(size_type i = 0; i <= tmp_sz; i++) {
+            for(size_type j = 0; j < BufSize; j++)
+                _alloc.destroy(&_map_tmp[i][j]);
+            _alloc.deallocate(_map_tmp[i], BufSize + 1);
+        }
+    }
+
+    iterator _insert(const_iterator pos, size_type count, const T& value, std::true_type) {
+
+    }
+
+    template<class InputIt>
+    iterator _insert(const_iterator pos, InputIt first, InputIt last, std::false_type){
+
+    }
+
 public:
     // 构造函数
     deque() {
-        _map_size = 4;
-        _map = new T*[_map_size + 1];
+        _map_size = 1;
+        _map = _alloc_map.allocate(_map_size + 1);
         for(size_type i = 0; i <= _map_size; i++)
-            _map[i] = _alloc_map.allocate(BufSize + 1);
-        _start(_map[0]);
-        _finish(_map[0]);
+            _map[i] = _alloc.allocate(BufSize + 1);
+        _start.jmp_node(&_map[0]);
+        _finish.jmp_node(&_map[0]);
     }
 
     explicit deque( const Allocator&) {
-        _map_size = 4;
-        _map = new T*[_map_size + 1];
+        _map_size = 1;
+        _map = _alloc_map.allocate(_map_size + 1);
         for(size_type i = 0; i <= _map_size; i++)
-            _map[i] = _alloc_map.allocate(BufSize + 1);
-        _start(_map[0]);
-        _finish(_map[0]);
+            _map[i] = _alloc.allocate(BufSize + 1);
+        _start.jmp_node(&_map[0]);
+        _finish.jmp_node(&_map[0]);
     }
 
     explicit deque( size_type count ) {
         _ctor(count, T(), std::true_type());
     }
 
-    deque( size_type count, const T& value, const Allocator&) {
+    deque( size_type count, const T& value, const Allocator& = Allocator()) {
         _ctor(count, value, std::true_type());
     }
 
     template< class InputIt >
-    deque( InputIt first, InputIt last, const Allocator&) {
+    deque( InputIt first, InputIt last, const Allocator& = Allocator()) {
         typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
         _ctor(first, last, type());
     }
 
-    deque( const deque& other ) {
-        iterator first = other.begin(), last = other.end();
-        _map_size = other._map_size;
-        _map = new T*[_map_size + 1];
-        for(size_type i = 0; i <= _map_size; i++) {
-            _map[i] = _alloc_map.allocate(BufSize + 1);
-        }
-        _start(_map[0]);
-        _finish(_map[0]);
-        while(first != last) {
-            _alloc.construct(_finish.cur, *first);
-            ++first;
-            ++_finish;
-        }
+    deque( const deque& other )
+        : _map_size(0){
+        _copy(other);
     }
 
     deque( deque&& other ) {
@@ -129,27 +170,11 @@ public:
 
     // 析构函数
     ~deque() {
-        for(size_type i = 0; i <= _map_size; i++) {
-            for(size_type j = 0; j < BufSize; j++)
-                _alloc.destroy(_map[i][j]);
-            _alloc.deallocate(_map[i], BufSize + 1);
-        }
+        _free_all();
     }
     // 拷贝重载
     deque& operator=( const deque& other ) {
-        iterator first = other.begin(), last = other.end();
-        _map_size = other._map_size;
-        _map = new T*[_map_size + 1];
-        for(size_type i = 0; i <= _map_size; i++) {
-            _map[i] = _alloc_map.allocate(BufSize + 1);
-        }
-        _start(_map[0]);
-        _finish(_map[0]);
-        while(first != last) {
-            _alloc.construct(_finish.cur, *first);
-            ++first;
-            ++_finish;
-        }
+        _copy(other);
         return *this;
     }
     // 移动重载
@@ -162,21 +187,13 @@ public:
     }
     // 赋值操作
     void assign( size_type count, const T& value ) {
-        for(size_type i = 0; i <= _map_size; i++) {
-            for(size_type j = 0; j < BufSize; j++)
-                _alloc.destroy(_map[i][j]);
-            _alloc.deallocate(_map[i], BufSize + 1);
-        }
+        _free_all();
         _ctor(count, value, std::true_type());
     }
 
     template< class InputIt >
     void assign( InputIt first, InputIt last ) {
-        for(size_type i = 0; i <= _map_size; i++) {
-            for(size_type j = 0; j < BufSize; j++)
-                _alloc.destroy(_map[i][j]);
-            _alloc.deallocate(_map[i], BufSize + 1);
-        }
+        _free_all();
         typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
         _ctor(first, last, type());
     }
@@ -186,9 +203,9 @@ public:
     iterator begin() noexcept { return _start; }
     const_iterator begin() const noexcept { return const_iterator(_start.control_node); }
     iterator end() noexcept { return _finish; }
-    const_iterator end() const noexcept { return const_iterator(_finish.control_node); }
+    const_iterator end() const noexcept { return const_iterator(_finish.control_node, _finish.cur); }
     const_iterator cbegin() const noexcept { return const_iterator(_start.control_node); }
-    const_iterator cend() const noexcept { return const_iterator(_finish.control_node); }
+    const_iterator cend() const noexcept { return const_iterator(_finish.control_node, _finish.cur); }
     // 元素访问
     reference operator[](size_type n) {
         iterator it = _start;
@@ -197,13 +214,13 @@ public:
     }
 
     const_reference operator[](size_type n) const {
-        iterator it = _start;
+        const_iterator it = _start;
         it += n;
         return *it;
     }
 
-    reference at(size_type n) { return *this[n]; }
-    const_reference at(size_type n) const { return *this[n]; }
+    reference at(size_type n) { return (*this)[n]; }
+    const_reference at(size_type n) const { return (*this)[n]; }
     reference front() { return *_start; }
     const_reference front() const { return *_start; }
     reference back() { return *(_finish - 1); }
@@ -213,11 +230,150 @@ public:
     size_type size() const noexcept { return _finish - _start; }
     size_type max_size() const noexcept { return UINT_MAX; }
 
-    void resize(size_type sz, const T& c);
-    void resize(size_type sz) { resize(sz, T()); }
-    void shrink_to_fit();
+    void resize(size_type sz, const T& c) {
+        size_type dis, osz = size();
+        if(sz < osz) {
+            dis = osz - sz;
+            while(dis--) {
+                _alloc.destroy(_finish.cur);
+                --_finish;
+            }
+        } else if(sz > osz) {
+            dis = sz - osz;
+            if(sz > _map_size * BufSize) {
+                _move_map(sz);
+            }
+            while(dis--) {
+                _alloc.construct(_finish.cur, c);
+                ++_finish;
+            }
+        }
+    }
 
+    void resize(size_type sz) { resize(sz, T()); }
+
+    void shrink_to_fit() {
+        _move_map(size());
+    }
+
+    void clear() noexcept {
+        if(!_map_size)  return;
+        for(size_type i = 0; i <= _map_size; i++) {
+            for(size_type j = 0; j < BufSize; j++)
+                _alloc.destroy(&_map[i][j]);
+        }
+        _start.jmp_node(&_map[0]);
+        _finish.jmp_node(&_map[0]);
+    }
+
+    iterator insert( const_iterator pos, size_type count, const T& value ) {
+        _insert(pos, count, value, std::true_type());
+    }
+
+    iterator insert( const_iterator pos, const T& value ) {
+        insert(pos, 1, value);
+    }
+
+    iterator insert( const_iterator pos, T&& value ) {
+
+    }
+
+    template< class InputIt >
+    iterator insert( const_iterator pos, InputIt first, InputIt last ) {
+        typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
+        _insert(pos, first, last, type());
+    }
+
+    iterator erase( const_iterator first, const_iterator last ) {
+
+    }
+
+    iterator erase( const_iterator pos ) {
+        erase(pos, pos + 1);
+    }
+
+    void push_back( const T& value ) {
+        insert(end(), value);
+    }
+
+    void push_back( T&& value ) {
+        insert(end(), static_cast<T&&>(value));
+    }
+
+    void push_front( const T& value ) {
+        insert(begin(), value);
+    }
+
+    void push_front( T&& value ) {
+        insert(begin(), static_cast<T&&>(value));
+    }
+
+    void pop_front() { erase(begin()); }
+
+    void pop_back() { erase(end()); }
+
+    template< class... Args >
+    iterator emplace( const_iterator pos, Args&&... args ) {
+
+    }
+
+    template< class... Args >
+    void emplace_front( Args&&... args ) {
+        emplace(begin(), static_cast<Args&&>(args)...);
+    }
+
+    template< class... Args >
+    void emplace_back( Args&&... args ) {
+        emplace(end(), static_cast<Args&&>(args)...);
+    }
+
+    void swap( deque& other ) {
+        {
+            size_type st = _map_size;
+            _map_size = other._map_size;
+            other._map_size = st;
+        }
+        {
+            map_pointer mt = _map;
+            _map = other._map;
+            other._map = mt;
+        }
+        {
+            iterator ist = _start;
+            _start = other._start;
+            other._start = ist;
+        }
+        {
+            iterator ift = _finish;
+            _finish = other._finish;
+            other._finish = ift;
+        }
+    }
 };
+
+template< class T, class Alloc >
+bool operator==( const jr_std::deque<T,Alloc>& lhs,
+                 const jr_std::deque<T,Alloc>& rhs ) {
+    if(lhs.size() != rhs.size())
+        return false;
+    for(size_t i = 0; i < lhs.size(); i++) {
+        if(lhs[i] != rhs[i])
+            return false;
+    }
+    return true;
+}
+
+template< class T, class Alloc >
+bool operator!=( const jr_std::deque<T,Alloc>& lhs,
+                 const jr_std::deque<T,Alloc>& rhs ) {
+    return !operator==(lhs, rhs);
+}
+
+template< class T, class Alloc >
+void swap( jr_std::deque<T,Alloc>& lhs,
+           jr_std::deque<T,Alloc>& rhs ) {
+    lhs.swap(rhs);
+}
 
 }
 

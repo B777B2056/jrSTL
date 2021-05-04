@@ -89,18 +89,28 @@ namespace jr_std {
             first(nullptr), cur(nullptr), last(nullptr),
             control_node(nullptr)
         {}
-        _deque_iterator(map_pointer d) : control_node(d) {
-            cur = first = control_node[0];
-            last = control_node[block_size];
+        _deque_iterator(map_pointer d) {
+            jmp_node(d);
+        }
+        _deque_iterator(map_pointer d, U *c) {
+            jmp_node(d);
+            cur = c;
         }
         _deque_iterator(const _deque_iterator&) = default;
         // 析构函数
         ~_deque_iterator() = default;
+        // 设置跳跃函数
+        void jmp_node(map_pointer d) {
+            control_node = d;
+            first = *control_node;
+            last = first + block_size;
+            cur = first;
+        }
         // 访问运算符重载（随机访问迭代器）
         reference operator*() const { return *cur; }
         pointer operator->() const { return &(operator*()); }
         // 迭代器间算数运算符运算符重载(两迭代器相减,计算的是两个迭代器间有多少个元素)
-        difference_type operator-(const _deque_iterator& x) {
+        difference_type operator-(const _deque_iterator& x) const {
             difference_type dis = 0;
             // 二者当前元素在同一段存储区内
             if(control_node == x.control_node)
@@ -110,27 +120,23 @@ namespace jr_std {
                 // 当前迭代器比x迭代器位置更靠后
                 dis = (x.last - x.cur)
                     + (cur - first)
-                    + block_size * (control_node - x.control_node);
+                    + block_size * (control_node - x.control_node - 1);
             } else {
                 // 当前迭代器比x迭代器位置更靠前
                 dis = (x.cur- x.first)
                     + (last - cur)
-                    + block_size * (control_node - x.control_node);
+                    + block_size * (x.control_node - control_node - 1);
                 dis = -dis;
             }
             return dis;
         }
         // 移位运算符重载
         _deque_iterator& operator++() {
-            // 当前节点自增后仍落在当前区块范围内
-            if(cur < last)
-                ++cur;
+            ++cur;
             // 当前节点自增后未落在当前区块范围内
-            else {
-                ++control_node;  // 进入下一区块，并更新标志节点
-                first = *control_node;
-                last = first + block_size;
-                cur = first;
+            if(cur == last) {
+                 // 进入下一区块，并更新标志节点
+                jmp_node(++control_node);
             }
             return *this;
         }
@@ -142,13 +148,11 @@ namespace jr_std {
         }
 
         _deque_iterator& operator--() {
-            if(cur > first)
+            if(cur == first) {
+                jmp_node(--control_node);
+                cur = last - 1;
+            } else {
                 --cur;
-            else {
-                --control_node;
-                first = *control_node;
-                last = first + block_size;
-                cur = first;
             }
             return *this;
         }
@@ -178,12 +182,11 @@ namespace jr_std {
                 if(d >= n) {
                     cur -= n;
                 } else {
-                    n += d;
                     difference_type block_jmp = (n - d - 1) / block_size + 1;
                     control_node -= block_jmp;
                     first = *control_node;
                     last = first + block_size;
-                    cur = last - (n - (block_jmp - 1) * block_size - d);
+                    cur = last - (n - d - (block_jmp - 1) * block_size);
                 }
             }
             return *this;
