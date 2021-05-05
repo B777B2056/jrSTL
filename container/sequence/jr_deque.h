@@ -362,21 +362,13 @@ public:
         insert(cend(), value);
     }
 
-    void push_back( T&& value ) {
-        insert(cend(), static_cast<T&&>(value));
-    }
-
     void push_front( const T& value ) {
         insert(cbegin(), value);
     }
 
-    void push_front( T&& value ) {
-        insert(cbegin(), static_cast<T&&>(value));
-    }
-
     void pop_front() { erase(cbegin()); }
 
-    void pop_back() { erase(cend()); }
+    void pop_back() { erase(cend() - 1); }
 
     template< class... Args >
     iterator emplace( const_iterator pos, Args&&... args ) {
@@ -404,6 +396,14 @@ public:
     template< class... Args >
     void emplace_back( Args&&... args ) {
         emplace(cend(), static_cast<Args&&>(args)...);
+    }
+
+    void push_front( T&& value ) {
+        emplace_front(static_cast<T&&>(value));
+    }
+
+    void push_back( T&& value ) {
+        emplace_back(static_cast<T&&>(value));
     }
 
     void swap( deque& other ) {
