@@ -1,6 +1,6 @@
 #ifndef ITERATORS_H
 #define ITERATORS_H
-
+#include <iostream>
 #include <cstddef>
 #include "../iterator/jr_iterator.h"
 
@@ -165,16 +165,15 @@ namespace jr_std {
 
         _deque_iterator& operator+=(difference_type n) {
             if(n > 0) {
-                difference_type d = cur - first;
-                if(n < last - cur) {
+                difference_type d = last - cur - 1;
+                if(n <= d) {
                     cur += n;
                 } else {
-                    n += d;
-                    difference_type block_jmp = (n - d) / block_size;
+                    difference_type block_jmp = (n - d) / block_size + 1;
                     control_node += block_jmp;
                     first = *control_node;
                     last = first + block_size;
-                    cur = first + (n - d) % block_size;
+                    cur = first + (n - d - 1) % block_size;
                 }
             } else if(n < 0) {
                 n = -n;

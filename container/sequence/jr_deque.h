@@ -113,13 +113,53 @@ protected:
         }
     }
 
-    iterator _insert(const_iterator pos, size_type count, const T& value, std::true_type) {
+    iterator _move_elements_n(const_iterator pos, difference_type n) {
+        iterator it = iterator(pos.control_node, pos.cur);
+        --it;
+        iterator tmp = _finish - 1;
+        _finish += n;
+        for(; tmp != it; tmp--) {
+            *(tmp + n) = *tmp;
+        }
+        it += n;
+        return it;
+    }
 
+    iterator _insert(const_iterator pos, size_type count, const T& value, std::true_type) {
+        size_type osz = size();
+        if(osz + count > BufSize * _map_size) {
+            difference_type pdis = jr_std::distance(cbegin(), pos);
+            _move_map(osz + count);
+            pos = cbegin();
+            jr_std::advance(pos, pdis);
+        }
+        iterator i_pos = _move_elements_n(pos, static_cast<difference_type>(count));
+        iterator before_pos = i_pos - count, tmp = before_pos;
+        while(tmp != i_pos) {
+            *tmp = value;
+            ++tmp;
+        }
+        return before_pos;
     }
 
     template<class InputIt>
     iterator _insert(const_iterator pos, InputIt first, InputIt last, std::false_type){
-
+        size_type osz = size();
+        difference_type count = jr_std::distance(first, last);
+        if(osz + count > BufSize * _map_size) {
+            difference_type pdis = jr_std::distance(cbegin(), pos);
+            _move_map(osz + count);
+            pos = cbegin();
+            jr_std::advance(pos, pdis);
+        }
+        iterator i_pos = _move_elements_n(pos, static_cast<difference_type>(count));
+        iterator before_pos = i_pos - count, tmp = before_pos;
+        while(tmp != i_pos) {
+            *tmp = *first;
+            ++tmp;
+            ++first;
+        }
+        return before_pos;
     }
 
 public:
@@ -267,11 +307,11 @@ public:
     }
 
     iterator insert( const_iterator pos, size_type count, const T& value ) {
-        _insert(pos, count, value, std::true_type());
+        return _insert(pos, count, value, std::true_type());
     }
 
     iterator insert( const_iterator pos, const T& value ) {
-        insert(pos, 1, value);
+        return insert(pos, 1, value);
     }
 
     iterator insert( const_iterator pos, T&& value ) {
@@ -281,7 +321,7 @@ public:
     template< class InputIt >
     iterator insert( const_iterator pos, InputIt first, InputIt last ) {
         typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
-        _insert(pos, first, last, type());
+        return _insert(pos, first, last, type());
     }
 
     iterator erase( const_iterator first, const_iterator last ) {
