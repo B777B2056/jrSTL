@@ -113,12 +113,15 @@ protected:
         }
     }
 
-    iterator _move_elements_n(const_iterator pos, difference_type n) {
+    iterator _move_elements_forward_n(const_iterator pos, difference_type n) {
         iterator it = iterator(pos.control_node, pos.cur);
-        --it;
+        if(it >= _finish) {
+            _finish += n;
+            return _finish;
+        }
         iterator tmp = _finish - 1;
         _finish += n;
-        for(; tmp != it; tmp--) {
+        for(; tmp != it - 1; tmp--) {
             *(tmp + n) = *tmp;
         }
         it += n;
@@ -133,10 +136,10 @@ protected:
             pos = cbegin();
             jr_std::advance(pos, pdis);
         }
-        iterator i_pos = _move_elements_n(pos, static_cast<difference_type>(count));
+        iterator i_pos = _move_elements_forward_n(pos, static_cast<difference_type>(count));
         iterator before_pos = i_pos - count, tmp = before_pos;
         while(tmp != i_pos) {
-            *tmp = value;
+            _alloc.construct(&(*tmp), value);
             ++tmp;
         }
         return before_pos;
@@ -152,10 +155,10 @@ protected:
             pos = cbegin();
             jr_std::advance(pos, pdis);
         }
-        iterator i_pos = _move_elements_n(pos, static_cast<difference_type>(count));
+        iterator i_pos = _move_elements_forward_n(pos, static_cast<difference_type>(count));
         iterator before_pos = i_pos - count, tmp = before_pos;
         while(tmp != i_pos) {
-            *tmp = *first;
+            _alloc.construct(&(*tmp), *first);
             ++tmp;
             ++first;
         }
@@ -315,7 +318,20 @@ public:
     }
 
     iterator insert( const_iterator pos, T&& value ) {
-
+        size_type osz = size();
+        if(osz + 1 > BufSize * _map_size) {
+            difference_type pdis = jr_std::distance(cbegin(), pos);
+            _move_map(osz + 1);
+            pos = cbegin();
+            jr_std::advance(pos, pdis);
+        }
+        iterator i_pos = _move_elements_forward_n(pos, 1);
+        iterator before_pos = i_pos - 1, tmp = before_pos;
+        while(tmp != i_pos) {
+            _alloc.construct(&(*tmp), static_cast<T&&>(value));
+            ++tmp;
+        }
+        return before_pos;
     }
 
     template< class InputIt >
@@ -325,46 +341,69 @@ public:
     }
 
     iterator erase( const_iterator first, const_iterator last ) {
-
+        difference_type n = last - first;
+        iterator it = iterator(last.control_node, last.cur);
+        iterator tmp = _finish;
+        _finish -= n;
+        for(; it != tmp; it++) {
+            *(it - n) = *it;
+        }
+        it -= n;
+        return it;
     }
 
     iterator erase( const_iterator pos ) {
-        erase(pos, pos + 1);
+        if(pos == cend())
+            return end();
+        return erase(pos, pos + 1);
     }
 
     void push_back( const T& value ) {
-        insert(end(), value);
+        insert(cend(), value);
     }
 
     void push_back( T&& value ) {
-        insert(end(), static_cast<T&&>(value));
+        insert(cend(), static_cast<T&&>(value));
     }
 
     void push_front( const T& value ) {
-        insert(begin(), value);
+        insert(cbegin(), value);
     }
 
     void push_front( T&& value ) {
-        insert(begin(), static_cast<T&&>(value));
+        insert(cbegin(), static_cast<T&&>(value));
     }
 
-    void pop_front() { erase(begin()); }
+    void pop_front() { erase(cbegin()); }
 
-    void pop_back() { erase(end()); }
+    void pop_back() { erase(cend()); }
 
     template< class... Args >
     iterator emplace( const_iterator pos, Args&&... args ) {
-
+        size_type osz = size();
+        if(osz + 1 > BufSize * _map_size) {
+            difference_type pdis = jr_std::distance(cbegin(), pos);
+            _move_map(osz + 1);
+            pos = cbegin();
+            jr_std::advance(pos, pdis);
+        }
+        iterator i_pos = _move_elements_forward_n(pos, 1);
+        iterator before_pos = i_pos - 1, tmp = before_pos;
+        while(tmp != i_pos) {
+            _alloc.construct(&(*tmp), static_cast<Args&&>(args)...);
+            ++tmp;
+        }
+        return before_pos;
     }
 
     template< class... Args >
     void emplace_front( Args&&... args ) {
-        emplace(begin(), static_cast<Args&&>(args)...);
+        emplace(cbegin(), static_cast<Args&&>(args)...);
     }
 
     template< class... Args >
     void emplace_back( Args&&... args ) {
-        emplace(end(), static_cast<Args&&>(args)...);
+        emplace(cend(), static_cast<Args&&>(args)...);
     }
 
     void swap( deque& other ) {
