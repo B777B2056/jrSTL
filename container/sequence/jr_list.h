@@ -4,7 +4,7 @@
 #include <type_traits>
 #include <cstddef>
 #include "../../memory/jr_allocator.h"
-#include "../iterators.h"
+#include "../utils/se_iterators.h"
 
 namespace jr_std {
     template<class T, class Allocator = allocator<T> >
@@ -308,12 +308,14 @@ namespace jr_std {
         }
 
         list(const list& x) : _size(x._size) {
+            if(this == &x)  return;
             _create_empty_node();
             for(_node<T> *t=x._head->next; t!=x._tail; t=t->next)
                 _insert2tail(t->data);
         }
 
         list(list&& x) {
+            if(this == &x)  return;
             _size = x._size;
             _head = x._head;
             _tail = x._tail;

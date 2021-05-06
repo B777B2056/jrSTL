@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <type_traits>
 #include "../../memory/jr_allocator.h"
-#include "../iterators.h"
+#include "../utils/se_iterators.h"
 
 namespace jr_std {
     template<class T, class Allocator = allocator<T>, size_t BufSize = 8>
@@ -89,6 +89,13 @@ namespace jr_std {
             _ctor(first, last, std::false_type());
         }
 
+        void _move(deque&& other) {
+            _map_size = other._map_size;
+            _map = other._map;
+            _start = other._start;
+            _finish = other._finish;
+        }
+
         void _move_map(size_type n) {
             size_type tmp_sz = _map_size;
             _map_size = n / BufSize + 1;
@@ -166,8 +173,7 @@ namespace jr_std {
 
     public:
         // 构造函数
-        deque() {
-            _map_size = 1;
+        deque() : _map_size(1) {
             _map = _alloc_map.allocate(_map_size + 1);
             for(size_type i = 0; i <= _map_size; i++)
                 _map[i] = _alloc.allocate(BufSize + 1);
@@ -175,8 +181,8 @@ namespace jr_std {
             _finish.jmp_node(&_map[0]);
         }
 
-        explicit deque( const Allocator&) {
-            _map_size = 1;
+        explicit deque( const Allocator& a)
+            : _map_size(1), _alloc(a) {
             _map = _alloc_map.allocate(_map_size + 1);
             for(size_type i = 0; i <= _map_size; i++)
                 _map[i] = _alloc.allocate(BufSize + 1);
@@ -188,44 +194,45 @@ namespace jr_std {
             _ctor(count, T(), std::true_type());
         }
 
-        deque( size_type count, const T& value, const Allocator& = Allocator()) {
+        deque( size_type count, const T& value,
+               const Allocator& a = Allocator())
+            : _alloc(a) {
             _ctor(count, value, std::true_type());
         }
 
         template< class InputIt >
-        deque( InputIt first, InputIt last, const Allocator& = Allocator()) {
+        deque( InputIt first, InputIt last,
+               const Allocator& a = Allocator())
+            : _alloc(a) {
             typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
             _ctor(first, last, type());
         }
 
         deque( const deque& other )
             : _map_size(0){
+            if(this == &other)  return;
             _copy(other);
         }
 
         deque( deque&& other ) {
-            _map_size = other._map_size;
-            _map = other._map;
-            _start = other.start;
-            _finish = other.finish;
+            if(this == &other)  return;
+            _move(static_cast<deque&&>(other));
         }
 
         // 析构函数
         ~deque() {
             _free_all();
-            _map_size = 0;
         }
         // 拷贝重载
         deque& operator=( const deque& other ) {
+            if(this == &other)  return *this;
             _copy(other);
             return *this;
         }
         // 移动重载
         deque& operator=( deque&& other ) {
-            _map_size = other._map_size;
-            _map = other._map;
-            _start = other._start;
-            _finish = other._finish;
+            if(this == &other)  return *this;
+            _move(static_cast<deque&&>(other));
             return *this;
         }
         // 赋值操作
@@ -407,6 +414,7 @@ namespace jr_std {
         }
 
         void swap( deque& other ) {
+            if(this == &other)  return;
             {
                 size_type st = _map_size;
                 _map_size = other._map_size;
