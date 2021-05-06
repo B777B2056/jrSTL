@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <cstddef>
 #include "../../memory/jr_allocator.h"
+#include "../../iterator/jr_iterator.h"
 
 /* TODO
  * Initializer list support: construct, assign, insert
@@ -16,8 +17,6 @@ namespace jr_std {
     public:
         typedef T* iterator;
         typedef const T* const_iterator;
-
-    protected:
         typedef T value_type;
         typedef Allocator allocator_type;
         typedef size_t size_type;
@@ -26,7 +25,7 @@ namespace jr_std {
         typedef const T& const_reference;
         typedef T* pointer;
         typedef const T* const_pointer;
-
+    protected:
         Allocator _alloc;
         size_type _size, _cap;
         iterator _head, _tail, _end_of_storage;
