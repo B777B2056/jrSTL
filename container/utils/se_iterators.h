@@ -6,11 +6,51 @@
 
 namespace jr_std {
     template<class U>
+    struct _forward_node {
+        U data;
+        _forward_node<U> *next;
+        _forward_node() : next(nullptr) {}
+        _forward_node(const U& val) : data(val), next(nullptr) {}
+    };
+
+    template<class U>
     struct _node {
         U data;
         _node<U> *prev, *next;
         _node() : prev(nullptr), next(nullptr) {}
         _node(const U& val) : data(val), prev(nullptr), next(nullptr) {}
+    };
+
+    template<class U, class Ref, class Ptr>
+    struct _forward_list_iterator {
+        typedef U value_type;
+        typedef Ptr pointer;
+        typedef Ref reference;
+        typedef ptrdiff_t difference_type;
+        typedef forward_iterator_tag iterator_category;
+        // point to current node
+        _forward_node<U> *_cur_node;
+        // construct iterator
+        _forward_list_iterator() : _cur_node(nullptr) {}
+        _forward_list_iterator(_forward_node<U> *x) : _cur_node(x) {}
+        ~_forward_list_iterator() = default;
+
+        // overloading ==, !=, *, ->, ++
+        bool operator==(const _forward_list_iterator& x) const { return x._cur_node == _cur_node; }
+        bool operator!=(const _forward_list_iterator& x) const { return x._cur_node != _cur_node; }
+        reference operator*() const { return _cur_node->data; }
+        pointer operator->() const { return &(operator*()); }
+        // front postion ++
+        _forward_list_iterator& operator++() {
+           _cur_node = _cur_node->next;
+           return *this;
+        }
+        // post position ++
+        _forward_list_iterator operator++(int) {
+           _forward_list_iterator tmp(this->_cur_node);
+           _cur_node = _cur_node->next;
+           return tmp;
+        }
     };
 
     template<class U, class Ref, class Ptr>
@@ -25,24 +65,10 @@ namespace jr_std {
         // construct iterator
         _list_iterator() : _cur_node(nullptr) {}
         _list_iterator(_node<U> *x) : _cur_node(x) {}
-        _list_iterator(_list_iterator& x) : _cur_node(x._cur_node) {}
-        _list_iterator(_list_iterator&& x) : _cur_node(x._cur_node) {}
         ~_list_iterator() = default;
-
-        _list_iterator& operator=(const _list_iterator& x) {
-            this->_cur_node = x._cur_node;
-            return *this;
-        }
-
-        _list_iterator operator=(_list_iterator&& x) {
-            this->_cur_node = x._cur_node;
-            return *this;
-        }
         // overloading ==, !=, *, ->, ++, --
-        bool operator==(_list_iterator& x) const { return x._cur_node == _cur_node; }
-        bool operator!=(_list_iterator& x) const { return x._cur_node != _cur_node; }
-        bool operator==(_list_iterator&& x) const { return x._cur_node == _cur_node; }
-        bool operator!=(_list_iterator&& x) const { return x._cur_node != _cur_node; }
+        bool operator==(const _list_iterator& x) const { return x._cur_node == _cur_node; }
+        bool operator!=(const _list_iterator& x) const { return x._cur_node != _cur_node; }
         reference operator*() const { return _cur_node->data; }
         pointer operator->() const { return &(operator*()); }
         // front postion ++
@@ -96,10 +122,9 @@ namespace jr_std {
             jmp_node(d);
             cur = c;
         }
-        _deque_iterator(const _deque_iterator&) = default;
         // 析构函数
         ~_deque_iterator() = default;
-        // 设置跳跃函数
+        // 跳跃函数
         void jmp_node(map_pointer d) {
             control_node = d;
             first = *control_node;

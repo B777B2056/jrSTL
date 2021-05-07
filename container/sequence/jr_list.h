@@ -367,11 +367,13 @@ namespace jr_std {
 
         template<class InputIt>
         void assign(InputIt first, InputIt last) {
+            clear();
             typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
             _assign(first, last, type());
         }
 
         void assign(size_type n, const_reference t) {
+            clear();
             _assign(n, t, std::true_type());
         }
 

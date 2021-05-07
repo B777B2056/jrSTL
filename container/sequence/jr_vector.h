@@ -263,11 +263,13 @@ namespace jr_std {
         }
 
         void assign( size_type count, const_reference value,std::true_type ) {
+            clear();
             _assign(count, value, std::true_type());
         }
 
         template<class InputIt>
         void assign( InputIt first, InputIt last) {
+            clear();
             typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
             _assign(first, last, type());
         }
@@ -326,11 +328,6 @@ namespace jr_std {
             _cap = _size;
             _move_elements(_alloc.allocate(_cap));
             _end_of_storage = _tail;
-        }
-
-        void clear() noexcept {
-            _size = 0;
-            _tail = _head;
         }
 
         void swap( vector& other ) {
@@ -434,6 +431,8 @@ namespace jr_std {
         void push_back( const_reference value ) { insert(end(), value); }
         void push_back( T&& value ) { insert(end(), static_cast<T&&>(value)); }
         void pop_back() { erase(end()-1); }
+
+        void clear() noexcept {  erase(begin(), end()); }
 
         template< class... Args >
         iterator emplace( const_iterator pos, Args&&... args ) {
