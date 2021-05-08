@@ -1,13 +1,13 @@
 #ifndef JR_FORWARD_LIST_H
 #define JR_FORWARD_LIST_H
-
+#include <iostream>
 #include <cstddef>
 #include <type_traits>
 #include "../../memory/jr_allocator.h"
 #include "../utils/se_iterators.h"
 
 namespace jr_std {
-template<class T, class Allocator = allocator<T>>
+template<class T, class Allocator = jr_std::allocator<T> >
   class forward_list {
   public:
     // 类型
@@ -25,12 +25,13 @@ template<class T, class Allocator = allocator<T>>
   protected:
      _forward_node<T> *_head, *_tail;
      Allocator _alloc;
-     typename Allocator::template rebind<_node<T> >::other _alloc_node;
+     typename Allocator::template rebind<_forward_node<T> >::other _alloc_node;
 
      void _create_empty_list() {
          _head = _alloc_node.allocate(1);
          _tail = _alloc_node.allocate(1);
          _head->next = _tail;
+         _tail->next = nullptr;
      }
 
      void _insert2front(_forward_node<T> **h, const T& value) {
@@ -66,6 +67,8 @@ template<class T, class Allocator = allocator<T>>
      }
 
      iterator _insert(const_iterator position, size_type n, const T& x, std::true_type) {
+         if(!n)
+             return iterator(position._cur_node);
          _forward_node<T> *t = position._cur_node;
          while(n--) {
              _forward_node<T> *node = _alloc_node.allocate(1);
@@ -74,10 +77,13 @@ template<class T, class Allocator = allocator<T>>
              t->next = node;
              t = t->next;
          }
+         return iterator(t);
      }
 
      template<class InputIt>
      iterator _insert(const_iterator position, InputIt first, InputIt last, std::false_type) {
+         if(first == last)
+             return iterator(position._cur_node);
          _forward_node<T> *t = position._cur_node;
          while(first != last) {
              _forward_node<T> *node = _alloc_node.allocate(1);
@@ -87,13 +93,15 @@ template<class T, class Allocator = allocator<T>>
              t = t->next;
              ++first;
          }
+         return iterator(t);
      }
 
      template<class Compare>
      _forward_node<T> *_merge_list(_forward_node<T> *h1, _forward_node<T> *h2, Compare comp) {
          if(!h1)    return h2;
          if(!h2)    return h1;
-         _forward_node<T> *l1, *l2, *last = nullptr;
+         _forward_node<T> *l1, *l2, *last = nullptr, *dummy = nullptr;
+         dummy = _alloc_node.allocate(1);
          if(comp(h1->data, h2->data)) {
              l1 = h1;
              l2 = h2;
@@ -105,7 +113,9 @@ template<class T, class Allocator = allocator<T>>
              last = l1;
              l1 = l1->next;
          }
+         dummy->next = l2;
          l1 = last;
+         l2 = dummy;
          while(l1 && l2 && l2->next) {
              last = l1;
              if(comp(l1->data, l2->next->data)) {
@@ -121,14 +131,17 @@ template<class T, class Allocator = allocator<T>>
          if(l1) {
              l2->next = l1;
          }
+         dummy->next = nullptr;
+         _alloc_node.deallocate(dummy, 1);
          return l1;
      }
 
      template<class Compare>
      _forward_node<T> *_merge_sort(_forward_node<T> *h, Compare comp) {
-         if(!h || !h->next) return nullptr;
+         if(!h || !h->next)
+             return nullptr;
          _forward_node<T> *slow = h, *fast = h, *new_h = nullptr;
-         while(fast->next && fast->next->next) {
+         while(fast && fast->next && fast->next->next) {
              slow = slow->next;
              fast = fast->next->next;
          }
@@ -136,6 +149,7 @@ template<class T, class Allocator = allocator<T>>
          slow->next = nullptr;
          h = _merge_sort(h, comp);
          new_h = _merge_sort(new_h, comp);
+         return h;
          return _merge_list(h, new_h, comp);
      }
 
@@ -146,19 +160,19 @@ template<class T, class Allocator = allocator<T>>
     }
 
     explicit forward_list(const Allocator& a)
-        : _alloc(a), _alloc_node(a.template rebind<_node<T> >::other){
+        : _alloc(a){
         _create_empty_list();
     }
 
     forward_list(size_type n, const T& value, const Allocator& a = Allocator())
-        : _alloc(a), _alloc_node(a.template rebind<_node<T> >::other) {
+        : _alloc(a) {
         _create_empty_list();
         _build_n(n, value, std::true_type());
     }
 
     template<class InputIt>
     forward_list(InputIt first, InputIt last, const Allocator& a = Allocator())
-        : _alloc(a), _alloc_node(a.template rebind<_node<T> >::other){
+        : _alloc(a){
         _create_empty_list();
         typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
         _build_n(first, last, type());
@@ -179,10 +193,11 @@ template<class T, class Allocator = allocator<T>>
     forward_list(forward_list&& x) {
         _head = x._head;
         _tail = x._tail;
+        x._create_empty_list();
     }
 
     forward_list(const forward_list& x, const Allocator& a)
-        : _alloc(a), _alloc_node(a.template rebind<_node<T> >::other) {
+        : _alloc(a) {
         _create_empty_list();
         _forward_node<T> *pre = _head, *cur = nullptr;
         for(auto it = x.begin(); it != x.end(); ++it) {
@@ -195,9 +210,10 @@ template<class T, class Allocator = allocator<T>>
     }
 
     forward_list(forward_list&& x, const Allocator& a)
-        : _alloc(a), _alloc_node(a.template rebind<_node<T> >::other) {
+        : _alloc(a) {
         _head = x._head;
         _tail = x._tail;
+        x._create_empty_list();
     }
 
     ~forward_list() {
@@ -229,6 +245,7 @@ template<class T, class Allocator = allocator<T>>
             return *this;
         _head = x._head;
         _tail = x._tail;
+        x._create_empty_list();
         return *this;
     }
 
@@ -272,6 +289,7 @@ template<class T, class Allocator = allocator<T>>
         _alloc.construct(&(node->data), static_cast<Args&&>(args)...);
         node->next = h->next;
         h->next = node;
+        return iterator(node);
     }
 
     iterator insert_after(const_iterator position, const T& x) {
@@ -279,6 +297,7 @@ template<class T, class Allocator = allocator<T>>
         _alloc.construct(&(node->data), x);
         node->next = h->next;
         h->next = node;
+        return iterator(node);
     }
 
     iterator insert_after(const_iterator position, T&& x) {
@@ -286,19 +305,22 @@ template<class T, class Allocator = allocator<T>>
         _alloc.construct(&(node->data), static_cast<T&&>(x));
         node->next = h->next;
         h->next = node;
+        return iterator(node);
     }
 
     iterator insert_after(const_iterator position, size_type n, const T& x) {
-        _insert(position, n, x, std::true_type());
+        return _insert(position, n, x, std::true_type());
     }
 
     template<class InputIt>
     iterator insert_after(const_iterator position, InputIt first, InputIt last) {
         typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
-        _insert(position, first, last, type());
+        return _insert(position, first, last, type());
     }
 
     iterator erase_after(const_iterator first, const_iterator last) {
+        if(first == last || first._cur_node->next == last._cur_node)
+            return iterator(first._cur_node);
         _forward_node<T> *t = first._cur_node, *m = t->next, *p = nullptr;
         t->next = last._cur_node;
         while(m != last._cur_node) {
@@ -307,12 +329,14 @@ template<class T, class Allocator = allocator<T>>
             _alloc_node.deallocate(m, 1);
             m = p;
         }
+        return iterator(last._cur_node);
     }
 
     iterator erase_after(const_iterator position) {
-        const_iterator addone = position;
-        addone = jr_std::next(addone);
-        erase_after(position, addone);
+        if(position == cbegin())    return begin();
+        const_iterator addtwo = position;
+        jr_std::advance(addtwo, 2);
+        return erase_after(position, addtwo);
     }
 
     template<class... Args>
@@ -392,8 +416,8 @@ template<class T, class Allocator = allocator<T>>
         while(x_last->next != last._cur_node)
             x_last = x_last->next;
         position._cur_node->next = first._cur_node->next;
-        x_last->next = t;
         first._cur_node->next = last._cur_node;
+        x_last->next = t;
     }
 
     void splice_after(const_iterator position, forward_list&& x,
@@ -403,8 +427,8 @@ template<class T, class Allocator = allocator<T>>
         while(x_last->next != last._cur_node)
             x_last = x_last->next;
         position._cur_node->next = first._cur_node->next;
-        x_last->next = t;
         first._cur_node->next = last._cur_node;
+        x_last->next = t;
     }
 
     void splice_after(const_iterator position, forward_list& x) {
@@ -455,40 +479,35 @@ template<class T, class Allocator = allocator<T>>
 
     template<class Compare>
     void merge(forward_list& x, Compare comp) {
-        _forward_node<T> *l1, *l2, *t1, *t2, *last = nullptr;
+        _forward_node<T> *l1, *l2, *t1, *t2;
         if(comp(_head->next->data, x._head->next->data)) {
-            l1 = _head->next;
-            l2 = x._head->next;
+            l1 = _head;
+            l2 = x._head;
             t1 = _tail;
             t2 = x._tail;
         } else{
-            l2 = _head->next;
-            l1 = x._head->next;
+            l2 = _head;
+            l1 = x._head;
             t2 = _tail;
             t1 = x._tail;
         }
-        while((l1 != t1) && comp(l1->data, l2->data)) {
-            last = l1;
+        while((l1->next != t1) && comp(l1->next->data, l2->next->data)) {
             l1 = l1->next;
         }
-        l1 = last;
-        while((l1 != t1) && (l2->next != t2)) {
-            last = l1;
-            if(comp(l1->data, l2->next->data)) {
+        while((l1->next != t1) && (l2->next != t2)) {
+            if(comp(l1->next->data, l2->next->data)) {
                 l1 = l1->next;
             }else{
-                // l2->next节点插在last节点的后面
                 _forward_node<T> *tmp = l2->next;
                 l2->next = l2->next->next;
-                tmp->next = last->next;
-                last->next = tmp;
+                tmp->next = l1->next;
+                l1->next = tmp;
             }
         }
-        if(l1 != t1) {
+        if(l1->next != t1) {
             l2->next = l1;
-        }
-        if(l2->next != t2) {
-            last->next = l2;
+        }else if(l2->next != t2) {
+            l1->next = l2->next;
             while(l2->next != t2)
                 l2 = l2->next;
             l2->next = t1;
@@ -497,46 +516,41 @@ template<class T, class Allocator = allocator<T>>
             x._head->next = x._tail;
         } else {
             _head->next = _tail;
-            swap(x);
+            this->swap(x);
         }
     }
 
     template<class Compare>
     void merge(forward_list&& x, Compare comp) {
-        _forward_node<T> *l1, *l2, *t1, *t2, *last = nullptr;
+        _forward_node<T> *l1, *l2, *t1, *t2;
         if(comp(_head->next->data, x._head->next->data)) {
-            l1 = _head->next;
-            l2 = x._head->next;
+            l1 = _head;
+            l2 = x._head;
             t1 = _tail;
             t2 = x._tail;
         } else{
-            l2 = _head->next;
-            l1 = x._head->next;
+            l2 = _head;
+            l1 = x._head;
             t2 = _tail;
             t1 = x._tail;
         }
-        while((l1 != t1) && comp(l1->data, l2->data)) {
-            last = l1;
+        while((l1->next != t1) && comp(l1->next->data, l2->next->data)) {
             l1 = l1->next;
         }
-        l1 = last;
-        while((l1 != t1) && (l2->next != t2)) {
-            last = l1;
-            if(comp(l1->data, l2->next->data)) {
+        while((l1->next != t1) && (l2->next != t2)) {
+            if(comp(l1->next->data, l2->next->data)) {
                 l1 = l1->next;
             }else{
-                // l2->next节点插在last节点的后面
                 _forward_node<T> *tmp = l2->next;
                 l2->next = l2->next->next;
-                tmp->next = last->next;
-                last->next = tmp;
+                tmp->next = l1->next;
+                l1->next = tmp;
             }
         }
-        if(l1 != t1) {
+        if(l1->next != t1) {
             l2->next = l1;
-        }
-        if(l2->next != t2) {
-            last->next = l2;
+        }else if(l2->next != t2) {
+            l1->next = l2->next;
             while(l2->next != t2)
                 l2 = l2->next;
             l2->next = t1;
@@ -545,17 +559,17 @@ template<class T, class Allocator = allocator<T>>
             x._head->next = x._tail;
         } else {
             _head->next = _tail;
-            swap(x);
+            this->swap(x);
         }
     }
 
     template<class Compare>
     void sort(Compare comp) {
-        _forward_node<T> *tmp_h = _head->next, *tmp_t = _head->next;
+        _forward_node<T> *tmp_h = _head->next, *tmp_t = _head;
         while(tmp_t->next != _tail)
             tmp_t = tmp_t->next;
+        _head->next = nullptr;
         tmp_t->next = nullptr;
-        tmp_h->next = nullptr;
         tmp_h = _merge_sort(tmp_h, comp);
         _head->next = tmp_h;
         tmp_t = _head->next;

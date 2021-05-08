@@ -34,7 +34,6 @@ namespace jr_std {
         _forward_list_iterator() : _cur_node(nullptr) {}
         _forward_list_iterator(_forward_node<U> *x) : _cur_node(x) {}
         ~_forward_list_iterator() = default;
-
         // overloading ==, !=, *, ->, ++
         bool operator==(const _forward_list_iterator& x) const { return x._cur_node == _cur_node; }
         bool operator!=(const _forward_list_iterator& x) const { return x._cur_node != _cur_node; }
