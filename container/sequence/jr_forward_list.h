@@ -100,8 +100,9 @@ template<class T, class Allocator = jr_std::allocator<T> >
      _forward_node<T> *_merge_list(_forward_node<T> *h1, _forward_node<T> *h2, Compare comp) {
          if(!h1)    return h2;
          if(!h2)    return h1;
-         _forward_node<T> *l1, *l2, *last = nullptr, *dummy = nullptr;
-         dummy = _alloc_node.allocate(1);
+         _forward_node<T> *l1, *l2, *dummy1 = nullptr, *dummy2 = nullptr;
+         dummy1 = _alloc_node.allocate(1);
+         dummy2 = _alloc_node.allocate(1);
          if(comp(h1->data, h2->data)) {
              l1 = h1;
              l2 = h2;
@@ -109,37 +110,39 @@ template<class T, class Allocator = jr_std::allocator<T> >
              l2 = h1;
              l1 = h2;
          }
-         while(l1 && comp(l1->data, l2->data)) {
-             last = l1;
+         dummy1->next = l1;
+         l1 = dummy1;
+         dummy2->next = l2;
+         l2 = dummy2;
+         while(l1->next && comp(l1->next->data, l2->next->data)) {
              l1 = l1->next;
          }
-         dummy->next = l2;
-         l1 = last;
-         l2 = dummy;
-         while(l1 && l2 && l2->next) {
-             last = l1;
-             if(comp(l1->data, l2->next->data)) {
+         while(l1->next && l2->next) {
+             if(comp(l1->next->data, l2->next->data)) {
                  l1 = l1->next;
              }else{
-                 // l2->next节点插在last节点的后面
                  _forward_node<T> *tmp = l2->next;
                  l2->next = l2->next->next;
-                 tmp->next = last->next;
-                 last->next = tmp;
+                 tmp->next = l1->next;
+                 l1->next = tmp;
              }
          }
-         if(l1) {
-             l2->next = l1;
+         if(l1->next) {
+             l2->next = l1->next;
+         }else if(l2->next) {
+             l1->next = l2->next;
          }
-         dummy->next = nullptr;
-         _alloc_node.deallocate(dummy, 1);
+         l1 = dummy1->next;
+         dummy1->next = nullptr;
+         _alloc_node.deallocate(dummy1, 1);
+         _alloc_node.deallocate(dummy2, 1);
          return l1;
      }
 
      template<class Compare>
      _forward_node<T> *_merge_sort(_forward_node<T> *h, Compare comp) {
          if(!h || !h->next)
-             return nullptr;
+             return h;
          _forward_node<T> *slow = h, *fast = h, *new_h = nullptr;
          while(fast && fast->next && fast->next->next) {
              slow = slow->next;
@@ -149,7 +152,6 @@ template<class T, class Allocator = jr_std::allocator<T> >
          slow->next = nullptr;
          h = _merge_sort(h, comp);
          new_h = _merge_sort(new_h, comp);
-         return h;
          return _merge_list(h, new_h, comp);
      }
 
