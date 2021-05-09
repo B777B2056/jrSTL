@@ -3,6 +3,11 @@
 
 #include <cstddef>
 
+/* array为聚合类类型（C++ Prime 7.5.5）;
+ * 没有显式的构造/复制/销毁;
+ * 也没有非public的成员。
+ */
+
 namespace jr_std {
   template<class T, size_t N>
   struct array {
@@ -16,7 +21,7 @@ namespace jr_std {
     typedef const T* const_pointer;
     typedef T* iterator;
     typedef const T* const_iterator;
-
+    value_type _base_array[N];
     // 聚合类型无显式的构造/复制/销毁
     void fill(const T& u) {
         for(int i = 0; i < N; i++)
@@ -25,9 +30,11 @@ namespace jr_std {
 
     void swap(array& x) noexcept {
         if(this == &x)    return;
-        pointer tmp = _base_array;
-        _base_array = x._base_array;
-        x._base_array = tmp;
+        for(size_type i = 0; i < N; i++) {
+            value_type tmp = (*this)[i];
+            (*this)[i] = x[i];
+            x[i] = tmp;
+        }
     }
 
     // 迭代器
@@ -55,10 +62,9 @@ namespace jr_std {
 
     T *data() noexcept { return _base_array; }
     const T *data() const noexcept { return _base_array; }
-  private:
-    pointer _base_array = new pointer[N];
   };
 
+  // 同大小的两array才可交换
   template< class T, std::size_t N >
   void swap( jr_std::array<T,N>& lhs,
              jr_std::array<T,N>& rhs )
@@ -80,6 +86,38 @@ namespace jr_std {
       return !(lhs == rhs);
   }
 
+  template< class T, std::size_t N >
+  bool operator<( const jr_std::array<T,N>& lhs,
+                  const jr_std::array<T,N>& rhs ) {
+      for(int i = 0; i < N; i++) {
+          if(lhs[i] >= rhs[i])
+              return false;
+      }
+      return true;
+  }
+
+  template< class T, std::size_t N >
+  bool operator>( const jr_std::array<T,N>& lhs,
+                  const jr_std::array<T,N>& rhs ) {
+      for(int i = 0; i < N; i++) {
+          if(lhs[i] <= rhs[i])
+              return false;
+      }
+      return true;
+  }
+
+  template< class T, std::size_t N >
+  bool operator<=( const jr_std::array<T,N>& lhs,
+                   const jr_std::array<T,N>& rhs ) {
+      return !(lhs > rhs);
+  }
+
+  template< class T, std::size_t N >
+  bool operator>=( const jr_std::array<T,N>& lhs,
+                   const jr_std::array<T,N>& rhs ) {
+      return !(lhs < rhs);
+  }
+
   template< size_t I, class T, size_t N >
   T& get( jr_std::array<T,N>& a ) noexcept {
       return a[I];
@@ -90,8 +128,18 @@ namespace jr_std {
       return a[I];
   }
 
-  template<class T, class... U>
-    array(T, U...) -> array<T, 1 + sizeof...(U)>;
+  template< std::size_t I, class T, std::size_t N >
+  T&& get( jr_std::array<T,N>&& a ) noexcept {
+      return a[I];
+  }
+
+  template< std::size_t I, class T, std::size_t N >
+  const T&& get( const jr_std::array<T,N>&& a ) noexcept {
+      return a[I];
+  }
+
+//  template<class T, class... U>
+//    array(T, U...) -> array<T, 1 + sizeof...(U)>;
 }
 
 #endif // JR_ARRAY_H
