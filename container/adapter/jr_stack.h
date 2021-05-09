@@ -14,23 +14,50 @@ namespace jr_std {
         typedef typename Container::reference reference;
         typedef typename Container::const_reference const_reference;
     public:
-        stack() {}
+        stack()
+            : c(Container())
+        {}
 
-        explicit stack( const Container& cont ) {
-            c = cont;
-        }
+        explicit stack( const Container& cont )
+            : c(cont)
+        {}
 
-        explicit stack( Container&& cont ) {
-            c = static_cast<Container&&>(cont);
-        }
+        explicit stack( Container&& cont )
+            : c(static_cast<Container&&>(cont))
+        {}
 
-        stack( const stack& other ) {
-            c = other.cont ;
-        }
+        stack( const stack& other )
+            : c(other.c)
+        {}
 
-        stack( stack&& other ) {
-            c = static_cast<Container&&>(other.cont) ;
-        }
+        stack( stack&& other )
+            : c(static_cast<Container&&>(other.c))
+        {}
+
+        template< class Alloc >
+        explicit stack( const Alloc& alloc )
+            : c(alloc)
+        {}
+
+        template< class Alloc >
+        stack( const Container& cont, const Alloc& alloc )
+            : c(cont, alloc)
+        {}
+
+        template< class Alloc >
+        stack( Container&& cont, const Alloc& alloc )
+            : c(static_cast<Container&&>(cont), alloc)
+        {}
+
+        template< class Alloc >
+        stack( const stack& other, const Alloc& alloc )
+            : c(other.c, alloc)
+        {}
+
+        template< class Alloc >
+        stack( stack&& other, const Alloc& alloc )
+            : c(static_cast<Container&&>(other.c), alloc)
+        {}
 
         ~stack() {}
 
@@ -60,6 +87,20 @@ namespace jr_std {
         void swap( stack& other ) noexcept {
             jr_std::swap(c, other.c);
         }
+
+        // 友元声明
+        template< class U, class Cont >
+        friend bool operator==( const stack<U, Cont>& lhs, const stack<U, Cont>& rhs );
+        template< class U, class Cont >
+        friend bool operator!=( const stack<U, Cont>& lhs, const stack<U, Cont>& rhs );
+        template< class U, class Cont >
+        friend bool operator<=( const stack<U, Cont>& lhs, const stack<U, Cont>& rhs );
+        template< class U, class Cont >
+        friend bool operator>=( const stack<U, Cont>& lhs, const stack<U, Cont>& rhs );
+        template< class U, class Cont >
+        friend bool operator<( const stack<U, Cont>& lhs, const stack<U, Cont>& rhs );
+        template< class U, class Cont >
+        friend bool operator>( const stack<U, Cont>& lhs, const stack<U, Cont>& rhs );
     };
 
     template< class T, class Container >
@@ -71,13 +112,37 @@ namespace jr_std {
     template< class T, class Container >
     bool operator==( const jr_std::stack<T,Container>& lhs,
                      const jr_std::stack<T,Container>& rhs ) {
-        return lhs == rhs;
+        return lhs.c == rhs.c;
     }
 
     template< class T, class Container >
     bool operator!=( const jr_std::stack<T,Container>& lhs,
                      const jr_std::stack<T,Container>& rhs ) {
-        return lhs != rhs;
+        return lhs.c != rhs.c;
+    }
+
+    template< class T, class Container >
+    bool operator<( const jr_std::stack<T,Container>& lhs,
+                     const jr_std::stack<T,Container>& rhs ) {
+        return lhs.c < rhs.c;
+    }
+
+    template< class T, class Container >
+    bool operator<=( const jr_std::stack<T,Container>& lhs,
+                     const jr_std::stack<T,Container>& rhs ) {
+        return lhs.c <= rhs.c;
+    }
+
+    template< class T, class Container >
+    bool operator>( const jr_std::stack<T,Container>& lhs,
+                     const jr_std::stack<T,Container>& rhs ) {
+        return lhs.c > rhs.c;
+    }
+
+    template< class T, class Container >
+    bool operator>=( const jr_std::stack<T,Container>& lhs,
+                     const jr_std::stack<T,Container>& rhs ) {
+        return lhs.c >= rhs.c;
     }
 }
 

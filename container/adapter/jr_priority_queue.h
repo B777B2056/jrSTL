@@ -23,26 +23,64 @@ namespace jr_std {
             Compare comp;
 
         public:
-            priority_queue() : c(Container()), comp(Compare()) {}
+            priority_queue()
+                : c(Container()), comp(Compare())
+            {}
 
             explicit priority_queue(const Compare& x)
-                : c(Container()), comp(x) {}
+                : c(Container()), comp(x)
+            {}
 
             priority_queue(const Compare& x, const Container& y)
-                : c(y), comp(x) {}
+                : c(y), comp(x)
+            {}
 
             priority_queue(const Compare& x, Container&& y)
-                : c(static_cast<Container&&>(y)), comp(x) {}
+                : c(static_cast<Container&&>(y)), comp(x)
+            {}
 
-            priority_queue( const priority_queue& other ) {
-                c = other.c;
-                comp = other.comp;
-            }
+            priority_queue( const priority_queue& other )
+                : c(other.c), comp(other.comp)
+            {}
 
-            priority_queue( priority_queue&& other ) {
-                c = static_cast<Container&&>(other.c);
-                comp = static_cast<Compare&&>(other.comp);
-            }
+            priority_queue( priority_queue&& other )
+                : c(static_cast<Container&&>(other.c)),
+                  comp(static_cast<Compare&&>(other.comp))
+            {}
+
+            template< class Alloc >
+            explicit priority_queue( const Alloc& alloc )
+                : c(alloc)
+            {}
+
+            template< class Alloc >
+            priority_queue( const Compare& compare, const Alloc& alloc )
+                : c(alloc), comp(compare)
+            {}
+
+            template< class Alloc >
+            priority_queue( const Compare& compare, const Container& cont,
+                            const Alloc& alloc )
+                : c(cont, alloc), comp(compare)
+            {}
+
+            template< class Alloc >
+            priority_queue( const Compare& compare, Container&& cont,
+                            const Alloc& alloc )
+                : c(static_cast<Container&&>(cont), alloc), comp(compare)
+            {}
+
+            template< class Alloc >
+            priority_queue( const priority_queue& other,
+                            const Alloc& alloc )
+                : c(other.c, alloc), comp(other.compare)
+            {}
+
+            template< class Alloc >
+            priority_queue( priority_queue&& other, const Alloc& alloc )
+                : c(static_cast<Container&&>(other.c), alloc),
+                  comp(static_cast<Compare&&>(other.compare))
+            {}
 
             template<class InputIt>
             priority_queue(InputIt first, InputIt last,

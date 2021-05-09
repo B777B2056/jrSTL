@@ -264,7 +264,7 @@ namespace jr_std {
         }
 
         const_reference operator[](size_type n) const {
-            const_iterator it = _start;
+            const_iterator it = const_iterator(_start.control_node);
             it += n;
             return *it;
         }
@@ -439,11 +439,18 @@ namespace jr_std {
     };
 
     template< class T, class Alloc >
+    void swap( jr_std::deque<T,Alloc>& lhs,
+               jr_std::deque<T,Alloc>& rhs ) {
+        lhs.swap(rhs);
+    }
+
+    template< class T, class Alloc >
     bool operator==( const jr_std::deque<T,Alloc>& lhs,
                      const jr_std::deque<T,Alloc>& rhs ) {
-        if(lhs.size() != rhs.size())
+        size_t lsz = lhs.size(), rsz = rhs.size();
+        if(lsz != rsz)
             return false;
-        for(size_t i = 0; i < lhs.size(); i++) {
+        for(size_t i = 0; i < lsz; i++) {
             if(lhs[i] != rhs[i])
                 return false;
         }
@@ -453,14 +460,48 @@ namespace jr_std {
     template< class T, class Alloc >
     bool operator!=( const jr_std::deque<T,Alloc>& lhs,
                      const jr_std::deque<T,Alloc>& rhs ) {
-        return !operator==(lhs, rhs);
+        return !(lhs == rhs);
     }
 
     template< class T, class Alloc >
-    void swap( jr_std::deque<T,Alloc>& lhs,
-               jr_std::deque<T,Alloc>& rhs ) {
-        lhs.swap(rhs);
+    bool operator<( const jr_std::deque<T,Alloc>& lhs,
+                    const jr_std::deque<T,Alloc>& rhs ) {
+        size_t lsz = lhs.size(), rsz = rhs.size();
+        if(lsz < rsz)
+            return true;
+        if(lsz > rsz)
+            return false;
+        for(size_t i = 0; i < lsz; i++) {
+            if(lhs[i] >= rhs[i])
+                return false;
+        }
+        return true;
     }
+
+    template< class T, class Alloc >
+    bool operator>( const jr_std::deque<T,Alloc>& lhs,
+                    const jr_std::deque<T,Alloc>& rhs ) {
+        size_t lsz = lhs.size(), rsz = rhs.size();
+        if(lsz < rsz)
+            return false;
+        if(lsz > rsz)
+            return true;
+        for(size_t i = 0; i < lsz; i++) {
+            if(lhs[i] <= rhs[i])
+                return false;
+        }
+        return true;
+    }
+
+    template< class T, class Alloc >
+    bool operator<=( const jr_std::deque<T,Alloc>& lhs,
+                     const jr_std::deque<T,Alloc>& rhs )
+    { return !(lhs > rhs); }
+
+    template< class T, class Alloc >
+    bool operator>=( const jr_std::deque<T,Alloc>& lhs,
+                     const jr_std::deque<T,Alloc>& rhs )
+    { return !(lhs < rhs); }
 
 }
 

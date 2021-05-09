@@ -806,24 +806,78 @@ namespace jr_std {
 
     template<class T, class Allocator>
     void swap(list<T, Allocator>& x, list<T, Allocator>& y)
-    noexcept(noexcept(x.swap(y))) {
-        x.swap(y);
-    }
+    noexcept(noexcept(x.swap(y)))
+    { x.swap(y); }
 
     template<class T, class Allocator>
-    bool operator==(const list<T, Allocator>& x, const list<T, Allocator>& y) {
-        if(x.size() != y.size())
+    bool operator==(const list<T, Allocator>& lhs,
+                    const list<T, Allocator>& rhs) {
+        size_t lsz = lhs.size(), rsz = rhs.size();
+        if(lsz != rsz)
             return false;
-        typename list<T, Allocator>::iterator itx = x.begin();
-        typename list<T, Allocator>::iterator ity = y.begin();
-        while((itx != x.end()) && (ity != y.end())) {
-            if(*itx != *ity)
+        auto lit = lhs.begin();
+        auto rit = rhs.begin();
+        while((lit != lhs.end()) && (rit != rhs.end())) {
+            if(*lit != *rit)
                 return false;
-            ++itx;
-            ++ity;
+            ++lit;
+            ++rit;
         }
         return true;
     }
+
+    template< class T, class Alloc >
+    bool operator!=( const jr_std::list<T,Alloc>& lhs,
+                     const jr_std::list<T,Alloc>& rhs )
+    { return !(lhs == rhs); }
+
+    template< class T, class Alloc >
+    bool operator<( const jr_std::list<T,Alloc>& lhs,
+                    const jr_std::list<T,Alloc>& rhs ) {
+        size_t lsz = lhs.size(), rsz = rhs.size();
+        if(lsz < rsz)
+            return true;
+        if(lsz > rsz)
+            return false;
+        auto lit = lhs.begin();
+        auto rit = rhs.begin();
+        while((lit != lhs.end()) && (rit != rhs.end())) {
+            if(*lit >= *rit)
+                return false;
+            ++lit;
+            ++rit;
+        }
+        return true;
+    }
+
+    template< class T, class Alloc >
+    bool operator>( const jr_std::list<T,Alloc>& lhs,
+                    const jr_std::list<T,Alloc>& rhs ) {
+        size_t lsz = lhs.size(), rsz = rhs.size();
+        if(lsz < rsz)
+            return false;
+        if(lsz > rsz)
+            return true;
+        auto lit = lhs.begin();
+        auto rit = rhs.begin();
+        while((lit != lhs.end()) && (rit != rhs.end())) {
+            if(*lit <= *rit)
+                return false;
+            ++lit;
+            ++rit;
+        }
+        return true;
+    }
+
+    template< class T, class Alloc >
+    bool operator<=( const jr_std::list<T,Alloc>& lhs,
+                     const jr_std::list<T,Alloc>& rhs )
+    { return !(lhs > rhs); }
+
+    template< class T, class Alloc >
+    bool operator>=( const jr_std::list<T,Alloc>& lhs,
+                     const jr_std::list<T,Alloc>& rhs )
+    { return !(lhs < rhs); }
 }
 
 #endif // JR_LIST_H

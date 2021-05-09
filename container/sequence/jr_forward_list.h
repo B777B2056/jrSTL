@@ -97,7 +97,9 @@ template<class T, class Allocator = jr_std::allocator<T> >
      }
 
      template<class Compare>
-     _forward_node<T> *_merge_list(_forward_node<T> *h1, _forward_node<T> *h2, Compare comp) {
+     _forward_node<T> *_merge_list(_forward_node<T> *h1, _forward_node<T> *h2,
+                                   _forward_node<T> *end1, _forward_node<T> *end2,
+                                   Compare comp, bool& is_change) {
          if(!h1)    return h2;
          if(!h2)    return h1;
          _forward_node<T> *l1, *l2, *dummy1 = nullptr, *dummy2 = nullptr;
@@ -106,18 +108,23 @@ template<class T, class Allocator = jr_std::allocator<T> >
          if(comp(h1->data, h2->data)) {
              l1 = h1;
              l2 = h2;
+             is_change = false;
          } else{
              l2 = h1;
              l1 = h2;
+             _forward_node<T> *tmp = end1;
+             end1 = end2;
+             end2 = tmp;
+             is_change = true;
          }
          dummy1->next = l1;
          l1 = dummy1;
          dummy2->next = l2;
          l2 = dummy2;
-         while(l1->next && comp(l1->next->data, l2->next->data)) {
+         while((l1->next != end1) && comp(l1->next->data, l2->next->data)) {
              l1 = l1->next;
          }
-         while(l1->next && l2->next) {
+         while((l1->next != end1) && (l2->next != end2)) {
              if(comp(l1->next->data, l2->next->data)) {
                  l1 = l1->next;
              }else{
@@ -127,10 +134,15 @@ template<class T, class Allocator = jr_std::allocator<T> >
                  l1->next = tmp;
              }
          }
-         if(l1->next) {
+         if(l1->next != end1) {
              l2->next = l1->next;
-         }else if(l2->next) {
+         }else if(l2->next != end2) {
              l1->next = l2->next;
+             if(end2) {
+                 while(l2->next != end2)
+                     l2 = l2->next;
+                 l2->next = end1;
+             }
          }
          l1 = dummy1->next;
          dummy1->next = nullptr;
@@ -143,6 +155,7 @@ template<class T, class Allocator = jr_std::allocator<T> >
      _forward_node<T> *_merge_sort(_forward_node<T> *h, Compare comp) {
          if(!h || !h->next)
              return h;
+         bool is_change; // 与排序无关，为了接口统一而妥协的多余参数(与merge成员有关)
          _forward_node<T> *slow = h, *fast = h, *new_h = nullptr;
          while(fast && fast->next && fast->next->next) {
              slow = slow->next;
@@ -152,7 +165,7 @@ template<class T, class Allocator = jr_std::allocator<T> >
          slow->next = nullptr;
          h = _merge_sort(h, comp);
          new_h = _merge_sort(new_h, comp);
-         return _merge_list(h, new_h, comp);
+         return _merge_list(h, new_h, nullptr, nullptr, comp, is_change);
      }
 
   public:
@@ -481,88 +494,34 @@ template<class T, class Allocator = jr_std::allocator<T> >
 
     template<class Compare>
     void merge(forward_list& x, Compare comp) {
-        _forward_node<T> *l1, *l2, *t1, *t2;
-        if(comp(_head->next->data, x._head->next->data)) {
-            l1 = _head;
-            l2 = x._head;
-            t1 = _tail;
-            t2 = x._tail;
-        } else{
-            l2 = _head;
-            l1 = x._head;
-            t2 = _tail;
-            t1 = x._tail;
+        bool is_change;
+        _forward_node<T> *h1 = _head->next, *h2 = x._head->next;
+        _head->next = nullptr;
+        x._head->next = nullptr;
+        h1 = _merge_list(h1, h2, _tail, x._tail, comp, is_change);
+        _head->next = h1;
+        if(is_change) {
+            _forward_node<T> *tmp = _tail;
+            _tail = x._tail;
+            x._tail = tmp;
         }
-        while((l1->next != t1) && comp(l1->next->data, l2->next->data)) {
-            l1 = l1->next;
-        }
-        while((l1->next != t1) && (l2->next != t2)) {
-            if(comp(l1->next->data, l2->next->data)) {
-                l1 = l1->next;
-            }else{
-                _forward_node<T> *tmp = l2->next;
-                l2->next = l2->next->next;
-                tmp->next = l1->next;
-                l1->next = tmp;
-            }
-        }
-        if(l1->next != t1) {
-            l2->next = l1;
-        }else if(l2->next != t2) {
-            l1->next = l2->next;
-            while(l2->next != t2)
-                l2 = l2->next;
-            l2->next = t1;
-        }
-        if(t1 == _tail) {
-            x._head->next = x._tail;
-        } else {
-            _head->next = _tail;
-            this->swap(x);
-        }
+        x._head->next = x._tail;
     }
 
     template<class Compare>
     void merge(forward_list&& x, Compare comp) {
-        _forward_node<T> *l1, *l2, *t1, *t2;
-        if(comp(_head->next->data, x._head->next->data)) {
-            l1 = _head;
-            l2 = x._head;
-            t1 = _tail;
-            t2 = x._tail;
-        } else{
-            l2 = _head;
-            l1 = x._head;
-            t2 = _tail;
-            t1 = x._tail;
+        bool is_change;
+        _forward_node<T> *h1 = _head->next, *h2 = x._head->next;
+        _head->next = nullptr;
+        x._head->next = nullptr;
+        h1 = _merge_list(h1, h2, _tail, x._tail, comp, is_change);
+        _head->next = h1;
+        if(is_change) {
+            _forward_node<T> *tmp = _tail;
+            _tail = x._tail;
+            x._tail = tmp;
         }
-        while((l1->next != t1) && comp(l1->next->data, l2->next->data)) {
-            l1 = l1->next;
-        }
-        while((l1->next != t1) && (l2->next != t2)) {
-            if(comp(l1->next->data, l2->next->data)) {
-                l1 = l1->next;
-            }else{
-                _forward_node<T> *tmp = l2->next;
-                l2->next = l2->next->next;
-                tmp->next = l1->next;
-                l1->next = tmp;
-            }
-        }
-        if(l1->next != t1) {
-            l2->next = l1;
-        }else if(l2->next != t2) {
-            l1->next = l2->next;
-            while(l2->next != t2)
-                l2 = l2->next;
-            l2->next = t1;
-        }
-        if(t1 == _tail) {
-            x._head->next = x._tail;
-        } else {
-            _head->next = _tail;
-            this->swap(x);
-        }
+        x._head->next = x._tail;
     }
 
     template<class Compare>
@@ -614,24 +573,60 @@ template<class T, class Allocator = jr_std::allocator<T> >
   template< class T, class Alloc >
   bool operator==( const jr_std::forward_list<T,Alloc>& lhs,
                    const jr_std::forward_list<T,Alloc>& rhs ) {
-      if((lhs.begin() != rhs.begin()) || (lhs.end() != rhs.end()))
-          return false;
-      typename jr_std::forward_list<T,Alloc>::const_iterator itl, itr;
-      itl = lhs.begin();
-      itr = rhs.begin();
-      while(itl != lhs.end()) {
-          if((itr == rhs.end()) || (*itl != *itr))
+      typename jr_std::forward_list<T,Alloc>::const_iterator lit, rit;
+      lit = lhs.begin();
+      rit = rhs.begin();
+      while(lit != lhs.end()) {
+          if((rit == rhs.end()) || (*lit != *rit))
               return false;
-          ++itl;
-          ++itr;
+          ++lit;
+          ++rit;
       }
-      return itr == rhs.end();
+      return rit == rhs.end();
   }
 
   template< class T, class Alloc >
   bool operator!=( const jr_std::forward_list<T,Alloc>& lhs,
                    const jr_std::forward_list<T,Alloc>& rhs )
   { return !(lhs == rhs); }
+
+  template< class T, class Alloc >
+  bool operator<( const jr_std::forward_list<T,Alloc>& lhs,
+                  const jr_std::forward_list<T,Alloc>& rhs ) {
+      auto lit = lhs.begin();
+      auto rit = rhs.begin();
+      while(lit != lhs.end()) {
+          if((rit == rhs.end()) || (*lit >= *rit))
+              return false;
+          ++lit;
+          ++rit;
+      }
+      return true;
+  }
+
+  template< class T, class Alloc >
+  bool operator>( const jr_std::forward_list<T,Alloc>& lhs,
+                  const jr_std::forward_list<T,Alloc>& rhs ) {
+      auto lit = lhs.begin();
+      auto rit = rhs.begin();
+      while(rit != rhs.end()) {
+          if((lit == lhs.end()) || (*lit <= *rit))
+              return false;
+          ++lit;
+          ++rit;
+      }
+      return true;
+  }
+
+  template< class T, class Alloc >
+  bool operator<=( const jr_std::forward_list<T,Alloc>& lhs,
+                   const jr_std::forward_list<T,Alloc>& rhs )
+  { return !(lhs > rhs); }
+
+  template< class T, class Alloc >
+  bool operator>=( const jr_std::forward_list<T,Alloc>& lhs,
+                   const jr_std::forward_list<T,Alloc>& rhs )
+  { return !(lhs < rhs); }
 }
 
 #endif // JR_FORWARD_LIST_H

@@ -14,23 +14,48 @@ namespace jr_std {
         typedef typename Container::reference reference;
         typedef typename Container::const_reference const_reference;
     public:
-        queue() {}
+        queue() : c(Container()) {}
 
-        explicit queue( const Container& cont ) {
-            c = cont;
-        }
+        explicit queue( const Container& cont )
+            : c(cont)
+        {}
 
-        explicit queue( Container&& cont ) {
-            c = static_cast<Container&&>(cont);
-        }
+        explicit queue( Container&& cont )
+            : c(static_cast<Container&&>(cont))
+        {}
 
-        queue( const queue& other ) {
-            c = other.cont;
-        }
+        queue( const queue& other )
+            : c(other.c)
+        {}
 
-        queue( queue&& other ) {
-            c = static_cast<Container&&>(other.cont);
-        }
+        queue( queue&& other )
+            : c(static_cast<Container&&>(other.c))
+        {}
+
+        template< class Alloc >
+        explicit queue( const Alloc& alloc )
+            : c(alloc)
+        {}
+
+        template< class Alloc >
+        queue( const Container& cont, const Alloc& alloc )
+            : c(cont, alloc)
+        {}
+
+        template< class Alloc >
+        queue( Container&& cont, const Alloc& alloc )
+            : c(static_cast<Container&&>(cont), alloc)
+        {}
+
+        template< class Alloc >
+        queue( const queue& other, const Alloc& alloc )
+            : c(other.c, alloc)
+        {}
+
+        template< class Alloc >
+        queue( queue&& other, const Alloc& alloc )
+            : c(static_cast<Container&&>(other.c), alloc)
+        {}
 
         ~queue() {}
 
@@ -64,26 +89,56 @@ namespace jr_std {
         void swap( queue& other ) noexcept {
             jr_std::swap(c, other.c);
         }
+        // 友元声明
+        template< class U, class Cont >
+        friend bool operator==( const queue<U, Cont>& lhs, const queue<U, Cont>& rhs );
+        template< class U, class Cont >
+        friend bool operator!=( const queue<U, Cont>& lhs, const queue<U, Cont>& rhs );
+        template< class U, class Cont >
+        friend bool operator<=( const queue<U, Cont>& lhs, const queue<U, Cont>& rhs );
+        template< class U, class Cont >
+        friend bool operator>=( const queue<U, Cont>& lhs, const queue<U, Cont>& rhs );
+        template< class U, class Cont >
+        friend bool operator<( const queue<U, Cont>& lhs, const queue<U, Cont>& rhs );
+        template< class U, class Cont >
+        friend bool operator>( const queue<U, Cont>& lhs, const queue<U, Cont>& rhs );
+
     };
 
     template< class T, class Container >
     void swap( jr_std::queue<T,Container>& lhs,
-               jr_std::queue<T,Container>& rhs ) {
-        lhs.swap(rhs);
-    }
+               jr_std::queue<T,Container>& rhs )
+    { lhs.swap(rhs); }
 
     template< class T, class Container >
     bool operator==( const jr_std::queue<T,Container>& lhs,
-                     const jr_std::queue<T,Container>& rhs ) {
-        return lhs == rhs;
-    }
+                     const jr_std::queue<T,Container>& rhs )
+    { return lhs.c == rhs.c; }
 
     template< class T, class Container >
     bool operator!=( const jr_std::queue<T,Container>& lhs,
-                     const jr_std::queue<T,Container>& rhs ) {
-        return lhs != rhs;
-    }
+                     const jr_std::queue<T,Container>& rhs )
+    { return lhs.c != rhs.c; }
 
+    template< class T, class Container >
+    bool operator<( const jr_std::queue<T,Container>& lhs,
+                    const jr_std::queue<T,Container>& rhs )
+    { return lhs.c < rhs.c; }
+
+    template< class T, class Container >
+    bool operator<=( const jr_std::queue<T,Container>& lhs,
+                     const jr_std::queue<T,Container>& rhs )
+    { return lhs.c <= rhs.c; }
+
+    template< class T, class Container >
+    bool operator>( const jr_std::queue<T,Container>& lhs,
+                    const jr_std::queue<T,Container>& rhs )
+    { return lhs.c > rhs.c; }
+
+    template< class T, class Container >
+    bool operator>=( const jr_std::queue<T,Container>& lhs,
+                     const jr_std::queue<T,Container>& rhs )
+    { return lhs.c >= rhs.c; }
 }
 
 #endif // QUEUE_H
