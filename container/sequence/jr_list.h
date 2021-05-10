@@ -198,7 +198,9 @@ namespace jr_std {
         }
 
         template<class Compare>
-        _node<T> *_merge_sorted_list(_node<T> *l1_h, _node<T> *l2_h, Compare comp) {
+        _node<T> *_merge_list(_node<T> *l1_h, _node<T> *l2_h,
+                                     _node<T> *t1, _node<T> *t2,
+                                     Compare comp, bool& is_change) {
             if(!l1_h)   return l2_h;
             if(!l2_h)   return l1_h;
             _node<T> *dummy = _create_node();
@@ -206,9 +208,14 @@ namespace jr_std {
             if(comp(l1_h->data, l2_h->data)) {
                 n1 = l1_h;
                 n2 = l2_h;
+                is_change = false;
             } else {
                 n1 = l2_h;
                 n2 = l1_h;
+                _node<T> *tmp = t1;
+                t1 = t2;
+                t2 = tmp;
+                is_change = true;
             }
             _node<T> *n3 = nullptr;
             _node<T> *n4 = nullptr;
@@ -217,7 +224,7 @@ namespace jr_std {
             _node<T> *last2 = nullptr;
             n1->prev = dummy;
             dummy->next = n1;
-            while(n1 && n2) {
+            while((n1 != t1) && (n2 != t2)) {
                 last = n1;
                 last2 = n2;
                 if(comp(n1->data, n2->data)) {
@@ -237,13 +244,18 @@ namespace jr_std {
                     n2 = n5;
                 }
             }
-            if(n1) {
+            if(n1 != t1) {
                 last2->next = n1;
                 n1->prev = last2;
             }
-            if(n2) {
+            if(n2 != t2) {
                 last->next = n2;
                 n2->prev = last;
+                if(t2) {
+                    n2 = t2->prev;
+                    n2->next = t1;
+                    t1->prev = n2;
+                }
             }
             n1 = dummy->next;
             n1->prev = dummy->next = nullptr;
@@ -255,6 +267,7 @@ namespace jr_std {
         _node<T> *_merge_sort(_node<T> *h, Compare comp) {
             if(!h || !h->next)
                 return h;
+            bool is_change;
             // Find center postion node(Double-pointer method)
             _node<T> *next, *slow, *fast;
             next = nullptr;
@@ -274,7 +287,9 @@ namespace jr_std {
             // Sort right list
             next = _merge_sort(next, comp);
             // Merge two parts list
-            return _merge_sorted_list(h, next, comp);
+            return _merge_list(h, next,
+                                      nullptr, nullptr,
+                                      comp, is_change);
         }
 
     public:
@@ -648,113 +663,47 @@ namespace jr_std {
         template<class Compare>
         void merge(list& x, Compare comp) {
             if(this == &x) return;
-            _node<T> *n1, *n2, *flag, *flag2, *last, *last2;
-            if(comp(_head->data, x._head->data)) {
-                n1 = _head->next;
-                n2 = x._head->next;
-                flag = _tail;
-                flag2 = x._tail;
-            } else {
-                n1 = x._head->next;
-                n2 = _head->next;
-                flag = x._tail;
-                flag2 = _tail;
+            bool is_change;
+            _node<T> *h1 = _head->next, *h2 = x._head->next;
+            h1->prev = _head->next = nullptr;
+            h2->prev = x._head->next = nullptr;
+            h1 = _merge_list(h1, h2,
+                                    _tail, x._tail,
+                                    comp, is_change);
+            _head->next = h1;
+            h1->prev = _head;
+            if(is_change) {
+                _node<T> *tmp = _tail;
+                _tail = x._tail;
+                x._tail = tmp;
             }
-            _node<T> *n3 = nullptr;
-            _node<T> *n4 = nullptr;
-            _node<T> *n5 = nullptr;
-            while((n1 != flag) && (n2 != flag2)) {
-                last = n1;
-                last2 = n2;
-                if(comp(n1->data, n2->data)) {
-                    n1 = n1->next;
-                }else{
-                    n3 = n1->prev;
-                    n4 = n2->prev;
-                    n5 = n2->next;
-                    n3->next = n2;
-                    n2->prev = n3;
-                    n2->next = n1;
-                    n1->prev = n2;
-                    n4->next = n5;
-                    n5->prev = n4;
-                    n2 = n5;
-                }
-            }
-            if(n1 != flag) {
-                last2->next = n1;
-                n1->prev = last2;
-            }
-            if(n2 != flag2) {
-                last->next = n2;
-                n2->prev = last;
-                n2 = flag2->prev;
-                n2->next = flag;
-                flag->prev = n2;
-            }
-            if(flag != _tail) {
-                this->swap(x);
-            }
-            _size += x._size;
-            x._size = 0;
             x._head->next = x._tail;
             x._tail->prev = x._head;
+            _size += x._size;
+            x._size = 0;
         }
 
         template<class Compare>
         void merge(list&& x, Compare comp) {
             if(this == &x) return;
-            _node<T> *n1, *n2, *flag, *flag2, *last, *last2;
-            if(comp(_head->data, x._head->data)) {
-                n1 = _head->next;
-                n2 = x._head->next;
-                flag = _tail;
-                flag2 = x._tail;
-            } else {
-                n1 = x._head->next;
-                n2 = _head->next;
-                flag = x._tail;
-                flag2 = _tail;
+            bool is_change;
+            _node<T> *h1 = _head->next, *h2 = x._head->next;
+            h1->prev = _head->next = nullptr;
+            h2->prev = x._head->next = nullptr;
+            h1 = _merge_list(h1, h2,
+                                    _tail, x._tail,
+                                    comp, is_change);
+            _head->next = h1;
+            h1->prev = _head;
+            if(is_change) {
+                _node<T> *tmp = _tail;
+                _tail = x._tail;
+                x._tail = tmp;
             }
-            _node<T> *n3 = nullptr;
-            _node<T> *n4 = nullptr;
-            _node<T> *n5 = nullptr;
-            while((n1 != flag) && (n2 != flag2)) {
-                last = n1;
-                last2 = n2;
-                if(comp(n1->data, n2->data)) {
-                    n1 = n1->next;
-                }else{
-                    n3 = n1->prev;
-                    n4 = n2->prev;
-                    n5 = n2->next;
-                    n3->next = n2;
-                    n2->prev = n3;
-                    n2->next = n1;
-                    n1->prev = n2;
-                    n4->next = n5;
-                    n5->prev = n4;
-                    n2 = n5;
-                }
-            }
-            if(n1 != flag) {
-                last2->next = n1;
-                n1->prev = last2;
-            }
-            if(n2 != flag2) {
-                last->next = n2;
-                n2->prev = last;
-                n2 = flag2->prev;
-                n2->next = flag;
-                flag->prev = n2;
-            }
-            if(flag != _tail) {
-                this->swap(x);
-            }
-            _size += x._size;
-            x._size = 0;
             x._head->next = x._tail;
             x._tail->prev = x._head;
+            _size += x._size;
+            x._size = 0;
         }
 
         void merge(list& x) {
