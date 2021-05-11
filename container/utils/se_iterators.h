@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include "../../iterator/jr_iterator.h"
+#include "../utils/jr_tree.h"
 
 namespace jr_std {
     template<class U>
@@ -267,5 +268,99 @@ namespace jr_std {
         }
     };
 
+    template<class U, class Ref, class Ptr>
+    struct _balance_bst_iterator{
+        // 迭代器通用的类型定义
+        typedef U value_type;
+        typedef Ptr pointer;
+        typedef Ref reference;
+        typedef ptrdiff_t difference_type;
+        typedef bidectional_iterator_tag iterator_category;
+        // 自己的特殊定义
+        typedef _balance_bst_iterator iterator;
+        typedef _tree_node<U> tnode;
+        tnode *_node;
+        tnode *_header;
+        // 构造与析构
+        _balance_bst_iterator() = delete;
+        _balance_bst_iterator(tnode *x, tnode *y) : _node(x), _header(y) {}
+        ~_balance_bst_iterator() = default;
+        // overloading ==, !=, *, ->, ++, --
+        bool operator==(const iterator& x) const {
+            return _node == x._node;
+        }
+        bool operator!=(const iterator& x) const {
+            return !(*this == x);
+        }
+        reference operator*() const { return _node->data; }
+        pointer operator->() const { return &(*(*this)); }
+        // front postion ++
+        iterator& operator++() {
+            if(_node->right) {
+                // 若当前节点存在右子树，则下一位置为右子树最小值
+                _node = _node->right;
+                 while(_node->left)
+                     _node = _node->left;
+            } else {
+                // 若当前节点不存在右子树，
+                // 则向上回溯，找到第一个比当前节点大的位置
+               tnode *f = _node->parent;
+               if(f == _header) {
+                   // 若当前节点无父亲且无右子树，
+                   // 则当前节点已是最后元素(且为根节点)，置节点为空
+                   _node = _header;
+               } else {
+                   // 若当前节点有父亲且为父亲的右子树，
+                   // 则向上回溯直至成为父亲的左子树
+                   //（即找到让当前刚刚小于父亲的父节点），
+                   // 让当前节点指向父亲
+                   //（若当前节点为根节点则父亲为空，说明原来的位置已是最后元素，置节点为空）
+                   while(f && (_node == f->right)) {
+                       _node = f;
+                       f = f->parent;
+                   }
+                   _node = f;
+               }
+            }
+            if(!_node) {
+                _node = _header;
+                return *this;
+            }
+            return *this;
+        }
+        // post position ++
+        iterator operator++(int) {
+           iterator tmp = *this;
+           ++(*this);
+           return tmp;
+        }
+        // front postion --
+        iterator& operator--() {
+            if(_node->left) {
+                _node = _node->left;
+                 while(_node->right)
+                     _node = _node->right;
+            }
+            else {
+               tnode *f = _node->parent;
+               if(f == _header) {
+                   _node = nullptr;
+               } else {
+                   while(_node == f->left) {
+                       _node = f;
+                       f = f->parent;
+                   }
+                   _node = f;
+               }
+            }
+            return *this;
+        }
+        // post position --
+        iterator operator--(int) {
+            iterator tmp = *this;
+            --(*this);
+            return tmp;
+        }
+    };
 }
 #endif // ITERATORS_H
