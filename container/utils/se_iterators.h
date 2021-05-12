@@ -279,23 +279,26 @@ namespace jr_std {
         // 自己的特殊定义
         typedef _balance_bst_iterator iterator;
         typedef _tree_node<U> tnode;
+        int _offset;
         tnode *_node;
         tnode *_header;
         // 构造与析构
         _balance_bst_iterator() = delete;
-        _balance_bst_iterator(tnode *x, tnode *y) : _node(x), _header(y) {}
+        _balance_bst_iterator(tnode *x, tnode *y) : _node(x), _header(y), _offset(1) {}
+        _balance_bst_iterator(tnode *x, tnode *y, int o) : _node(x), _header(y), _offset(o) {}
         ~_balance_bst_iterator() = default;
         // overloading ==, !=, *, ->, ++, --
-        bool operator==(const iterator& x) const {
-            return _node == x._node;
-        }
-        bool operator!=(const iterator& x) const {
-            return !(*this == x);
-        }
+        bool operator==(const iterator& x) const
+        { return (_node == x._node) && (_offset == x._offset); }
+        bool operator!=(const iterator& x) const { return !(*this == x); }
         reference operator*() const { return _node->data; }
         pointer operator->() const { return &(*(*this)); }
         // front postion ++
         iterator& operator++() {
+            ++_offset;
+            if(_offset <= _node->cnt) {
+                return *this;
+            }
             if(_node->right) {
                 // 若当前节点存在右子树，则下一位置为右子树最小值
                 _node = _node->right;
@@ -322,6 +325,7 @@ namespace jr_std {
                    _node = f;
                }
             }
+            _offset = 1;
             if(!_node) {
                 _node = _header;
                 return *this;
@@ -336,6 +340,10 @@ namespace jr_std {
         }
         // front postion --
         iterator& operator--() {
+            --_offset;
+            if((_offset <= _node->cnt) && (_offset >= 1)) {
+                return *this;
+            }
             if(_node->left) {
                 _node = _node->left;
                  while(_node->right)
@@ -353,6 +361,7 @@ namespace jr_std {
                    _node = f;
                }
             }
+            _offset = _node->cnt;
             return *this;
         }
         // post position --
