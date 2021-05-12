@@ -505,7 +505,6 @@ private:
     size_type max_size() const noexcept { return UINT_MAX; }
 
     // 修改器
-    // 修改器
     template<class... Args>
     pair<iterator, bool> emplace(Args&&... args) {
         Key *a;
@@ -713,27 +712,75 @@ private:
     // 比较
     template< class Key, class Compare, class Alloc >
     bool operator==( const multiset<Key,Compare,Alloc>& lhs,
-                     const multiset<Key,Compare,Alloc>& rhs );
+                     const multiset<Key,Compare,Alloc>& rhs ) {
+        size_t lsz = lhs.size(), rsz = rhs.size();
+        if(lsz != rsz)
+            return false;
+        Compare comp;
+        auto lit = lhs.begin(), rit = rhs.begin();
+        while(lit != lhs.end()) {
+            if(comp(*lit, *rit) || comp(*rit, *lit))
+                return false;
+            ++lit;
+            ++rit;
+        }
+        return true;
+    }
 
     template< class Key, class Compare, class Alloc >
     bool operator!=( const multiset<Key,Compare,Alloc>& lhs,
-                     const multiset<Key,Compare,Alloc>& rhs );
+                     const multiset<Key,Compare,Alloc>& rhs )
+    { return !(lhs == rhs); }
 
     template< class Key, class Compare, class Alloc >
     bool operator<( const multiset<Key,Compare,Alloc>& lhs,
-                    const multiset<Key,Compare,Alloc>& rhs );
-
-    template< class Key, class Compare, class Alloc >
-    bool operator<=( const multiset<Key,Compare,Alloc>& lhs,
-                     const multiset<Key,Compare,Alloc>& rhs );
+                    const multiset<Key,Compare,Alloc>& rhs ) {
+        size_t lsz = lhs.size(), rsz = rhs.size();
+        if(lsz < rsz)
+            return true;
+        if(lsz > rsz)
+            return false;
+        Compare comp;
+        auto lit = lhs.begin();
+        auto rit = rhs.begin();
+        while(lit != lhs.end()) {
+            if(!comp(*lit, *rit))
+                return false;
+            ++lit;
+            ++rit;
+        }
+        return true;
+    }
 
     template< class Key, class Compare, class Alloc >
     bool operator>( const multiset<Key,Compare,Alloc>& lhs,
-                    const multiset<Key,Compare,Alloc>& rhs );
+                    const multiset<Key,Compare,Alloc>& rhs ) {
+        size_t lsz = lhs.size(), rsz = rhs.size();
+        if(lsz > rsz)
+            return true;
+        if(lsz < rsz)
+            return false;
+        Compare comp;
+        auto lit = lhs.begin();
+        auto rit = rhs.begin();
+        while(lit != lhs.end()) {
+            if(!comp(*rit, *lit))
+                return false;
+            ++lit;
+            ++rit;
+        }
+        return true;
+    }
+
+    template< class Key, class Compare, class Alloc >
+    bool operator<=( const multiset<Key,Compare,Alloc>& lhs,
+                     const multiset<Key,Compare,Alloc>& rhs )
+    { return !(lhs > rhs); }
 
     template< class Key, class Compare, class Alloc >
     bool operator>=( const multiset<Key,Compare,Alloc>& lhs,
-                     const multiset<Key,Compare,Alloc>& rhs );
+                     const multiset<Key,Compare,Alloc>& rhs )
+    { return !(lhs < rhs); }
 }
 
 #endif // JR_SET_H
