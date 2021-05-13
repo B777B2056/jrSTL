@@ -27,6 +27,11 @@ namespace jr_std {
              class Compare = jr_std::less<T>,
              class Allocator = jr_std::allocator<T> >
     class _Balance_BST{
+        // 友元类声明，放出访问根节点、_header权限（因为swap的缘故）
+        template<class T1, class T2, class T3> friend class set;
+        template<class T1, class T2, class T3> friend class multiset;
+        template<class T1, class T2, class T3, class T4 > friend class map;
+
     private:
         typedef _tree_node<T> tnode;
         tnode *_root;
@@ -194,29 +199,50 @@ namespace jr_std {
                     } else if(r->left && !r->right) {
                         // 待删除节点只有左子树, 返回左子树根节点, 删除目标节点
                         tnode *rleft = r->left;
+                        rleft->parent = r->parent;
                         _alloc_data.destroy(&(r->data));
                         _alloc_node.deallocate(r, 1);
                         r = rleft;
                     } else if(!r->left && r->right) {
                         // 待删除节点只有右子树, 返回右子树根节点, 删除目标节点
                         tnode *rright = r->right;
+                        rright->parent = r->parent;
                         _alloc_data.destroy(&(r->data));
                         _alloc_node.deallocate(r, 1);
                         r = rright;
                     } else {
                         // 待删除节点有左右子树,
-                        // 以右子树最小节点代替当前节点:
-                        // 只交换二者的data、cnt, 然后递归删除交换后的最小节点
+                        // 交换右子树最小节点与当前节点:
                         tnode *right_min = r->right;
                         while(right_min->left)
                             right_min = right_min->left;
-                        T tmp = r->data;
-                        r->data = right_min->data;
-                        right_min->data = tmp;
-                        int c_tmp = r->cnt;
-                        r->cnt = right_min->cnt;
-                        right_min->cnt = c_tmp;
+                        tnode *r_parent = r->parent;
+                        tnode *rmin_parent = right_min->parent;
+                        tnode *t1 = right_min->left, *t2 = right_min->right;
+                        if(rmin_parent != r) {
+                            rmin_parent->left = r;
+                            r->parent = rmin_parent;
+                            if(r_parent->left == r)
+                                r_parent->left = right_min;
+                            else
+                                r_parent->right = right_min;
+                            right_min->right = r->right;
+                        }else{
+                            r->parent = right_min;
+                            if(r_parent->left == r)
+                                r_parent->left = right_min;
+                            else
+                                r_parent->right = right_min;
+                            right_min->right = r;
+                        }
+                        right_min->parent = r_parent;
+                        right_min->left = r->left;
+                        r->left = t1;
+                        r->right = t2;
+                        r = right_min;
                         r->right = _erase_helper(r->right, value);
+                        if(r->left)
+                            r->left->parent = r;
                         if(r->right)
                             r->right->parent = r;
                     }
@@ -268,14 +294,29 @@ namespace jr_std {
             _header->left = _header;
         }
 
+        _Balance_BST(Compare c) : _root(nullptr), comp(c) {
+            _header = _alloc_node.allocate(1);
+            _header->left = _header;
+        }
+
         template<class InputIt>
-        _Balance_BST(InputIt first, InputIt last) : _root(nullptr) {
+        _Balance_BST(InputIt first, InputIt last, Compare c = Compare())
+            : _root(nullptr), comp(c) {
             _header = _alloc_node.allocate(1);
             _header->left = _header;
             while(first != last) {
                 this->insert(*first);
                 ++first;
             }
+        }
+
+        _Balance_BST(_Balance_BST&& x, Compare c = Compare()) : comp(c){
+            _root = x._root;
+            x._root = nullptr;
+            _header = _alloc_node.allocate(1);
+            _header->left = _root;
+            _root->parent = _header;
+            x._header->left = x._header;
         }
 
         ~_Balance_BST() {
@@ -294,7 +335,7 @@ namespace jr_std {
             x._root = nullptr;
             _header->left = _root;
             _root->parent = _header;
-            x._header->left = x._header->right = x._header;
+            x._header->left = x._header;
             return *this;
         }
 
@@ -404,7 +445,8 @@ namespace jr_std {
         void erase(const T& value) {
             // 递归删除目标节点
             _root = _erase_helper(_root, value);
-            _root->parent = _header;
+            if(_root)
+                _root->parent = _header;
             _header->left = _root;
         }
 
@@ -418,9 +460,9 @@ namespace jr_std {
         // 先序遍历方便debug
         void _pre_order(tnode *n) {
             if(!n) return;
-            std::cout << "data = " << n->data << ", cnt = " << n->cnt;
+            std::cout << "data = " << n->data.first << ", cnt = " << n->cnt;
             if(n->parent)
-                std::cout << ", parent = " << n->parent->data;
+                std::cout << ", parent = " << n->parent->data.first;
             std::cout << std::endl;
             _pre_order(n->left);
             _pre_order(n->right);

@@ -328,7 +328,6 @@ namespace jr_std {
             _offset = 1;
             if(!_node) {
                 _node = _header;
-                return *this;
             }
             return *this;
         }
@@ -362,6 +361,9 @@ namespace jr_std {
                }
             }
             _offset = _node->cnt;
+            if(!_node) {
+                _node = _header;
+            }
             return *this;
         }
         // post position --

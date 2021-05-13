@@ -2,7 +2,6 @@
 #define JR_SET_H
 
 #include <cstddef>
-#include <type_traits>
 #include "../../functional/jr_functional.h"
 #include "../../memory/jr_allocator.h"
 #include "../../iterator/jr_iterator.h"
@@ -83,7 +82,7 @@ template<class Key, class Compare = jr_std::less<Key>,
         if(this != & x) {
             _size = x.size();
             clear();
-            t.insert(x.begin(), x.end());
+            insert(x.begin(), x.end());
         }
         return *this;
     }
@@ -132,7 +131,7 @@ template<class Key, class Compare = jr_std::less<Key>,
     // 修改器
     template<class... Args>
     pair<iterator, bool> emplace(Args&&... args) {
-        Key *a;
+        value_type *a;
         a = _alloc_data.allocate(1);
         _alloc_data.construct(a, static_cast<Args&&>(args)...);
         bool isInsert = t.insert(*a);
@@ -142,7 +141,7 @@ template<class Key, class Compare = jr_std::less<Key>,
 
     template<class... Args>
     iterator emplace_hint(const_iterator hint, Args&&... args) {
-        Key *a;
+        value_type *a;
         a = _alloc_data.allocate(1);
         _alloc_data.construct(a, static_cast<Args&&>(args)...);
         bool isInsert = t.insert_hint(*a, hint._node);
@@ -209,7 +208,6 @@ template<class Key, class Compare = jr_std::less<Key>,
         return result;
     }
 
-    /*与标准存在出入：此处交换后所有迭代器被非法化*/
     void swap(set& other) {
         if(this == &other)  return;
         {
@@ -218,11 +216,14 @@ template<class Key, class Compare = jr_std::less<Key>,
             other._size = t;
         }
         {
-            set m(other.begin(), other.end());
-            other.clear();
-            other.insert(begin(), end());
-            clear();
-            insert(m.begin(), m.end());
+            tnode *tmp_r = t._root;
+            t._root = other.t._root;
+            other.t._root = tmp_r;
+        }
+        {
+            tnode *tmp_h = t._header;
+            t._header = other.t._header;
+            other.t._header = tmp_h;
         }
     }
 
@@ -233,6 +234,7 @@ template<class Key, class Compare = jr_std::less<Key>,
 
     // 观察器
     key_compare key_comp() const { return comp; }
+
     value_compare value_comp() const { return comp; }
 
     // set 操作
@@ -240,14 +242,14 @@ template<class Key, class Compare = jr_std::less<Key>,
 
     const_iterator find(const key_type& x) const { return const_iterator(t.search(x), t.get_header()); }
 
-    size_type count(const key_type& x) const { return t.search(x) ? 1 : 0; }
+    size_type count(const key_type& x) const {
+        return  find(x) == end() ? 0 : 1;
+    }
 
     iterator lower_bound(const key_type& x) {
-        if(find(x) == end())
-            return end();
-        tnode *max_elem = t.get_max();
-        if(!comp(x, max_elem->data))
-            return iterator(max_elem, t.get_header());
+        tnode *min_elem = t.get_min();
+        if(comp(x, min_elem->data))
+            return begin();
         iterator it = begin();
         while(comp(*it, x) && (it != end()))
             ++it;
@@ -257,11 +259,9 @@ template<class Key, class Compare = jr_std::less<Key>,
     }
 
     const_iterator lower_bound(const key_type& x) const {
-        if(find(x) == end())
-            return end();
-        tnode *max_elem = t.get_max();
-        if(!comp(x, max_elem->data))
-            return const_iterator(max_elem, t.get_header());
+        tnode *min_elem = t.get_min();
+        if(comp(x, min_elem->data))
+            return cbegin();
         const_iterator it = begin();
         while(comp(*it, x) && (it != end()))
             ++it;
@@ -271,11 +271,9 @@ template<class Key, class Compare = jr_std::less<Key>,
     }
 
     iterator upper_bound(const key_type& x) {
-        if(find(x) == end())
-            return end();
         tnode *max_elem = t.get_max();
         if(!comp(x, max_elem->data))
-            return iterator(max_elem, t.get_header());
+            return end();
         iterator it = begin();
         while(!comp(x, *it) && (it != end()))
             ++it;
@@ -283,11 +281,9 @@ template<class Key, class Compare = jr_std::less<Key>,
     }
 
     const_iterator upper_bound(const key_type& x) const {
-        if(find(x) == end())
-            return end();
         tnode *max_elem = t.get_max();
         if(!comp(x, max_elem->data))
-            return const_iterator(max_elem, t.get_header());
+            return cend();
         const_iterator it = begin();
         while(!comp(x, *it) && (it != end()))
             ++it;
@@ -458,7 +454,7 @@ private:
         if(this != & x) {
             _size = x.size();
             clear();
-            t.insert(x.begin(), x.end());
+            insert(x.begin(), x.end());
         }
         return *this;
     }
@@ -506,53 +502,52 @@ private:
 
     // 修改器
     template<class... Args>
-    pair<iterator, bool> emplace(Args&&... args) {
-        Key *a;
+    iterator emplace(Args&&... args) {
+        value_type *a;
         a = _alloc_data.allocate(1);
         _alloc_data.construct(a, static_cast<Args&&>(args)...);
         int offset = 0;
         tnode *n = t.search(*a);
         if(n != t.get_header())
             offset = n->cnt;
-        bool isInsert = t.insert(*a);
-        if(isInsert) ++_size;
-        return pair<iterator, bool>(iterator(n, t.get_header(), ++offset), isInsert);
+        t.insert(*a);
+        ++_size;
+        return iterator(n, t.get_header(), ++offset);
     }
 
     template<class... Args>
     iterator emplace_hint(const_iterator hint, Args&&... args) {
-        Key *a;
+        value_type *a;
         a = _alloc_data.allocate(1);
         _alloc_data.construct(a, static_cast<Args&&>(args)...);
         int offset = 0;
         tnode *n = t.search(*a);
         if(n != t.get_header())
             offset = n->cnt;
-        bool isInsert = t.insert_hint(*a, hint._node);
-        if(isInsert) ++_size;
+        t.insert_hint(*a, hint._node);
+        ++_size;
         return iterator(t.search(*a), t.get_header(), ++offset);
     }
 
-    pair<iterator,bool> insert(const value_type& x) {
+    iterator insert(const value_type& x) {
         int offset = 0;
         tnode *n = t.search(x);
         if(n != t.get_header())
             offset = n->cnt;
-        bool isInsert = t.insert(x);
-        if(isInsert) ++_size;
-        return pair<iterator, bool>(iterator(t.search(x), t.get_header(), ++offset),
-                                    isInsert);
+        t.insert(x);
+        ++_size;
+        return iterator(t.search(x), t.get_header(), ++offset);
     }
 
-    pair<iterator,bool> insert(value_type&& x) {
+    iterator insert(value_type&& x) {
         auto m = static_cast<value_type&&>(x);
         int offset = 0;
         tnode *n = t.search(m);
         if(n != t.get_header())
             offset = n->cnt;
-        bool isInsert = t.insert(m);
-        if(isInsert) ++_size;
-        return pair<iterator, bool>(iterator(t.search(m), t.get_header(), ++offset), isInsert);
+        t.insert(m);
+        ++_size;
+        return iterator(t.search(m), t.get_header(), ++offset);
     }
 
     iterator insert(const_iterator hint, const value_type& x) {
@@ -560,8 +555,8 @@ private:
         tnode *n = t.search(x);
         if(n != t.get_header())
             offset = n->cnt;
-        bool isInsert = t.insert_hint(x, hint._node);
-        if(isInsert) ++_size;
+        t.insert_hint(x, hint._node);
+        ++_size;
         return iterator(t.search(x), t.get_header(), ++offset);
     }
 
@@ -571,8 +566,8 @@ private:
         tnode *n = t.search(m);
         if(n != t.get_header())
             offset = n->cnt;
-        bool isInsert = t.insert_hint(m, hint._node);
-        if(isInsert) ++_size;
+        t.insert_hint(m, hint._node);
+        ++_size;
         return iterator(t.search(m), t.get_header(), ++offset);
     }
 
@@ -594,7 +589,7 @@ private:
     }
 
     void erase(const key_type& va) {
-        if(t.search(va)) {
+        if(t.search(va) != t._header) {
             t.erase(va);
             --_size;
         }
@@ -609,7 +604,6 @@ private:
         return result;
     }
 
-    /*与标准存在出入：此处交换后所有迭代器被非法化*/
     void swap(multiset& other) {
         if(this == &other)  return;
         {
@@ -618,11 +612,14 @@ private:
             other._size = t;
         }
         {
-            multiset m(other.begin(), other.end());
-            other.clear();
-            other.insert(begin(), end());
-            clear();
-            insert(m.begin(), m.end());
+            tnode *tmp_r = t._root;
+            t._root = other.t._root;
+            other.t._root = tmp_r;
+        }
+        {
+            tnode *tmp_h = t._header;
+            t._header = other.t._header;
+            other.t._header = tmp_h;
         }
     }
 
@@ -640,14 +637,15 @@ private:
 
     const_iterator find(const key_type& x) const { return const_iterator(t.search(x), t.get_header()); }
 
-    size_type count(const key_type& x) const { return t.search(x) ? 1 : 0; }
+    size_type count(const key_type& x) const {
+        tnode *s = t.search(x);
+        return  s == t._header ? 0 : s->cnt;
+    }
 
     iterator lower_bound(const key_type& x) {
-        if(find(x) == end())
-            return end();
-        tnode *max_elem = t.get_max();
-        if(!comp(x, max_elem->data))
-            return iterator(max_elem, t.get_header());
+        tnode *min_elem = t.get_min();
+        if(comp(x, min_elem->data))
+            return begin();
         iterator it = begin();
         while(comp(*it, x) && (it != end()))
             ++it;
@@ -657,11 +655,9 @@ private:
     }
 
     const_iterator lower_bound(const key_type& x) const {
-        if(find(x) == end())
-            return end();
-        tnode *max_elem = t.get_max();
-        if(!comp(x, max_elem->data))
-            return const_iterator(max_elem, t.get_header());
+        tnode *min_elem = t.get_min();
+        if(comp(x, min_elem->data))
+            return cbegin();
         const_iterator it = begin();
         while(comp(*it, x) && (it != end()))
             ++it;
@@ -671,11 +667,9 @@ private:
     }
 
     iterator upper_bound(const key_type& x) {
-        if(find(x) == end())
-            return end();
         tnode *max_elem = t.get_max();
         if(!comp(x, max_elem->data))
-            return iterator(max_elem, t.get_header());
+            return end();
         iterator it = begin();
         while(!comp(x, *it) && (it != end()))
             ++it;
@@ -683,11 +677,9 @@ private:
     }
 
     const_iterator upper_bound(const key_type& x) const {
-        if(find(x) == end())
-            return end();
         tnode *max_elem = t.get_max();
         if(!comp(x, max_elem->data))
-            return const_iterator(max_elem, t.get_header());
+            return cend();
         const_iterator it = begin();
         while(!comp(x, *it) && (it != end()))
             ++it;

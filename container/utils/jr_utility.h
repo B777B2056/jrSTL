@@ -16,16 +16,13 @@ struct pair {
     {}
 
     pair( T1&& x, T2&& y )
-        : first(static_cast<T1&&>(x)),
-        second(static_cast<T2&&>(y))
+        : first(static_cast<T1&&>(x)), second(static_cast<T2&&>(y))
     {}
 
-    template< class U1, class U2 >
-    pair( const pair<U1, U2>& p ) : first(p.first), second(p.second)
+    pair( const pair& p ) : first(p.first), second(p.second)
     {}
 
-    template< class U1, class U2 >
-    pair( pair<U1, U2>&& p )
+    pair( pair&& p )
         : first(static_cast<T1&&>(p.first)),
         second(static_cast<T2&&>(p.second))
     {}
