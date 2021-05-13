@@ -2,20 +2,17 @@
 #include <string>
 #include <algorithm>
 #include <utility>
-#include "container/associate/jr_map.h"
+#include "container/associate/jr_set.h"
 #include "iterator/jr_iterator.h"
 
 int main() {
-    jr_std::multimap<int, char> n;
-    n.insert(jr_std::pair<const int,char>(1, 'a'));
-    n.insert(jr_std::pair<const int,char>(1, 'b'));
-    n.insert(jr_std::pair<const int,char>(1, 'c'));
-    n.insert(jr_std::pair<const int,char>(2, 'd'));
-    n.insert(jr_std::pair<const int,char>(3, 'e'));
-    n.insert(jr_std::pair<const int,char>(4, 'f'));
-    n.erase(1);
+    jr_std::multiset<int> n;
+    int m[] = {3,5,4,3,2,8,5,34,25};
+    for(int i : m)
+        n.insert(i);
+    n.erase(5);
     for(auto it = n.begin(); it != n.end(); ++it)
-        std::cout << it->first << " " << it->second << std::endl;
+        std::cout << *it << std::endl;
 
     return 0;
 }

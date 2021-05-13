@@ -29,8 +29,11 @@ namespace jr_std {
     class _Balance_BST{
         // 友元类声明，放出访问根节点、_header权限（因为swap的缘故）
         template<class T1, class T2, class T3> friend class set;
+
         template<class T1, class T2, class T3> friend class multiset;
-        template<class T1, class T2, class T3, class T4 > friend class map;
+
+        template<class T1, class T2, class T3, class T4, bool a >
+        friend class _map_base;
 
     private:
         typedef _tree_node<T> tnode;
