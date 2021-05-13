@@ -6,40 +6,16 @@
 #include "iterator/jr_iterator.h"
 
 int main() {
-    jr_std::map<int, char> alice;
-    jr_std::map<int, char> bob;
-    jr_std::map<int, char> eve;
-
-    alice[1] = 'a';
-    alice[2] = 'b';
-    alice[3] = 'c';
-    bob[7] = 'Z';
-    bob[8] = 'Y';
-    bob[9] = 'X';
-    bob[10] = 'W';
-    eve[1] = 'a';
-    eve[2] = 'b';
-    eve[3] = 'c';
-
-    std::cout << std::boolalpha;
-
-    // 比较不相等的容器
-    std::cout << "alice == bob returns " << (alice == bob) << '\n';
-    std::cout << "alice != bob returns " << (alice != bob) << '\n';
-    std::cout << "alice <  bob returns " << (alice < bob) << '\n';
-    std::cout << "alice <= bob returns " << (alice <= bob) << '\n';
-    std::cout << "alice >  bob returns " << (alice > bob) << '\n';
-    std::cout << "alice >= bob returns " << (alice >= bob) << '\n';
-
-    std::cout << '\n';
-
-    // 比较相等的容器
-    std::cout << "alice == eve returns " << (alice == eve) << '\n';
-    std::cout << "alice != eve returns " << (alice != eve) << '\n';
-    std::cout << "alice <  eve returns " << (alice < eve) << '\n';
-    std::cout << "alice <= eve returns " << (alice <= eve) << '\n';
-    std::cout << "alice >  eve returns " << (alice > eve) << '\n';
-    std::cout << "alice >= eve returns " << (alice >= eve) << '\n';
+    jr_std::multimap<int, char> n;
+    n.insert(jr_std::pair<const int,char>(1, 'a'));
+    n.insert(jr_std::pair<const int,char>(1, 'b'));
+    n.insert(jr_std::pair<const int,char>(1, 'c'));
+    n.insert(jr_std::pair<const int,char>(2, 'd'));
+    n.insert(jr_std::pair<const int,char>(3, 'e'));
+    n.insert(jr_std::pair<const int,char>(4, 'f'));
+    n.erase(1);
+    for(auto it = n.begin(); it != n.end(); ++it)
+        std::cout << it->first << " " << it->second << std::endl;
 
     return 0;
 }
