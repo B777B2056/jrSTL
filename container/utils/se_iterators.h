@@ -3,9 +3,10 @@
 
 #include <cstddef>
 #include "../../iterator/jr_iterator.h"
-#include "../utils/jr_tree.h"
+#include "../../memory/jr_allocator.h"
 
 namespace jr_std {
+    // 单向链表节点定义
     template<class U>
     struct _forward_node {
         U data;
@@ -14,12 +15,35 @@ namespace jr_std {
         _forward_node(const U& val) : data(val), next(nullptr) {}
     };
 
+    // 双向链表节点定义
     template<class U>
     struct _node {
         U data;
         _node<U> *prev, *next;
         _node() : prev(nullptr), next(nullptr) {}
         _node(const U& val) : data(val), prev(nullptr), next(nullptr) {}
+    };
+
+    // 平衡二叉搜索树节点定义
+    template<class U>
+    struct _tree_node{
+        U data;
+        _tree_node *left, *right;
+        _tree_node *parent;
+        _tree_node()
+            : left(nullptr),
+              right(nullptr),
+              parent(nullptr)
+        {}
+    };
+
+    // 哈希表桶节点定义
+    template<class U>
+    struct _hashtable_node{
+         U data;
+         bool hasElem;
+         _hashtable_node *next;
+         _hashtable_node() : hasElem(false), next(nullptr) {}
     };
 
     template<class U, class Ref, class Ptr>
@@ -279,26 +303,19 @@ namespace jr_std {
         // 自己的特殊定义
         typedef _balance_bst_iterator iterator;
         typedef _tree_node<U> tnode;
-        int _offset;
         tnode *_node;
         tnode *_header;
         // 构造与析构
         _balance_bst_iterator() = delete;
-        _balance_bst_iterator(tnode *x, tnode *y) : _node(x), _header(y), _offset(1) {}
-        _balance_bst_iterator(tnode *x, tnode *y, int o) : _node(x), _header(y), _offset(o) {}
+        _balance_bst_iterator(tnode *x, tnode *y) : _node(x), _header(y) {}
         ~_balance_bst_iterator() = default;
         // overloading ==, !=, *, ->, ++, --
-        bool operator==(const iterator& x) const
-        { return (_node == x._node) && (_offset == x._offset); }
+        bool operator==(const iterator& x) const { return _node == x._node; }
         bool operator!=(const iterator& x) const { return !(*this == x); }
         reference operator*() const { return _node->data; }
         pointer operator->() const { return &(*(*this)); }
         // front postion ++
         iterator& operator++() {
-            ++_offset;
-            if(_offset <= _node->cnt) {
-                return *this;
-            }
             if(_node->right) {
                 // 若当前节点存在右子树，则下一位置为右子树最小值
                 _node = _node->right;
@@ -325,7 +342,6 @@ namespace jr_std {
                    _node = f;
                }
             }
-            _offset = 1;
             if(!_node) {
                 _node = _header;
             }
@@ -339,10 +355,6 @@ namespace jr_std {
         }
         // front postion --
         iterator& operator--() {
-            --_offset;
-            if((_offset <= _node->cnt) && (_offset >= 1)) {
-                return *this;
-            }
             if(_node->left) {
                 _node = _node->left;
                  while(_node->right)
@@ -360,7 +372,6 @@ namespace jr_std {
                    _node = f;
                }
             }
-            _offset = _node->cnt;
             if(!_node) {
                 _node = _header;
             }
@@ -370,6 +381,71 @@ namespace jr_std {
         iterator operator--(int) {
             iterator tmp = *this;
             --(*this);
+            return tmp;
+        }
+    };
+
+    template<class T1, class T2, class T3, class T4, bool isMulti>
+    class _hashtable;
+
+    template<class U, class Hash, class KeyEqual,
+             class Allocator, bool isMulti>
+    struct _hashtable_iterator{
+        // 迭代器通用的类型定义
+        typedef U value_type;
+        typedef const U* pointer;
+        typedef const U& reference;
+        typedef size_t size_type;
+        typedef ptrdiff_t difference_type;
+        typedef forward_iterator_tag iterator_category;
+        // 自己特殊定义
+        typedef _hashtable_node<U> hnode;
+        typedef _hashtable<U, Hash, KeyEqual, Allocator, isMulti> table;
+        size_type offset;
+        table *tab;
+        hnode *cur;
+        // construct iterator
+        _hashtable_iterator(hnode *n, table *t, size_type o)
+            : offset(o), tab(t), cur(n)
+        {}
+
+        ~_hashtable_iterator() = default;
+        // overloading ==, !=, *, ->, ++
+        bool operator==(const _hashtable_iterator& x) const { return cur == x.cur; }
+
+        bool operator!=(const _hashtable_iterator& x) const { return !(*this == x); }
+
+        reference operator*() const {
+            if(cur == tab->table[offset])
+                cur = cur->next;
+            return cur->data;
+        }
+
+        pointer operator->() const { return &(operator*()); }
+        // front postion ++
+        _hashtable_iterator& operator++() {
+            // 若当前指针指向头节点，则跳过头节点
+            if(cur == tab->table[offset])
+                cur = cur->next;
+            // 桶内还有内容，则跳至下一内容
+            cur = cur->next;
+            // 桶内无内容，则跳至下一个桶
+            if(!cur) {
+                ++offset;
+                while(offset < tab->table.size()) {
+                    if(tab->table[offset]->hasElem){
+                        cur = tab->table[offset]->next;
+                        break;
+                    }
+                    ++offset;
+                }
+            }
+            return *this;
+        }
+        // post position ++
+        _hashtable_iterator operator++(int) {
+            _hashtable_iterator tmp(*this);
+            ++(*this);
             return tmp;
         }
     };

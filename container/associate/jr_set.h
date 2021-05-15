@@ -4,6 +4,7 @@
 #include <cstddef>
 #include "../../functional/jr_functional.h"
 #include "../../container/utils/se_iterators.h"
+#include "../../container/utils/jr_tree.h"
 #include "../../container/utils/jr_utility.h"
 
 namespace jr_std {
@@ -197,9 +198,9 @@ namespace jr_std {
             }
 
             iterator erase(const_iterator first, const_iterator last) {
-                iterator result = iterator(last._node, last._header, last._offset);
+                iterator result = iterator(last._node, last._header);
                 while(first != last) {
-                    erase(iterator(first._node, first._header, first._offset));
+                    erase(iterator(first._node, first._header));
                     ++first;
                 }
                 return result;

@@ -28,7 +28,7 @@ struct pair {
     {}
 
     pair& operator=( const pair& other ) = default;
-
+    
     pair& operator=( pair&& other ) noexcept = default;
 
     void swap(pair& other) noexcept {

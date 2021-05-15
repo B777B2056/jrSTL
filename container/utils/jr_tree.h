@@ -1,48 +1,31 @@
 #ifndef JR_TREE_H
 #define JR_TREE_H
 
-#include <iostream>
 #include "../../functional/jr_functional.h"
 #include "../../memory/jr_allocator.h"
-
-#define _DEBUG
+#include "../../container/utils/jr_utility.h"
+#include "se_iterators.h"
 
 namespace jr_std {
-    // 平衡二叉搜索树节点定义
-    template<class T>
-    struct _tree_node{
-        int cnt;
-        T data;
-        _tree_node *left, *right;
-        _tree_node *parent;
-        _tree_node()
-            : cnt(0), left(nullptr),
-              right(nullptr),
-              parent(nullptr)
-        {}
-    };
-
     // 平衡二叉搜索树（现为AVL树而非红黑树）
-    template<class T, bool isMutli = false,
-             class Compare = jr_std::less<T>,
-             class Allocator = jr_std::allocator<T> >
+    template<class T,
+             bool isMutli,
+             class Compare,
+             class Allocator >
     class _Balance_BST{
         // 友元类声明，放出访问根节点、_header权限（因为swap的缘故）
-        template<class T1, class T2, class T3> friend class set;
-
-        template<class T1, class T2, class T3> friend class multiset;
-
-        template<class T1, class T2, class T3, class T4, bool a >
-        friend class _map_base;
+        template<class T1, class T2, class T3, bool a> friend class _set_base;
+        template<class T1, class T2, class T3, class T4, bool a > friend class _map_base;
 
     private:
         typedef _tree_node<T> tnode;
         tnode *_root;
         tnode *_header; // _header标记迭代器end位置（仅用nullptr代表end会造成未查明的指针错误...）
         Compare comp;
-        Allocator _alloc_data;
         bool isInsert;
-        typename Allocator::template rebind<_tree_node<T> >::other _alloc_node;
+        Allocator _alloc_data;
+        typename Allocator::template rebind<tnode>::other _alloc_node;
+
         // 求以r为根节点的二叉树高度（与计算平衡因子有关）
         int _height(tnode *r) {
             if(!r)
@@ -54,6 +37,7 @@ namespace jr_std {
         // 向左单向旋转, n指向不平衡节点
         // 新插入节点位于不平衡节点右子树的右子树上
         void _left_rotation(tnode*& y) {
+            if(!y || !y->right)  return;
             tnode *x = y->right;
             // 交换不平衡节点与其左子节点
             y->right = x->left;
@@ -69,6 +53,7 @@ namespace jr_std {
         // 向右单向旋转, n指向新插入的节点
         // 新插入节点位于不平衡节点左子树的左子树上
         void _right_rotation(tnode*& y) {
+            if(!y || !y->left)  return;
             tnode *x = y->left;
             // 交换父节点和祖父节点
             y->left = x->right;
@@ -87,12 +72,14 @@ namespace jr_std {
                 // 若为空树，则直接插入
                 r = _alloc_node.allocate(1);
                 _alloc_data.construct(&(r->data), value);
-                r->cnt = 1;
                 r->parent = nullptr;
             } else if(comp(value, r->data)) {
                 // 若插入位置在左子树，则先递归向左子树插入
                 r->left = _insert_helper(r->left, value);
-                if(r->left) r->left->parent = r;
+                if(r->left)
+                    r->left->parent = r;
+                if(r->right)
+                    r->right->parent = r;
                 // 检查平衡因子，判断是否需要进行旋转
                 int balance_factor = _height(r->left) - _height(r->right);
                 // 平衡因子为2,说明以r为根的子树的左子树比右子树高2,进行相应调整
@@ -106,29 +93,29 @@ namespace jr_std {
                         _right_rotation(r);
                     }
                 }
-            } else if(comp(r->data, value)) {
-                // 若插入位置在右子树，则先递归向右子树插入
-                r->right = _insert_helper(r->right, value);
-                if(r->right) r->right->parent = r;
-                // 检查平衡因子，判断是否需要进行旋转
-                int balance_factor = _height(r->left) - _height(r->right);
-                // 平衡因子为-2,说明以r为根的子树的右子树比左子树高2,进行相应调整
-                if(balance_factor == -2) {
-                    // 若新增节点插入在r的右子树的右子树上，则r子树向左旋转
-                    if(comp(r->right->data, value))
-                        _left_rotation(r);
-                    // 若新增节点插入在r的右子树的左子树上，则r子树右-左旋转
-                    else {
-                        _right_rotation(r->right);
-                        _left_rotation(r);
+            } else {
+                if(comp(r->data, value) || isMutli) {
+                    // 若插入位置在右子树，则先递归向右子树插入
+                    r->right = _insert_helper(r->right, value);
+                    if(r->left)
+                        r->left->parent = r;
+                    if(r->right)
+                        r->right->parent = r;
+                    // 检查平衡因子，判断是否需要进行旋转
+                    int balance_factor = _height(r->left) - _height(r->right);
+                    // 平衡因子为-2,说明以r为根的子树的右子树比左子树高2,进行相应调整
+                    if(balance_factor == -2) {
+                        // 若新增节点插入在r的右子树的右子树上，则r子树向左旋转
+                        if(comp(r->right->data, value))
+                            _left_rotation(r);
+                        // 若新增节点插入在r的右子树的左子树上，则r子树右-左旋转
+                        else {
+                            _right_rotation(r->right);
+                            _left_rotation(r);
+                        }
                     }
                 }
-            } else {
-                isInsert = false;
-                if(isMutli) {
-                    r->cnt++;
-                    isInsert = true;
-                }
+
             }
             return r;
         }
@@ -138,12 +125,14 @@ namespace jr_std {
                 // 若为空树，则直接插入
                 r = _alloc_node.allocate(1);
                 _alloc_data.construct(&(r->data), value);
-                r->cnt = 1;
                 r->parent = nullptr;
             } else if(comp(value, r->data)) {
                 // 若插入位置在左子树，则先递归向左子树插入
                 r->left = _insert_helper(r->left, value);
-                if(r->left) r->left->parent = r;
+                if(r->left)
+                    r->left->parent = r;
+                if(r->right)
+                    r->right->parent = r;
                 // 检查平衡因子，判断是否需要进行旋转
                 int balance_factor = _height(r->left) - _height(r->right);
                 // 平衡因子为2,说明以r为根的子树的左子树比右子树高2,进行相应调整
@@ -157,108 +146,110 @@ namespace jr_std {
                         _right_rotation(r);
                     }
                 }
-            } else if(comp(r->data, value)) {
-                // 若插入位置在右子树，则先递归向右子树插入
-                r->right = _insert_helper(r->right, value);
-                if(r->right) r->right->parent = r;
-                // 检查平衡因子，判断是否需要进行旋转
-                int balance_factor = _height(r->left) - _height(r->right);
-                // 平衡因子为-2,说明以r为根的子树的右子树比左子树高2,进行相应调整
-                if(balance_factor == -2) {
-                    // 若新增节点插入在r的右子树的右子树上，则r子树向左旋转
-                    if(comp(r->right->data, value))
-                        _left_rotation(r);
-                    // 若新增节点插入在r的右子树的左子树上，则r子树右-左旋转
-                    else {
-                        _right_rotation(r->right);
-                        _left_rotation(r);
-                    }
-                }
             } else {
-                isInsert = false;
-                if(isMutli) {
-                    r->cnt++;
-                    isInsert = true;
+                if(comp(r->data, value) || isMutli) {
+                    // 若插入位置在右子树，则先递归向右子树插入
+                    r->right = _insert_helper(r->right, value);
+                    if(r->left)
+                        r->left->parent = r;
+                    if(r->right)
+                        r->right->parent = r;
+                    // 检查平衡因子，判断是否需要进行旋转
+                    int balance_factor = _height(r->left) - _height(r->right);
+                    // 平衡因子为-2,说明以r为根的子树的右子树比左子树高2,进行相应调整
+                    if(balance_factor == -2) {
+                        // 若新增节点插入在r的右子树的右子树上，则r子树向左旋转
+                        if(comp(r->right->data, value))
+                            _left_rotation(r);
+                        // 若新增节点插入在r的右子树的左子树上，则r子树右-左旋转
+                        else {
+                            _right_rotation(r->right);
+                            _left_rotation(r);
+                        }
+                    }
                 }
             }
             return r;
         }
         // 删除节点的递归实现
-        tnode *_erase_helper(tnode *r, const T& value) {
+        tnode *_erase_helper(tnode *r, const T& key) {
             /*普通BST删除操作*/
             if(!r)  return nullptr;
-            if(comp(value, r->data)) {
-                r->left = _erase_helper(r->left, value);
-            } else if(comp(r->data, value)) {
-                r->right = _erase_helper(r->right, value);
+            if(comp(key, r->data)) {
+                r->left = _erase_helper(r->left, key);
+            } else if(comp(r->data, key)) {
+                r->right = _erase_helper(r->right, key);
             } else {
-                r->cnt--;
-                if(r->cnt <= 0) {
-                    if(!r->left && !r->right) {
-                        // 待删除节点为叶节点, 直接删除
-                        _alloc_data.destroy(&(r->data));
-                        _alloc_node.deallocate(r, 1);
-                        r = nullptr;
-                    } else if(r->left && !r->right) {
-                        // 待删除节点只有左子树, 返回左子树根节点, 删除目标节点
-                        tnode *rleft = r->left;
-                        rleft->parent = r->parent;
-                        _alloc_data.destroy(&(r->data));
-                        _alloc_node.deallocate(r, 1);
-                        r = rleft;
-                    } else if(!r->left && r->right) {
-                        // 待删除节点只有右子树, 返回右子树根节点, 删除目标节点
-                        tnode *rright = r->right;
-                        rright->parent = r->parent;
-                        _alloc_data.destroy(&(r->data));
-                        _alloc_node.deallocate(r, 1);
-                        r = rright;
-                    } else {
-                        // 待删除节点有左右子树,
-                        // 交换右子树最小节点与当前节点:
-                        tnode *right_min = r->right;
-                        while(right_min->left)
-                            right_min = right_min->left;
-                        tnode *r_parent = r->parent;
-                        tnode *rmin_parent = right_min->parent;
-                        tnode *t1 = right_min->left, *t2 = right_min->right;
-                        if(rmin_parent != r) {
-                            rmin_parent->left = r;
-                            r->parent = rmin_parent;
-                            if(r_parent->left == r)
-                                r_parent->left = right_min;
-                            else
-                                r_parent->right = right_min;
-                            right_min->right = r->right;
-                        }else{
-                            r->parent = right_min;
-                            if(r_parent->left == r)
-                                r_parent->left = right_min;
-                            else
-                                r_parent->right = right_min;
-                            right_min->right = r;
-                        }
-                        right_min->parent = r_parent;
-                        right_min->left = r->left;
-                        r->left = t1;
-                        r->right = t2;
-                        r = right_min;
-                        r->right = _erase_helper(r->right, value);
-                        if(r->left)
-                            r->left->parent = r;
-                        if(r->right)
-                            r->right->parent = r;
-                    }
+                if(!r->left && !r->right) {
+                    // 待删除节点为叶节点, 直接删除
+                    _alloc_data.destroy(&(r->data));
+                    _alloc_node.deallocate(r, 1);
+                    r = nullptr;
+                } else if(r->left && !r->right) {
+                    // 待删除节点只有左子树, 返回左子树根节点, 删除目标节点
+                    tnode *rleft = r->left;
+                    rleft->parent = r->parent;
+                    _alloc_data.destroy(&(r->data));
+                    _alloc_node.deallocate(r, 1);
+                    r = rleft;
+                } else if(!r->left && r->right) {
+                    // 待删除节点只有右子树, 返回右子树根节点, 删除目标节点
+                    tnode *rright = r->right;
+                    rright->parent = r->parent;
+                    _alloc_data.destroy(&(r->data));
+                    _alloc_node.deallocate(r, 1);
+                    r = rright;
+                } else {
+                    // 待删除节点有左右子树,
+                    // 将右子树最小节点的值覆盖当前节点的值，然后递归删除右子树最小节点:
+                    tnode *right_min = r->right;
+                    while(right_min->left)
+                        right_min = right_min->left;
+
+                    _alloc_data.destroy(&(r->data));
+                    _alloc_data.construct(&(r->data), right_min->data);
+                    r->right = _erase_helper(r->right, r->data);
+
+                    /*直接交换两个节点：存在bug，有时候会导致父节点指向错乱，形成环*/
+//                    tnode *r_parent = r->parent;
+//                    tnode *rmin_parent = right_min->parent;
+//                    tnode *t1 = right_min->left, *t2 = right_min->right;
+//                    if(rmin_parent != r) {
+//                        rmin_parent->left = r;
+//                        r->parent = rmin_parent;
+//                        if(r_parent->left == r)
+//                            r_parent->left = right_min;
+//                        else
+//                            r_parent->right = right_min;
+//                        right_min->right = r->right;
+//                    }else{
+//                        if(r_parent->left == r)
+//                            r_parent->left = right_min;
+//                        else
+//                            r_parent->right = right_min;
+//                        r->parent = right_min;
+//                        right_min->right = r;
+//                    }
+//                    right_min->parent = r_parent;
+//                    right_min->left = r->left;
+//                    r->left = t1;
+//                    r->right = t2;
+//                    r = right_min;
+//                    r->right = _erase_helper(r->right, right_min->data);
                 }
             }
             /*将不平衡节点调整为平衡*/
             if(r) {
+//                if(r->left)
+//                    r->left->parent = r;
+//                if(r->right)
+//                    r->right->parent = r;
                 // 检查平衡因子，判断是否需要进行旋转
                 int balance_factor = _height(r->left) - _height(r->right);
                 // 平衡因子为2,说明以r为根的子树的左子树比右子树高2,进行相应调整
                 if(balance_factor == 2) {
                     // 若删除节点后，左子树的左子树不低于左子树的右子树，则r子树向右旋转
-                    if(_height(r->left->left) >= _height(r->left->right))
+                    if(r->left && (_height(r->left->left) >= _height(r->left->right)))
                         _right_rotation(r);
                     // 若删除节点后，左子树的左子树低于左子树的右子树，则r子树左-右旋转
                     else {
@@ -268,7 +259,7 @@ namespace jr_std {
                 // 平衡因子为-2,说明以r为根的子树的右子树比左子树高2,进行相应调整
                 } else if(balance_factor == -2) {
                     // 若删除节点后，右子树的右子树不低于右子树的左子树，则r子树向左旋转
-                    if(_height(r->right->right) >= _height(r->right->right))
+                    if(r->right && (_height(r->right->right) >= _height(r->right->right)))
                         _left_rotation(r);
                     // 若删除节点后，右子树的右子树低于右子树的左子树，则r子树右-左旋转
                     else {
@@ -292,7 +283,7 @@ namespace jr_std {
 
     public:
         // 构造
-        _Balance_BST() : _root(nullptr) {
+        _Balance_BST() : _root(nullptr), comp(Compare()) {
             _header = _alloc_node.allocate(1);
             _header->left = _header;
         }
@@ -445,9 +436,9 @@ namespace jr_std {
         }
 
         // 删除值与value相等的节点
-        void erase(const T& value) {
+        void erase(const T& key) {
             // 递归删除目标节点
-            _root = _erase_helper(_root, value);
+            _root = _erase_helper(_root, key);
             if(_root)
                 _root->parent = _header;
             _header->left = _root;
@@ -463,7 +454,7 @@ namespace jr_std {
         // 先序遍历方便debug
         void _pre_order(tnode *n) {
             if(!n) return;
-            std::cout << "data = " << n->data.first << ", cnt = " << n->cnt;
+            std::cout << "data = " << n->data.first << " " << n->data.second;
             if(n->parent)
                 std::cout << ", parent = " << n->parent->data.first;
             std::cout << std::endl;

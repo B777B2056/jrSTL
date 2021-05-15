@@ -7,10 +7,14 @@
 
 int main() {
     jr_std::multiset<int> n;
-    int m[] = {3,5,4,3,2,8,5,34,25};
-    for(int i : m)
-        n.insert(i);
-    n.erase(5);
+    n.insert(1);
+    n.insert(2);
+    n.insert(3);
+    n.insert(3);
+    n.insert(3);
+    n.insert(4);
+    n.insert(4);
+    n.erase(4);
     for(auto it = n.begin(); it != n.end(); ++it)
         std::cout << *it << std::endl;
 

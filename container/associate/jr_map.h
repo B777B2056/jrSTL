@@ -4,6 +4,7 @@
 #include <cstddef>
 #include "../../functional/jr_functional.h"
 #include "../../container/utils/se_iterators.h"
+#include "../../container/utils/jr_tree.h"
 #include "../../container/utils/jr_utility.h"
 
 namespace jr_std {
@@ -22,28 +23,27 @@ namespace jr_std {
           typedef size_t size_type;
           typedef T mapped_type;
           typedef ptrdiff_t difference_type;
-          typedef _balance_bst_iterator<pair<const Key, T>, pair<const Key, T>&, pair<const Key, T>*> iterator;
-          typedef _balance_bst_iterator<pair<const Key, T>, const pair<const Key, T>&, const pair<const Key, T>*> const_iterator;
+          typedef _balance_bst_iterator<value_type, value_type&, value_type*> iterator;
+          typedef _balance_bst_iterator<value_type, const value_type&, const value_type*> const_iterator;
 
-    class value_compare {
-      friend class _map_base;
-    protected:
-      Compare _comp;
-      value_compare(Compare c) : _comp(c) { }
-        public:
-          bool operator()(const value_type& x, const value_type& y) const {
-            return _comp(x.first, y.first);
-          }
-        };
+        class value_compare {
+          friend class _map_base;
+        protected:
+          Compare _comp;
+          value_compare(Compare c) : _comp(c) { }
+            public:
+              bool operator()(const value_type& x, const value_type& y) const {
+                return _comp(x.first, y.first);
+              }
+            };
 
-      protected:
-        typedef _tree_node<value_type> tnode;
-        typedef _Balance_BST<value_type, isMultiMap, value_compare,
-                             typename Allocator::template rebind<tnode>::other> tree;
-        value_compare comp;
-        tree t;
-        size_type _size;
-        Allocator _alloc_data;
+          protected:
+            typedef _tree_node<value_type> tnode;
+            typedef _Balance_BST<value_type, isMultiMap, value_compare, Allocator> tree;
+            Compare comp;
+            tree t;
+            size_type _size;
+            Allocator _alloc_data;
 
       public:
         // 构造/复制/销毁
@@ -193,9 +193,13 @@ namespace jr_std {
             }
         }
 
+        void print() {t.print_tree();
+                      std::cout << "============\n";}
+
         size_type erase(const key_type& va) {
             size_type cnt = 0;
             while(find(va) != end()) {
+                print();
                 t.erase(value_type(va, T()));
                 --_size;
                 ++cnt;
@@ -211,7 +215,7 @@ namespace jr_std {
         }
 
         iterator erase(const_iterator position) {
-            iterator result = iterator(position._node, position._header, position._offset);
+            iterator result = iterator(position._node, position._header);
             ++result;
             erase(position->first);
             return result;
@@ -220,7 +224,7 @@ namespace jr_std {
         iterator erase(const_iterator first, const_iterator last) {
             iterator result = iterator(last._node, t._header);
             while(first != last) {
-                erase(iterator(first._node, t.get_header(), first._offset));
+                erase(iterator(first._node, first._header));
                 ++first;
             }
             return result;
@@ -349,18 +353,18 @@ namespace jr_std {
              class Allocator = allocator<pair<const Key, T> > >
     class multimap  : public _map_base<Key, T, Compare, Allocator, true> {
         private:
-            typedef _map_base<Key, T, Compare, Allocator, false> _base;
+            typedef _map_base<Key, T, Compare, Allocator, true> _base;
 
         public:
             template< class... Args >
             typename _base::iterator emplace( Args&&... args )
-            { return _base::emplace(static_cast<Args&&>(args)...).first; }
+            { return (_base::emplace(static_cast<Args&&>(args)...)).first; }
 
             typename _base::iterator insert( const typename _base::value_type& value )
-            { return _base::insert(value).first; }
+            { return (_base::insert(value)).first; }
 
             typename _base::iterator insert( typename _base::value_type&& value )
-            { return _base::insert(static_cast<typename _base::value_type&&>(value)).first; }
+            { return (_base::insert(static_cast<typename _base::value_type&&>(value))).first; }
     };
 
       // 交换
