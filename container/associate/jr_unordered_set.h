@@ -117,30 +117,53 @@ template<class Key,
     allocator_type get_allocator() const noexcept { return _alloc_data; }
 
     // 迭代器
-    iterator begin() noexcept { return iterator(_tab[0], &_tab, 0); }
+    iterator begin() noexcept {
+        size_type i;
+        for(i = 0; i < _tab.table.size(); ++i) {
+            if(_tab.table[i]->hasElem)
+                break;
+        }
+        return _tab[i]->next ? iterator(_tab[i]->next, &_tab, i) : end();
+    }
 
-    const_iterator begin() const noexcept { return const_iterator(_tab[0], &_tab, 0); }
+    const_iterator begin() const noexcept {
+        size_type i;
+        for(i = 0; i < _tab.table.size(); ++i) {
+            if(_tab.table[i]->hasElem)
+                break;
+        }
+        return _tab[i]->next ? const_iterator(_tab[i]->next, &_tab, i) : end();
+    }
 
-    iterator end() noexcept { return iterator(_tab[_tab.table.size() - 1], &_tab, 0); }
+    iterator end() noexcept
+    { return iterator(_tab[_tab.table.size() - 1], &_tab, _tab.table.size() - 1); }
 
-    const_iterator end() const noexcept { return const_iterator(_tab[_tab.table.size() - 1], &_tab, 0); }
+    const_iterator end() const noexcept
+    { return const_iterator(_tab[_tab.table.size() - 1], &_tab, _tab.table.size() - 1); }
 
-    const_iterator cbegin() const noexcept { return const_iterator(_tab[0], &_tab, 0); }
+    const_iterator cbegin() const noexcept {
+        size_type i;
+        for(i = 0; i < _tab.table.size(); ++i) {
+            if(_tab.table[i]->hasElem)
+                break;
+        }
+        return _tab[i]->next ? const_iterator(_tab[i]->next, &_tab, i) : end();
+    }
 
-    const_iterator cend() const noexcept { return const_iterator(_tab[_tab.table.size() - 1], &_tab, 0); }
+    const_iterator cend() const noexcept
+    { return const_iterator(_tab[_tab.table.size() - 1], &_tab, _tab.table.size() - 1); }
 
     // 容量
     bool empty() const noexcept { return _num_of_elem == 0; }
+
     size_type size() const noexcept { return _num_of_elem; }
+
     size_type max_size() const noexcept { return UINT_MAX; }
 
     // 修改器
     template<class... Args>
     pair<iterator, bool> emplace(Args&&... args) {
-        value_type *a;
-        a = _alloc_data.allocate(1);
-        _alloc_data.construct(a, static_cast<Args&&>(args)...);
-        auto n = _tab.insert(*a);
+        auto n = _tab.insert(static_cast<Args&&>(args)...);
         bool isInsert = (n.second != nullptr);
         if(!isInsert)
             return pair<iterator, bool>(end(), isInsert);
@@ -227,40 +250,150 @@ template<class Key,
 
     // 观察器
     hasher hash_function() const { return hasher(); }
+
     key_equal key_eq() const { return Pred(); }
 
     // set 操作
-    iterator         find(const key_type& k);
-    const_iterator   find(const key_type& k) const;
-    size_type        count(const key_type& k) const;
-    pair<iterator, iterator>               equal_range(const key_type& k);
-    pair<const_iterator, const_iterator>   equal_range(const key_type& k) const;
+    iterator find(const key_type& k) {
+        auto n = _tab.find(k);
+        if(!n.second)
+            return end();
+        else
+            return iterator(n.second, &_tab, n.first);
+    }
+
+    const_iterator find(const key_type& k) const {
+        auto n = _tab.find(k);
+        if(!n.second)
+            return cend();
+        else
+            return const_iterator(n.second, &_tab, n.first);
+    }
+
+    size_type count(const key_type& k) const {
+        size_type cnt = 0;
+        for(auto it = begin(); it != end(); ++it) {
+            if(_eql(k, *it))
+                ++cnt;
+        }
+        return cnt;
+    }
+
+    pair<iterator, iterator> equal_range(const key_type& k) {
+        iterator first, last;
+        for(iterator it = begin(); it != end(); ++it) {
+            if(_eql(k, *it)) {
+                first = it;
+                while(_eql(k, *it))
+                    ++it;
+                last = it;
+                break;
+            }
+        }
+        return pair<iterator, iterator>(first, last);
+    }
+
+    pair<const_iterator, const_iterator> equal_range(const key_type& k) const {
+        const_iterator first, last;
+        for(const_iterator it = begin(); it != end(); ++it) {
+            if(_eql(k, *it)) {
+                first = it;
+                while(_eql(k, *it))
+                    ++it;
+                last = it;
+                break;
+            }
+        }
+        return pair<const_iterator, const_iterator>(first, last);
+    }
 
     // 桶接口
-    size_type bucket_count() const noexcept;
-    size_type max_bucket_count() const noexcept;
-    size_type bucket_size(size_type n) const;
-    size_type bucket(const key_type& k) const;
-    local_iterator begin(size_type n);
-    const_local_iterator begin(size_type n) const;
-    local_iterator end(size_type n);
-    const_local_iterator end(size_type n) const;
-    const_local_iterator cbegin(size_type n) const;
-    const_local_iterator cend(size_type n) const;
+    size_type bucket_count() const noexcept {
+        size_type cnt = 0;
+        for(size_type i = 0; i < _tab.table.size(); ++i) {
+            if(_tab.table[i]->hasElem)
+                ++cnt;
+        }
+        return cnt;
+    }
+
+    size_type max_bucket_count() const noexcept { return _tab.table.size(); }
+
+    size_type bucket_size(size_type n) const {
+        size_type cnt = 0;
+        hnode *t = _tab.table[n]->next;
+        while(t) {
+            ++cnt;
+            t = t->next;
+        }
+        return cnt;
+    }
+
+    size_type bucket(const key_type& k) const { return hasher(k); }
+
+    local_iterator begin(size_type n)
+    { return local_iterator(_tab[n]->next, &_tab, n); }
+
+    const_local_iterator begin(size_type n) const
+    { return const_local_iterator(_tab[n]->next, &_tab, n); }
+
+    local_iterator end(size_type n)
+    { return local_iterator(_tab[n+1], &_tab, n+1); }
+
+    const_local_iterator end(size_type n) const
+    { return const_local_iterator(_tab[n+1], &_tab, n+1); }
+
+    const_local_iterator cbegin(size_type n) const
+    { return const_local_iterator(_tab[n]->next, &_tab, n); }
+
+    const_local_iterator cend(size_type n) const
+    { return const_local_iterator(_tab[n+1], &_tab, n+1); }
 
     // 散列策略
-    float load_factor() const noexcept;
-    float max_load_factor() const noexcept;
-    void max_load_factor(float z);
-    void rehash(size_type n);
-    void reserve(size_type n);
+    float load_factor() const noexcept
+    { return static_cast<float>(size()) / bucket_count(); }
+
+    float max_load_factor() const noexcept
+    { return static_cast<float>(size()) / max_bucket_count(); }
+
+    void max_load_factor(float z) {
+        if(load_factor() > z) {
+            _tab.set_length(static_cast<size_type>(size() / z));
+        }
+    }
+
+    void rehash(size_type n) { _tab.set_length(n); }
+
+    void reserve(size_type n) { rehash(n / max_load_factor()); }
   };
 
   // 交换
   template<class Key, class Hash, class Pred, class Alloc>
-    void swap(unordered_set<Key, Hash, Pred, Alloc>& x,
-              unordered_set<Key, Hash, Pred, Alloc>& y)
-    { x.swap(y); };
+  void swap(unordered_set<Key, Hash, Pred, Alloc>& x,
+            unordered_set<Key, Hash, Pred, Alloc>& y)
+  { x.swap(y); };
+
+  // 比较
+  template< class Key, class Hash, class KeyEqual, class Allocator >
+  bool operator==( const unordered_set<Key,Hash,KeyEqual,Allocator>& lhs,
+                   const unordered_set<Key,Hash,KeyEqual,Allocator>& rhs ) {
+        if(lhs.size() != rhs.size())
+            return false;
+        auto lit = lhs.begin();
+        auto rit = rhs.begin();
+        while(lit != lhs.end()) {
+            if(!KeyEqual(*lit, *rit))
+                return false;
+            ++lit;
+            ++rit;
+        }
+        return true;
+  }
+
+  template< class Key, class Hash, class KeyEqual, class Allocator >
+  bool operator!=( const unordered_set<Key,Hash,KeyEqual,Allocator>& lhs,
+                   const unordered_set<Key,Hash,KeyEqual,Allocator>& rhs )
+  { return !(lhs == rhs); }
 }
 
 #endif // JR_UNORDERED_SET_H

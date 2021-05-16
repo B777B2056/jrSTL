@@ -160,24 +160,24 @@ public:
             return pair<const int, lnode *>(hash_index, n);
         }
     }
-
+    
     // 将元素插入到指定位置（hint）之后
     void insert_hint(lnode *hint, const T& a) {
         lnode *n = _alloc_node.allocate(1);
         _alloc_data.construct(&(n->data), a);
         n->next = hint->next;
         hint->next = n;
-
+        
     }
-
+    
     void insert_hint(lnode *hint, T&& a) {
         lnode *n = _alloc_node.allocate(1);
         _alloc_data.construct(&(n->data), static_cast<T&&>(a));
         n->next = hint->next;
         hint->next = n;
-
+        
     }
-
+    
     // 删除对应键值的所有元素(析构整条链表)
     pair<const int, lnode *> erase(T& target) {
         int hash_index = Hash(target);
