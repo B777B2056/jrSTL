@@ -1,6 +1,7 @@
 #ifndef ITERATORS_H
 #define ITERATORS_H
 
+#include <iostream>
 #include <cstddef>
 #include "../../iterator/jr_iterator.h"
 #include "../../memory/jr_allocator.h"
@@ -415,30 +416,27 @@ namespace jr_std {
 
         bool operator!=(const _hashtable_iterator& x) const { return !(*this == x); }
 
-        reference operator*() const {
-            if(cur == tab->table[offset])
-                cur = cur->next;
-            return cur->data;
-        }
+        reference operator*() const { return cur->data; }
 
         pointer operator->() const { return &(operator*()); }
         // front postion ++
         _hashtable_iterator& operator++() {
-            // 若当前指针指向头节点，则跳过头节点
-            if(cur == tab->table[offset])
-                cur = cur->next;
-            // 桶内还有内容，则跳至下一内容
-            cur = cur->next;
             // 桶内无内容，则跳至下一个桶
-            if(!cur) {
+            if(!cur->next) {
                 ++offset;
-                while(offset < tab->table.size()) {
-                    if(tab->table[offset]->hasElem){
+                while(offset < tab->table.size() - 1) {
+                    if(tab->table[offset] && tab->table[offset]->hasElem){
                         cur = tab->table[offset]->next;
                         break;
                     }
                     ++offset;
                 }
+                if(offset == tab->table.size() - 1) {
+                    cur = tab->table.back();
+                }
+            } else{
+                // 桶内还有内容，则跳至下一内容
+                cur = cur->next;
             }
             return *this;
         }

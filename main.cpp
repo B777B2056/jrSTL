@@ -2,21 +2,24 @@
 #include <string>
 #include <algorithm>
 #include <utility>
-#include "container/associate/jr_set.h"
+#include "container/associate/jr_unordered_set.h"
 #include "iterator/jr_iterator.h"
 
 int main() {
-    jr_std::multiset<int> n;
-    n.insert(1);
-    n.insert(2);
-    n.insert(3);
-    n.insert(3);
-    n.insert(3);
-    n.insert(4);
-    n.insert(4);
-    n.erase(4);
+    jr_std::unordered_set<int> n;
+    for(int i = 1; i <= 10; i++)
+        n.insert(i);
+    for(auto it = n.begin(); it != n.end(); ) {
+        if((*it) % 2 == 1) {
+            it = n.erase(it);
+        }else{
+            ++it;
+        }
+    }
+    auto it0 = n.begin();
+    n.insert(it0, -1);
     for(auto it = n.begin(); it != n.end(); ++it)
-        std::cout << *it << std::endl;
+        std::cout << *it << " ";
 
     return 0;
 }

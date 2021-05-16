@@ -1,17 +1,19 @@
 #ifndef JR_UNORDERED_SET_H
 #define JR_UNORDERED_SET_H
 
+#include <iostream>
 #include <cstddef>
 #include <functional>
 #include "../../memory/jr_allocator.h"
 #include "../../container/utils/jr_hashtable.h"
 
 namespace jr_std {
-template<class Key,
-           class Hash = std::hash<Key>,
-           class Pred = std::equal_to<Key>,
-           class Allocator = jr_std::allocator<Key>>
-  class unordered_set {
+  template<class Key,
+           class Hash,
+           class Pred,
+           class Allocator,
+           bool isMultiSet>
+  class _hashset_base {
   public:
       // 类型
       typedef Key key_type;
@@ -23,8 +25,8 @@ template<class Key,
       typedef const value_type& const_reference;
       typedef size_t size_type;
       typedef ptrdiff_t difference_type;
-      typedef _hashtable_iterator<Key, Hash, Pred, Allocator, false> iterator;
-      typedef _hashtable_iterator<Key, Hash, Pred, Allocator, false> const_iterator;
+      typedef _hashtable_iterator<Key, Hash, Pred, Allocator, isMultiSet> iterator;
+      typedef _hashtable_iterator<Key, Hash, Pred, Allocator, isMultiSet> const_iterator;
       typedef Hash hasher;
       typedef Pred key_equal;
       typedef iterator local_iterator;
@@ -32,7 +34,7 @@ template<class Key,
 
    protected:
       typedef _hashtable_node<Key> hnode;
-      typedef _hashtable<Key, Hash, Pred, Allocator, false> table;
+      typedef _hashtable<Key, Hash, Pred, Allocator, isMultiSet> table;
       hasher _hf;
       key_equal _eql;
       Allocator _alloc_data;
@@ -41,17 +43,17 @@ template<class Key,
 
    public:
     // 构造/复制/销毁
-    unordered_set()
+    _hashset_base()
         : _hf(hasher()), _eql(key_equal()), _alloc_data(Allocator()),
           _tab(11), _num_of_elem(0)
     {}
 
-    explicit unordered_set(const Allocator& a)
+    explicit _hashset_base(const Allocator& a)
         : _hf(hasher()), _eql(key_equal()), _alloc_data(a),
           _tab(11), _num_of_elem(0)
     {}
 
-    explicit unordered_set(size_type n,
+    explicit _hashset_base(size_type n,
                            const hasher& hf = hasher(),
                            const key_equal& eql = key_equal(),
                            const allocator_type& a = allocator_type())
@@ -59,7 +61,7 @@ template<class Key,
     {}
 
     template<class InputIt>
-    unordered_set(InputIt first, InputIt last, size_type n = 0,
+    _hashset_base(InputIt first, InputIt last, size_type n = 0,
                   const hasher& hf = hasher(),
                   const key_equal& eql = key_equal(),
                   const allocator_type& a = allocator_type())
@@ -72,44 +74,44 @@ template<class Key,
         }
     }
 
-    unordered_set(size_type n, const allocator_type& a)
+    _hashset_base(size_type n, const allocator_type& a)
         : _hf(hasher()), _eql(key_equal()), _alloc_data(a),
           _tab(n), _num_of_elem(0)
     {}
 
-    unordered_set(size_type n, const hasher& hf, const allocator_type& a)
+    _hashset_base(size_type n, const hasher& hf, const allocator_type& a)
         : _hf(hf), _eql(key_equal()), _alloc_data(a),
           _tab(n), _num_of_elem(0)
     {}
 
-    unordered_set(const unordered_set& x)
+    _hashset_base(const _hashset_base& x)
         : _hf(hasher()), _eql(key_equal()), _alloc_data(Allocator()),
           _tab(x._tab), _num_of_elem(x._num_of_elem)
     {}
 
-    unordered_set(unordered_set&& x)
+    _hashset_base(_hashset_base&& x)
         : _hf(hasher()), _eql(key_equal()), _alloc_data(Allocator()),
           _tab(static_cast<table&&>(x._tab)), _num_of_elem(x._num_of_elem)
     {}
 
-    unordered_set(const unordered_set& x, const Allocator& a)
+    _hashset_base(const _hashset_base& x, const Allocator& a)
         : _hf(hasher()), _eql(key_equal()), _alloc_data(a),
           _tab(x._tab), _num_of_elem(x._num_of_elem)
     {}
 
-    unordered_set(unordered_set&& x, const Allocator& a)
+    _hashset_base(_hashset_base&& x, const Allocator& a)
         : _hf(hasher()), _eql(key_equal()), _alloc_data(a),
           _tab(static_cast<table&&>(x._tab)), _num_of_elem(x._num_of_elem)
     {}
 
-    ~unordered_set() = default;
+    ~_hashset_base() = default;
 
-    unordered_set& operator=(const unordered_set& x) {
+    _hashset_base& operator=(const _hashset_base& x) {
         _tab = x._tab;
         _num_of_elem = x._num_of_elem;
     }
 
-    unordered_set& operator=(unordered_set&& x) {
+    _hashset_base& operator=(_hashset_base&& x) {
         _tab = static_cast<table&&>(x._tab);
         _num_of_elem = x._num_of_elem;
     }
@@ -123,7 +125,7 @@ template<class Key,
             if(_tab.table[i]->hasElem)
                 break;
         }
-        return _tab[i]->next ? iterator(_tab[i]->next, &_tab, i) : end();
+        return _tab.table[i]->next ? iterator(_tab.table[i]->next, &_tab, i) : end();
     }
 
     const_iterator begin() const noexcept {
@@ -132,14 +134,14 @@ template<class Key,
             if(_tab.table[i]->hasElem)
                 break;
         }
-        return _tab[i]->next ? const_iterator(_tab[i]->next, &_tab, i) : end();
+        return _tab.table[i]->next ? const_iterator(_tab.table[i]->next, &_tab, i) : end();
     }
 
     iterator end() noexcept
-    { return iterator(_tab[_tab.table.size() - 1], &_tab, _tab.table.size() - 1); }
+    { return iterator(_tab.table.back(), &_tab, _tab.table.size() - 1); }
 
     const_iterator end() const noexcept
-    { return const_iterator(_tab[_tab.table.size() - 1], &_tab, _tab.table.size() - 1); }
+    { return const_iterator(_tab.table.back(), &_tab, _tab.table.size() - 1); }
 
     const_iterator cbegin() const noexcept {
         size_type i;
@@ -147,11 +149,11 @@ template<class Key,
             if(_tab.table[i]->hasElem)
                 break;
         }
-        return _tab[i]->next ? const_iterator(_tab[i]->next, &_tab, i) : end();
+        return _tab.table[i]->next ? const_iterator(_tab.table[i]->next, &_tab, i) : end();
     }
 
     const_iterator cend() const noexcept
-    { return const_iterator(_tab[_tab.table.size() - 1], &_tab, _tab.table.size() - 1); }
+    { return const_iterator(_tab.table.back(), &_tab, _tab.table.size() - 1); }
 
     // 容量
     bool empty() const noexcept { return _num_of_elem == 0; }
@@ -167,14 +169,21 @@ template<class Key,
         bool isInsert = (n.second != nullptr);
         if(!isInsert)
             return pair<iterator, bool>(end(), isInsert);
-        else
+        else {
+            ++_num_of_elem;
             return pair<iterator, bool>(iterator(n.second, &_tab, n.first), isInsert);
+        }
     }
 
     template<class... Args>
     iterator emplace_hint(const_iterator hint, Args&&... args) {
-        _tab.insert_hint(hint.cur, static_cast<Args&&>(args)...);
-        return iterator(hint.cur->next, &_tab, hint.offset);
+        hnode *d = _tab.insert_hint(hint.cur, static_cast<Args&&>(args)...);
+        if(d) {
+            ++_num_of_elem;
+            return iterator(hint.cur, &_tab, hint.offset);
+        } else {
+            return end();
+        }
     }
 
     pair<iterator, bool> insert(const value_type& obj) {
@@ -182,8 +191,10 @@ template<class Key,
         bool isInsert = (n.second != nullptr);
         if(!isInsert)
             return pair<iterator, bool>(end(), isInsert);
-        else
+        else {
+            ++_num_of_elem;
             return pair<iterator, bool>(iterator(n.second, &_tab, n.first), isInsert);
+        }
     }
 
     pair<iterator, bool> insert(value_type&& obj) {
@@ -191,42 +202,52 @@ template<class Key,
         bool isInsert = (n.second != nullptr);
         if(!isInsert)
             return pair<iterator, bool>(end(), isInsert);
-        else
+        else {
+            ++_num_of_elem;
             return pair<iterator, bool>(iterator(n.second, &_tab, n.first), isInsert);
+        }
     }
 
     iterator insert(const_iterator hint, const value_type& obj) {
-        _tab.insert_hint(hint.cur, obj);
-        return iterator(hint.cur->next, &_tab, hint.offset);
+        hnode *d = _tab.insert_hint(hint.cur, obj);
+        if(d) {
+            ++_num_of_elem;
+            return iterator(hint.cur, &_tab, hint.offset);
+        } else {
+            return end();
+        }
     }
 
     iterator insert(const_iterator hint, value_type&& obj) {
-        _tab.insert_hint(hint.cur, static_cast<value_type&&>(obj));
-        return iterator(hint.cur->next, &_tab, hint.offset);
+        hnode *d = _tab.insert_hint(hint.cur, static_cast<value_type&&>(obj));
+        if(d) {
+            ++_num_of_elem;
+            return iterator(hint.cur, &_tab, hint.offset);
+        } else {
+            return end();
+        }
     }
 
     template<class InputIt>
     void insert(InputIt first, InputIt last) {
         while(first != last) {
-            _tab.insert(*first);
+            insert(*first);
             ++first;
         }
     }
 
     iterator erase(iterator position) {
-        auto n = _tab.erase(*position);
-        if(n.second)
-            return iterator(n.second, &_tab, n.first);
-        else
-            return end();
+        iterator r = position;
+        ++r;
+        _tab.erase(position.offset, position.cur);
+        --_num_of_elem;
+        return r;
     }
 
     size_type erase(const key_type& k) {
-        auto n = _tab.erase(k);
-        if(n.second)
-            return iterator(n.second, &_tab, n.first);
-        else
-            return end();
+        size_type cnt = _tab.erase(k);
+        _num_of_elem -= cnt;
+        return cnt;
     }
 
     iterator erase(const_iterator first, const_iterator last) {
@@ -237,8 +258,8 @@ template<class Key,
         return iterator(last.second, &_tab, last.first);
     }
 
-    void swap(unordered_set& x) {
-        unordered_set tmp = x;
+    void swap(_hashset_base& x) {
+        _hashset_base tmp = x;
         x = *this;
         *this = tmp;
     }
@@ -366,6 +387,13 @@ template<class Key,
 
     void reserve(size_type n) { rehash(n / max_load_factor()); }
   };
+
+  template<class Key,
+           class Hash = std::hash<Key>,
+           class Pred = std::equal_to<Key>,
+           class Allocator = jr_std::allocator<Key>>
+  class unordered_set : public _hashset_base<Key, Hash, Pred, Allocator, false>
+  {};
 
   // 交换
   template<class Key, class Hash, class Pred, class Alloc>
