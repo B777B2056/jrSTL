@@ -19,11 +19,12 @@ struct KeyEqual{
 int main() {
     char b = 'a';
     int a[] = {47, 7, 29, 11, 16, 92, 7, 7, 7, 22, 8, 3, 50, 37, 89, 94, 21};
-    jr_std::unordered_map<int, char, IntHash, KeyEqual> n(5);
+    jr_std::unordered_map<int, char, IntHash, KeyEqual> n;
     for(int i = 0; i < 14; i++)
         n.insert(jr_std::pair<const int, char>(a[i], b+i));
     jr_std::allocator<jr_std::pair<const int, char>> al;
-    jr_std::unordered_map<int, char, IntHash, KeyEqual> nw(n, al);
+    jr_std::unordered_map<int, char, IntHash, KeyEqual> nw;
+    n.swap(nw);
     for(auto it = nw.begin(); it != nw.end(); ++it)
         std::cout << it->first << " " << it->second << std::endl;
     for(auto it = n.begin(); it != n.end(); ++it)

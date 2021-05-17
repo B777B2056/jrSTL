@@ -263,9 +263,9 @@ namespace jr_std {
 
     void swap(_hashset_base& x) {
         if(this == &x)  return;
-        table tmp = _tab;
-        _tab = x._tab;
-        x._tab = tmp;
+        table tmp = static_cast<table&&>(_tab);
+        _tab = static_cast<table&&>(x._tab);
+        x._tab = static_cast<table&&>(tmp);
         int t = _num_of_elem;
         _num_of_elem = x._num_of_elem;
         x._num_of_elem = t;

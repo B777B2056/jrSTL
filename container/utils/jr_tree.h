@@ -209,41 +209,10 @@ namespace jr_std {
                     _alloc_data.destroy(&(r->data));
                     _alloc_data.construct(&(r->data), right_min->data);
                     r->right = _erase_helper(r->right, r->data);
-
-                    /*直接交换两个节点：存在bug，有时候会导致父节点指向错乱，形成环*/
-//                    tnode *r_parent = r->parent;
-//                    tnode *rmin_parent = right_min->parent;
-//                    tnode *t1 = right_min->left, *t2 = right_min->right;
-//                    if(rmin_parent != r) {
-//                        rmin_parent->left = r;
-//                        r->parent = rmin_parent;
-//                        if(r_parent->left == r)
-//                            r_parent->left = right_min;
-//                        else
-//                            r_parent->right = right_min;
-//                        right_min->right = r->right;
-//                    }else{
-//                        if(r_parent->left == r)
-//                            r_parent->left = right_min;
-//                        else
-//                            r_parent->right = right_min;
-//                        r->parent = right_min;
-//                        right_min->right = r;
-//                    }
-//                    right_min->parent = r_parent;
-//                    right_min->left = r->left;
-//                    r->left = t1;
-//                    r->right = t2;
-//                    r = right_min;
-//                    r->right = _erase_helper(r->right, right_min->data);
                 }
             }
             /*将不平衡节点调整为平衡*/
             if(r) {
-//                if(r->left)
-//                    r->left->parent = r;
-//                if(r->right)
-//                    r->right->parent = r;
                 // 检查平衡因子，判断是否需要进行旋转
                 int balance_factor = _height(r->left) - _height(r->right);
                 // 平衡因子为2,说明以r为根的子树的左子树比右子树高2,进行相应调整
