@@ -54,16 +54,6 @@ namespace jr_std {
                   t(first, last), comp(c), _alloc_data(a)
             {}
 
-            _set_base(const _set_base& x)
-                : _size(x.size()), t(x.begin(), x.end())
-            {}
-
-            _set_base(_set_base&& x) {
-                _size = x._size;
-                x._size = 0;
-                t = static_cast<tree&&>(x.t);
-            }
-
             _set_base(const _set_base& x, const Allocator& a)
                 : _size(x.size()), t(x.begin(), x.end()), _alloc_data(a)
             {}
@@ -74,7 +64,17 @@ namespace jr_std {
                 t = static_cast<tree&&>(x.t);
             }
 
-            ~_set_base()  = default;
+            _set_base(const _set_base& x)
+                : _size(x.size()), t(x.begin(), x.end())
+            {}
+
+            _set_base(_set_base&& x) {
+                _size = x._size;
+                x._size = 0;
+                t = static_cast<tree&&>(x.t);
+            }
+
+            virtual ~_set_base()  = default;
 
             _set_base& operator=(const _set_base& x) {
                 if(this != & x) {
@@ -301,7 +301,36 @@ namespace jr_std {
 
     template<class Key, class Compare = jr_std::less<Key>,
              class Allocator = jr_std::allocator<Key> >
-    class set : public _set_base<Key, Compare, Allocator, false> {};
+    class set : public _set_base<Key, Compare, Allocator, false> {
+        private:
+            typedef _set_base<Key, Compare, Allocator, false> _base;
+
+        public:
+            // 构造（继承父类）
+            set() {}
+
+            explicit set(const Allocator& a) : _base(a)
+            {}
+
+            explicit set(const Compare& c, const Allocator& a = Allocator())
+                : _base(c, a)
+            {}
+
+            template< class InputIt >
+            set( InputIt first, InputIt last,
+                 const Compare& c = Compare(),
+                 const Allocator& a = Allocator() )
+                : _base(first, last, c, a)
+            {}
+
+            set(const set& x, const Allocator& a)
+                : _base(x,a)
+            {}
+
+            set(set&& x, const Allocator& a)
+                : _base(static_cast<set&&>(x), a)
+            {}
+    };
 
     template<class Key, class Compare = jr_std::less<Key>,
              class Allocator = jr_std::allocator<Key>>
@@ -310,6 +339,31 @@ namespace jr_std {
             typedef _set_base<Key, Compare, Allocator, true> _base;
 
         public:
+            // 构造（继承父类）
+            multiset() {}
+
+            explicit multiset(const Allocator& a) : _base(a)
+            {}
+
+            explicit multiset(const Compare& c, const Allocator& a = Allocator())
+                : _base(c, a)
+            {}
+
+            template< class InputIt >
+            multiset( InputIt first, InputIt last,
+                 const Compare& c = Compare(),
+                 const Allocator& a = Allocator() )
+                : _base(first, last, c, a)
+            {}
+
+            multiset(const multiset& x, const Allocator& a)
+                : _base(x,a)
+            {}
+
+            multiset(multiset&& x, const Allocator& a)
+                : _base(static_cast<multiset&&>(x), a)
+            {}
+            // 特化操作
             template< class... Args >
             typename _base::iterator emplace( Args&&... args )
             { return _base::emplace(static_cast<Args&&>(args)...).first; }

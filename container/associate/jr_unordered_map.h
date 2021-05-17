@@ -1,5 +1,5 @@
-#ifndef JR_UNORDERED_SET_H
-#define JR_UNORDERED_SET_H
+#ifndef JR_UNORDERED_MAP_H
+#define JR_UNORDERED_MAP_H
 
 #include <cstddef>
 #include <functional>
@@ -8,32 +8,34 @@
 
 namespace jr_std {
   template<class Key,
+           class T,
            class Hash,
            class Pred,
            class Allocator,
-           bool isMultiSet>
-  class _hashset_base {
+           bool isMultiMap>
+  class _hashmap_base {
   public:
       // 类型
       typedef Key key_type;
-      typedef Key value_type;
+      typedef T mapped_type;
+      typedef pair<const Key, T> value_type;
       typedef Allocator allocator_type;
-      typedef Key* pointer;
-      typedef const Key* const_pointer;
+      typedef value_type* pointer;
+      typedef const value_type* const_pointer;
       typedef value_type& reference;
       typedef const value_type& const_reference;
       typedef size_t size_type;
       typedef ptrdiff_t difference_type;
-      typedef _hashtable_iterator<Key, Hash, Pred, Allocator, isMultiSet> iterator;
-      typedef _hashtable_iterator<Key, Hash, Pred, Allocator, isMultiSet> const_iterator;
+      typedef _hashtable_iterator<value_type, Hash, Pred, Allocator, isMultiMap> iterator;
+      typedef _hashtable_iterator<value_type, Hash, Pred, Allocator, isMultiMap> const_iterator;
       typedef Hash hasher;
       typedef Pred key_equal;
       typedef iterator local_iterator;
       typedef const_iterator const_local_iterator;
 
    protected:
-      typedef _hashtable_node<Key> hnode;
-      typedef _hashtable<Key, Hash, Pred, Allocator, isMultiSet> table;
+      typedef _hashtable_node<value_type> hnode;
+      typedef _hashtable<value_type, Hash, Pred, Allocator, isMultiMap> table;
       hasher _hf;
       key_equal _eql;
       Allocator _alloc_data;
@@ -42,30 +44,41 @@ namespace jr_std {
 
    public:
     // 构造/复制/销毁
-    _hashset_base()
+    _hashmap_base()
         : _hf(hasher()), _eql(key_equal()), _alloc_data(Allocator()),
           _tab(11), _num_of_elem(0)
     {}
 
-    explicit _hashset_base(const Allocator& a)
+    explicit _hashmap_base(const Allocator& a)
         : _hf(hasher()), _eql(key_equal()), _alloc_data(a),
           _tab(11), _num_of_elem(0)
     {}
 
-    explicit _hashset_base(size_type n,
+    explicit _hashmap_base(size_type n,
                            const hasher& hf = hasher(),
                            const key_equal& eql = key_equal(),
                            const allocator_type& a = allocator_type())
         : _hf(hf), _eql(eql), _alloc_data(a), _tab(n), _num_of_elem(0)
     {}
 
+    _hashmap_base(size_type n, const allocator_type& a)
+        : _hf(hasher()), _eql(key_equal()), _alloc_data(a),
+          _tab(n), _num_of_elem(0)
+    {}
+
+    _hashmap_base(size_type n, const hasher& hf, const allocator_type& a)
+        : _hf(hf), _eql(key_equal()), _alloc_data(a),
+          _tab(n), _num_of_elem(0)
+    {}
+
     template<class InputIt>
-    _hashset_base(InputIt first, InputIt last, size_type n = 0,
+    _hashmap_base(InputIt first, InputIt last, size_type n,
                   const hasher& hf = hasher(),
                   const key_equal& eql = key_equal(),
                   const allocator_type& a = allocator_type())
         : _hf(hf), _eql(eql), _alloc_data(a), _num_of_elem(0) {
-        _tab.set_length(jr_std::distance(first, last) + 5);
+        size_type length = static_cast<size_type>(jr_std::distance(first, last));
+        _tab.set_length((n < length ? length : n) + 5);
         while(first != last) {
             _tab.insert(*first);
             ++_num_of_elem;
@@ -73,47 +86,35 @@ namespace jr_std {
         }
     }
 
-    _hashset_base(size_type n, const allocator_type& a)
-        : _hf(hasher()), _eql(key_equal()), _alloc_data(a),
-          _tab(n), _num_of_elem(0)
-    {}
-
-    _hashset_base(size_type n, const hasher& hf, const allocator_type& a)
-        : _hf(hf), _eql(key_equal()), _alloc_data(a),
-          _tab(n), _num_of_elem(0)
-    {}
-
-    _hashset_base(const _hashset_base& x, const Allocator& a)
+    _hashmap_base(const _hashmap_base x, const Allocator& a)
         : _hf(hasher()), _eql(key_equal()), _alloc_data(a),
           _tab(x._tab), _num_of_elem(x._num_of_elem)
     {}
 
-    _hashset_base(_hashset_base&& x, const Allocator& a)
+    _hashmap_base(_hashmap_base&& x, const Allocator& a)
         : _hf(hasher()), _eql(key_equal()), _alloc_data(a),
           _tab(static_cast<table&&>(x._tab)), _num_of_elem(x._num_of_elem)
     {}
 
-    _hashset_base(const _hashset_base& x)
+    _hashmap_base(const _hashmap_base& x)
         : _hf(hasher()), _eql(key_equal()), _alloc_data(Allocator()),
           _tab(x._tab), _num_of_elem(x._num_of_elem)
     {}
 
-    _hashset_base(_hashset_base&& x)
+    _hashmap_base(_hashmap_base& x)
         : _hf(hasher()), _eql(key_equal()), _alloc_data(Allocator()),
           _tab(static_cast<table&&>(x._tab)), _num_of_elem(x._num_of_elem)
     {}
 
-    ~_hashset_base() = default;
+    virtual ~_hashmap_base() = default;
 
-    _hashset_base& operator=(const _hashset_base& x) {
-        if(this == &x)  return;
+    _hashmap_base& operator=(const _hashmap_base& x) {
         _tab = x._tab;
         _num_of_elem = x._num_of_elem;
         return *this;
     }
 
-    _hashset_base& operator=(_hashset_base&& x) {
-        if(this == &x)  return;
+    _hashmap_base& operator=(_hashmap_base&& x) {
         _tab = static_cast<table&&>(x._tab);
         _num_of_elem = x._num_of_elem;
         return *this;
@@ -248,7 +249,7 @@ namespace jr_std {
     }
 
     size_type erase(const key_type& k) {
-        size_type cnt = _tab.erase(k);
+        size_type cnt = _tab.erase(value_type(k, T()));
         _num_of_elem -= cnt;
         return cnt;
     }
@@ -261,7 +262,7 @@ namespace jr_std {
         return iterator(l.cur, &_tab, l.offset);
     }
 
-    void swap(_hashset_base& x) {
+    void swap(_hashmap_base& x) {
         if(this == &x)  return;
         table tmp = _tab;
         _tab = x._tab;
@@ -283,7 +284,7 @@ namespace jr_std {
 
     // set 操作
     iterator find(const key_type& k) {
-        auto n = _tab.find(k);
+        auto n = _tab.find(value_type(k, T()));
         if(!n.second)
             return end();
         else
@@ -291,21 +292,21 @@ namespace jr_std {
     }
 
     const_iterator find(const key_type& k) const {
-        auto n = _tab.find(k);
+        auto n = _tab.find(value_type(k, T()));
         if(!n.second)
             return cend();
         else
             return const_iterator(n.second, &_tab, n.first);
     }
 
-    size_type count(const key_type& k) { return _tab.count(k); }
+    size_type count(const key_type& k) { return _tab.count(value_type(k, T())); }
 
     pair<iterator, iterator> equal_range(const key_type& k) {
         iterator first = end(), last = end();
         for(iterator it = begin(); it != end(); ++it) {
-            if(_eql(k, *it)) {
+            if(_eql(value_type(k, T()), *it)) {
                 first = it;
-                while(_eql(k, *it))
+                while(_eql(value_type(k, T()), *it))
                     ++it;
                 last = it;
                 break;
@@ -317,9 +318,9 @@ namespace jr_std {
     pair<const_iterator, const_iterator> equal_range(const key_type& k) const {
         const_iterator first = end(), last = end();
         for(const_iterator it = begin(); it != end(); ++it) {
-            if(_eql(k, *it)) {
+            if(_eql(value_type(k, T()), *it)) {
                 first = it;
-                while(_eql(k, *it))
+                while(_eql(value_type(k, T()), *it))
                     ++it;
                 last = it;
                 break;
@@ -388,31 +389,39 @@ namespace jr_std {
     void reserve(size_type n) { rehash(n / max_load_factor()); }
   };
 
-  template<class Key,
+  template<class Key, class T,
            class Hash = std::hash<Key>,
            class Pred = std::equal_to<Key>,
-           class Allocator = jr_std::allocator<Key>>
-  class unordered_set : public _hashset_base<Key, Hash, Pred, Allocator, false> {
+           class Allocator = jr_std::allocator<pair<const Key, T> > >
+  class unordered_map : public _hashmap_base<Key, T, Hash, Pred, Allocator, false> {
   private:
-      typedef _hashset_base<Key, Hash, Pred, Allocator, false> _base;
+      typedef _hashmap_base<Key, T, Hash, Pred, Allocator, false> _base;
 
   public:
       // 构造（继承父类）
-      unordered_set() {}
+      unordered_map() {}
 
-      explicit unordered_set(const Allocator& a)
+      explicit unordered_map(const Allocator& a)
           : _base(a)
       {}
 
-      explicit unordered_set(typename _base::size_type n,
-                             const Hash& hf = Hash(),
-                             const Pred& eql = Pred(),
-                             const Allocator& a = Allocator())
+      explicit unordered_map(typename _base::size_type n,
+                                  const Hash& hf = Hash(),
+                                  const Pred& eql = Pred(),
+                                  const Allocator& a = Allocator())
           : _base(n, hf, eql, a)
       {}
 
+      unordered_map(typename _base::size_type n, const Allocator& a)
+          : _base(n, a)
+      {}
+
+      unordered_map(typename _base::size_type n, const Hash& hf, const Allocator& a)
+          : _base(n, hf, a)
+      {}
+
       template<class InputIt>
-      unordered_set(InputIt first, InputIt last,
+      unordered_map(InputIt first, InputIt last,
                     typename _base::size_type n,
                     const Hash& hf = Hash(),
                     const Pred& eql = Pred(),
@@ -420,48 +429,62 @@ namespace jr_std {
           : _base(first, last, n, hf, eql, a)
       {}
 
-      unordered_set(typename _base::size_type n, const Allocator& a)
-          : _base(n, a)
-      {}
-
-      unordered_set(typename _base::size_type n, const Hash& hf, const Allocator& a)
-          : _base(n, hf, a)
-      {}
-
-      unordered_set(const unordered_set& x, const Allocator& a)
+      unordered_map(const unordered_map x, const Allocator& a)
           : _base(x, a)
       {}
 
-      unordered_set(unordered_set&& x, const Allocator& a)
-          : _base(static_cast<unordered_set&&>(x), a)
+      unordered_map(unordered_map&& x, const Allocator& a)
+          : _base(static_cast<unordered_map&&>(x), a)
       {}
+      // 元素访问
+      typename _base::mapped_type& operator[](const typename _base::key_type& x) {
+          return (*((_base::insert(typename _base::value_type(x, T()))).first)).second;
+      }
+
+      typename _base::mapped_type& operator[](typename _base::key_type&& x) {
+          return (*((_base::insert(typename _base::value_type(static_cast<typename _base::key_type&&>(x), T()))).first)).second;
+      }
+
+      typename _base::mapped_type& at(const typename _base::key_type& x)
+      { return (*this)[x]; }
+
+      const typename _base::mapped_type& at(const typename _base::key_type& x) const
+      { return (*this)[x]; }
   };
 
-  template<class Key,
+  template<class Key, class T,
            class Hash = std::hash<Key>,
            class Pred = std::equal_to<Key>,
-           class Allocator = jr_std::allocator<Key>>
-  class unordered_multiset : public _hashset_base<Key, Hash, Pred, Allocator, true> {
+           class Allocator = jr_std::allocator<pair<const Key, T> > >
+  class unordered_multimap : public _hashmap_base<Key, T, Hash, Pred, Allocator, true> {
   private:
-      typedef _hashset_base<Key, Hash, Pred, Allocator, true> _base;
+      typedef _hashmap_base<Key, T, Hash, Pred, Allocator, true> _base;
 
   public:
       // 构造（继承父类）
-      unordered_multiset() {}
+      unordered_multimap() {}
 
-      explicit unordered_multiset(const Allocator& a)
+      explicit unordered_multimap(const Allocator& a)
           : _base(a)
       {}
 
-      explicit unordered_multiset(typename _base::size_type n,
-                             const Hash& hf = Hash(),
-                             const Pred& eql = Pred(),
-                             const Allocator& a = Allocator())
+      explicit unordered_multimap(typename _base::size_type n,
+                                  const Hash& hf = Hash(),
+                                  const Pred& eql = Pred(),
+                                  const Allocator& a = Allocator())
           : _base(n, hf, eql, a)
       {}
 
+      unordered_multimap(typename _base::size_type n, const Allocator& a)
+          : _base(n, a)
+      {}
+
+      unordered_multimap(typename _base::size_type n, const Hash& hf, const Allocator& a)
+          : _base(n, hf, a)
+      {}
+
       template<class InputIt>
-      unordered_multiset(InputIt first, InputIt last,
+      unordered_multimap(InputIt first, InputIt last,
                     typename _base::size_type n,
                     const Hash& hf = Hash(),
                     const Pred& eql = Pred(),
@@ -469,22 +492,13 @@ namespace jr_std {
           : _base(first, last, n, hf, eql, a)
       {}
 
-      unordered_multiset(typename _base::size_type n, const Allocator& a)
-          : _base(n, a)
-      {}
-
-      unordered_multiset(typename _base::size_type n, const Hash& hf, const Allocator& a)
-          : _base(n, hf, a)
-      {}
-
-      unordered_multiset(const unordered_multiset& x, const Allocator& a)
+      unordered_multimap(const unordered_multimap x, const Allocator& a)
           : _base(x, a)
       {}
 
-      unordered_multiset(unordered_multiset&& x, const Allocator& a)
-          : _base(static_cast<unordered_multiset&&>(x), a)
+      unordered_multimap(unordered_multimap&& x, const Allocator& a)
+          : _base(static_cast<unordered_multimap&&>(x), a)
       {}
-
       // 特化操作
       template< class... Args >
       typename _base::iterator emplace( Args&&... args )
@@ -499,19 +513,19 @@ namespace jr_std {
 
   // 交换
   template<class Key, class Hash, class Pred, class Alloc>
-  void swap(unordered_set<Key, Hash, Pred, Alloc>& x,
-            unordered_set<Key, Hash, Pred, Alloc>& y)
+  void swap(unordered_map<Key, Hash, Pred, Alloc>& x,
+            unordered_map<Key, Hash, Pred, Alloc>& y)
   { x.swap(y); };
 
   template< class Key, class Hash, class KeyEqual, class Alloc >
-  void swap( unordered_multiset<Key,Hash,KeyEqual,Alloc>& x,
-             unordered_multiset<Key,Hash,KeyEqual,Alloc>& y )
+  void swap( unordered_multimap<Key,Hash,KeyEqual,Alloc>& x,
+             unordered_multimap<Key,Hash,KeyEqual,Alloc>& y )
   { x.swap(y); };
 
   // 比较
   template< class Key, class Hash, class KeyEqual, class Allocator >
-  bool operator==( const unordered_set<Key,Hash,KeyEqual,Allocator>& lhs,
-                   const unordered_set<Key,Hash,KeyEqual,Allocator>& rhs ) {
+  bool operator==( const unordered_map<Key,Hash,KeyEqual,Allocator>& lhs,
+                   const unordered_map<Key,Hash,KeyEqual,Allocator>& rhs ) {
         if(lhs.size() != rhs.size())
             return false;
         auto lit = lhs.begin();
@@ -526,13 +540,13 @@ namespace jr_std {
   }
 
   template< class Key, class Hash, class KeyEqual, class Allocator >
-  bool operator!=( const unordered_set<Key,Hash,KeyEqual,Allocator>& lhs,
-                   const unordered_set<Key,Hash,KeyEqual,Allocator>& rhs )
+  bool operator!=( const unordered_map<Key,Hash,KeyEqual,Allocator>& lhs,
+                   const unordered_map<Key,Hash,KeyEqual,Allocator>& rhs )
   { return !(lhs == rhs); }
 
   template< class Key, class Hash, class KeyEqual, class Allocator >
-  bool operator==( const unordered_multiset<Key,Hash,KeyEqual,Allocator>& lhs,
-                   const unordered_multiset<Key,Hash,KeyEqual,Allocator>& rhs ) {
+  bool operator==( const unordered_multimap<Key,Hash,KeyEqual,Allocator>& lhs,
+                   const unordered_multimap<Key,Hash,KeyEqual,Allocator>& rhs ) {
         if(lhs.size() != rhs.size())
             return false;
         auto lit = lhs.begin();
@@ -547,9 +561,8 @@ namespace jr_std {
   }
 
   template< class Key, class Hash, class KeyEqual, class Allocator >
-  bool operator!=( const unordered_multiset<Key,Hash,KeyEqual,Allocator>& lhs,
-                   const unordered_multiset<Key,Hash,KeyEqual,Allocator>& rhs )
+  bool operator!=( const unordered_multimap<Key,Hash,KeyEqual,Allocator>& lhs,
+                   const unordered_multimap<Key,Hash,KeyEqual,Allocator>& rhs )
   { return !(lhs == rhs); }
 }
-
-#endif // JR_UNORDERED_SET_H
+#endif // JR_UNORDERED_MAP_H

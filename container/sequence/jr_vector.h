@@ -382,8 +382,8 @@ namespace jr_std {
                 return last;
             _size -= (last - first);
             while((first != last) && (last != _tail)) {
-                _alloc.destroy(first);
-                *first = *last;
+                _alloc.destroy(&(*first));
+                _alloc.construct(&(*first), *last);
                 ++first;
                 ++last;
             }

@@ -1,6 +1,7 @@
 #ifndef JR_HASHTABLE_H
 #define JR_HASHTABLE_H
 
+#include <iostream>
 #include <cstddef>
 #include <functional>
 #include "../../container/sequence/jr_vector.h"
@@ -16,29 +17,33 @@ class _hashtable{
     template<class U, class T1, class T2, class T3, bool a>
     friend class _hashset_base;
 
+    template<class U1, class U2, class T1, class T2, class T3, bool a>
+    friend class _hashmap_base;
+
 private:
-    typedef _hashtable_node<T> lnode;
+    typedef _hashtable_node<T> hnode;
     HashFun Hash;
     KeyEqualFun KeyEqual;
     typename Allocator::template rebind<T>::other _alloc_data;
-    typename Allocator::template rebind<lnode>::other _alloc_node;
-    vector<lnode *, typename Allocator::template rebind<lnode *>::other> table;
+    typename Allocator::template rebind<hnode>::other _alloc_node;
+    vector<hnode *, typename Allocator::template rebind<hnode *>::other> table;
 
-    lnode *_copy_list(lnode *h) {
-        lnode *head = _alloc_node.allocate(1), *tmp = nullptr;
-        tmp = head;
-        for(lnode *n = h; n; n = n->next) {
-            lnode *m = _alloc_node.allocate(1);
+    hnode *_copy_list(hnode *h) {
+        hnode *head = _alloc_node.allocate(1);
+        hnode *tmp = head;
+        for(hnode *n = h; n; n = n->next) {
+            hnode *m = _alloc_node.allocate(1);
             _alloc_data.construct(&(m->data), n->data);
+            m->next = tmp->next;
             tmp->next = m;
             tmp = tmp->next;
         }
         return head;
     }
 
-    void _destroy_list(lnode *&m) {
+    void _destroy_list(hnode *m) {
         while(m) {
-            lnode *tmp = m->next;
+            hnode *tmp = m->next;
             _alloc_data.destroy(&(m->data));
             _alloc_node.deallocate(m, 1);
             m = tmp;
@@ -58,7 +63,8 @@ public:
     _hashtable(const _hashtable& x)
         : table(x.table.size()) {
         for(size_t i = 0; i < table.size(); i++) {
-            _copy_list(x.table[i]);
+            table[i] = _copy_list(x.table[i]);
+            table[i]->hasElem = x.table[i]->hasElem;
         }
     }
 
@@ -71,30 +77,34 @@ public:
     }
 
     ~_hashtable() {
-        for(lnode *&m : table) {
-//            _destroy_list(m);
+        for(size_t i = 0; i < table.size(); i++) {
+            _destroy_list(table[i]);
+            table[i] = nullptr;
         }
     }
 
     _hashtable& operator=(const _hashtable& x) {
-        for(lnode *&m : table) {
-            _destroy_list(m);
-        }
-        table.reserve(x.table.size());
+        if(this == &x)  return *this;
+        table.resize(x.table.size());
         for(size_t i = 0; i < table.size(); i++) {
-            _copy_list(x.table[i]);
+            if(table[i] && table[i]->next)
+                _destroy_list(table[i]->next);
+            table[i] = _copy_list(x.table[i]->next);
+            table[i]->hasElem = x.table[i]->hasElem;
         }
+        return *this;
     }
 
     _hashtable& operator=(_hashtable&& x) {
-        for(lnode *&m : table) {
-            _destroy_list(m);
-        }
-        table.reserve(x.table.size());
+        if(this == &x)  return *this;
+        table.resize(x.table.size());
         for(size_t i = 0; i < table.size(); i++) {
+            if(table[i] && table[i]->next)
+                _destroy_list(table[i]->next);
             table[i] = x.table[i];
             x.table[i] = _alloc_node.allocate(1);
         }
+        return *this;
     }
     // 设置表长
     void set_length(size_t len) {
@@ -107,77 +117,98 @@ public:
         }
     }
     // 查找目标键
-    pair<const int, lnode *> find(const T& target) {
+    pair<const int, hnode *> find(const T& target) {
         int hash_index = Hash(target);
         // 起始位置没有元素，或索引超出范围，说明该键值不存在，返回-1
         if((hash_index >= table.size()) || !table[hash_index]->hasElem)
-            return pair<const int, lnode *>(-1, nullptr);
-        lnode *m = table[hash_index];
-        while(!KeyEqual(m->data, target))
+            return pair<const int, hnode *>(-1, nullptr);
+        hnode *m = table[hash_index];
+        while(m && !KeyEqual(m->data, target))
             m = m->next;
-        return pair<const int, lnode *>(hash_index, m);
+        return pair<const int, hnode *>(hash_index, m);
+    }
+    // 元素计数器
+    size_t count(const T& k) {
+        size_t cnt = 0;
+        int hash_index = Hash(k);
+        // 起始位置没有元素，或索引超出范围，说明该键值不存在，返回0
+        if((hash_index >= table.size()) || !table[hash_index]->hasElem)
+            return 0;
+        hnode *m = table[hash_index];
+        while(m) {
+            if(KeyEqual(m->data, k))
+                ++cnt;
+            m = m->next;
+        }
+        return cnt;
     }
     // 插入新元素
-    pair<const int, lnode *> insert(const T& a) {
-        // 若不允许键值重复且该键值已存在，则什么都不做；否则，挂在哈希值对应索引的链表的尾部
+    pair<const int, hnode *> insert(const T& a) {
+        // 若不允许键值重复且该键值已存在，则什么都不做；否则，挂在哈希值对应索引的链表的头部
         auto t = find(a);
         if(!isMulti && t.second)
-            return pair<const int, lnode *>(-1, nullptr);
+            return t;
         else {
             int hash_index = Hash(a);
-            // 插入元素数量超过原来的表长-1时，扩充表长(最后一个桶用于标记end迭代器)
+            // 插入元素所需桶的数量超过原来的表长-1时，扩充表长(最后一个桶用于标记end迭代器)
             if(hash_index >= table.size() - 1) {
                 table.resize(hash_index + 5);
+                for(size_t i = 0; i < table.size(); i++) {
+                    if(!table[i])
+                        table[i] = _alloc_node.allocate(1);
+                }
             }
-            lnode *m = table[hash_index], *n = nullptr;
-            while(m->next)
-                m = m->next;
-            n = _alloc_node.allocate(1);
+            // 直接在链表头插入，节省插入时间
+            hnode *n = _alloc_node.allocate(1);
             _alloc_data.construct(&(n->data), a);
+            n->next = table[hash_index]->next;
+            table[hash_index]->next = n;
             table[hash_index]->hasElem = n->hasElem = true;
-            m->next = n;
-            return pair<const int, lnode *>(hash_index, n);
+            return pair<const int, hnode *>(hash_index, n);
         }
     }
 
-    pair<const int, lnode *> insert(T&& a) {
+    pair<const int, hnode *> insert(T&& a) {
         auto t = find(a);
         if(!isMulti && t.second)
-            return pair<const int, lnode *>(-1, nullptr);
+            return t;
         else {
             int hash_index = Hash(a);
-            // 插入元素数量超过原来的表长-1时，扩充表长(最后一个桶用于标记end迭代器)
+            // 插入元素所需桶的数量超过原来的表长-1时，扩充表长(最后一个桶用于标记end迭代器)
             if(hash_index >= table.size() - 1) {
                 table.resize(hash_index + 5);
+                for(size_t i = 0; i < table.size(); i++) {
+                    if(!table[i])
+                        table[i] = _alloc_node.allocate(1);
+                }
             }
-            lnode *m = table[hash_index], *n = nullptr;
-            while(m->next)
-                m = m->next;
-            n = _alloc_node.allocate(1);
+            // 直接在链表头插入，节省插入时间
+            hnode *n = _alloc_node.allocate(1);
             _alloc_data.construct(&(n->data), static_cast<T&&>(a));
+            n->next = table[hash_index]->next;
+            table[hash_index]->next = n;
             table[hash_index]->hasElem = n->hasElem = true;
-            m->next = n;
-            return pair<const int, lnode *>(hash_index, n);
+            return pair<const int, hnode *>(hash_index, n);
         }
     }
     
     // 将元素插入到指定位置（hint）之后
-    lnode *insert_hint(lnode *hint, const T& a) {
+    hnode *insert_hint(hnode *hint, const T& a) {
         auto t = find(a);
         if(!isMulti && t.second)
             return nullptr;
-        lnode *n = _alloc_node.allocate(1);
+        hnode *n = _alloc_node.allocate(1);
         _alloc_data.construct(&(n->data), a);
         n->next = hint->next;
         hint->next = n;
         return hint;
     }
     
-    lnode *insert_hint(lnode *hint, T&& a) {
+    hnode *insert_hint(hnode *hint, T&& a) {
         auto t = find(a);
         if(!isMulti && t.second)
             return nullptr;
-        lnode *n = _alloc_node.allocate(1);
+        hnode *n = _alloc_node.allocate(1);
         _alloc_data.construct(&(n->data), static_cast<T&&>(a));
         n->next = hint->next;
         hint->next = n;
@@ -185,16 +216,16 @@ public:
     }
     
     // 删除指定位置的元素
-    void erase(size_t hash_index, lnode *n) {
+    void erase(size_t hash_index, hnode *n) {
         // 起始位置没有元素，或索引超出范围，说明该键值不存在，无需删除
         if((hash_index >= table.size() - 1) || !table[hash_index]->hasElem) {
             return;
         }
-        lnode *m = table[hash_index];
+        hnode *m = table[hash_index];
         for(; m && m->next && (m->next != n); m = m->next);
         if(!m->next)
             return;
-        lnode *tmp = m->next;
+        hnode *tmp = m->next;
         m->next = m->next->next;
         _alloc_data.destroy(&(tmp->data));
         _alloc_node.deallocate(tmp, 1);
@@ -202,7 +233,7 @@ public:
             table[hash_index]->hasElem = false;
     }
 
-    // 删除对应键值的所有元素(析构整条链表)
+    // 删除对应键值的所有元素
     size_t erase(const T& target) {
         size_t cnt = 0;
         int hash_index = Hash(target);
@@ -210,14 +241,17 @@ public:
         if((hash_index >= table.size() - 1) || !table[hash_index]->hasElem) {
             return 0;
         }
-        lnode *m = table[hash_index];
-        while(m && m->next && KeyEqual(m->next->data, target)) {
-            lnode *tmp = m->next;
-            m->next = m->next->next;
-            _alloc_data.destroy(&(tmp->data));
-            _alloc_node.deallocate(tmp, 1);
-            ++cnt;
-            m = m->next;
+        hnode *m = table[hash_index];
+        while(m && m->next) {
+            if(KeyEqual(m->next->data, target)) {
+                hnode *tmp = m->next;
+                m->next = m->next->next;
+                _alloc_data.destroy(&(tmp->data));
+                _alloc_node.deallocate(tmp, 1);
+                ++cnt;
+            }else {
+                m = m->next;
+            }
         }
         if(!table[hash_index]->next)
             table[hash_index]->hasElem = false;

@@ -65,15 +65,6 @@ namespace jr_std {
                comp(c), t(first, last, comp), _alloc_data(a)
         {}
 
-        _map_base(const _map_base& x)
-            : _size(x.size()), comp(x.key_comp()), t(x.begin(), x.end(), comp)
-        {}
-
-        _map_base(_map_base&& x) : _size(x._size), comp(x.key_comp()),
-            t(static_cast<tree&&>(x.t), comp){
-            x._size = 0;
-        }
-
         _map_base(const _map_base& x, const Allocator& a)
             : _size(x.size()), comp(Compare()),
               t(x.begin(), x.end(), comp), _alloc_data(a)
@@ -85,9 +76,18 @@ namespace jr_std {
             x._size = 0;
         }
 
+        _map_base(const _map_base& x)
+            : _size(x.size()), comp(x.key_comp()), t(x.begin(), x.end(), comp)
+        {}
+
+        _map_base(_map_base&& x) : _size(x._size), comp(x.key_comp()),
+            t(static_cast<tree&&>(x.t), comp){
+            x._size = 0;
+        }
+
         virtual ~_map_base() = default;
 
-        virtual _map_base& operator=(const _map_base& x) {
+        _map_base& operator=(const _map_base& x) {
             if(this != & x) {
                 _size = x.size();
                 clear();
@@ -96,7 +96,7 @@ namespace jr_std {
             return *this;
         }
 
-        virtual _map_base& operator=(_map_base&& x) {
+        _map_base& operator=(_map_base&& x) {
             if(this != &x) {
                 _size = x._size;
                 x._size = 0;
@@ -333,6 +333,30 @@ namespace jr_std {
           typedef _map_base<Key, T, Compare, Allocator, false> _base;
 
       public:
+          // 构造（继承父类）
+          map() {}
+
+          explicit map(const Allocator& a)
+               : _base(a)
+          {}
+
+          explicit map(const Compare& c, const Allocator& a = Allocator())
+               : _base(c, a)
+          {}
+
+          template<class InputIt>
+          map(InputIt first, InputIt last,
+              const Compare& c = Compare(), const Allocator& a = Allocator())
+               : _base(first, last, c, a)
+          {}
+
+          map(const map& x, const Allocator& a)
+              : _base(x, a)
+          {}
+
+          map(map&& x, const Allocator& a)
+              : _base(static_cast<map&&>(x), a)
+          {}
           // 元素访问
           typename _base::mapped_type& operator[](const typename _base::key_type& x) {
               return (*((_base::insert(typename _base::value_type(x, T()))).first)).second;
@@ -351,11 +375,36 @@ namespace jr_std {
 
     template<class Key, class T, class Compare = less<Key>,
              class Allocator = allocator<pair<const Key, T> > >
-    class multimap  : public _map_base<Key, T, Compare, Allocator, true> {
+    class multimap : public _map_base<Key, T, Compare, Allocator, true> {
         private:
             typedef _map_base<Key, T, Compare, Allocator, true> _base;
 
         public:
+            // 构造（继承父类）
+            multimap() {}
+
+            explicit multimap(const Allocator& a)
+                 : _base(a)
+            {}
+
+            explicit multimap(const Compare& c, const Allocator& a = Allocator())
+                 : _base(c, a)
+            {}
+
+            template<class InputIt>
+            multimap(InputIt first, InputIt last,
+                const Compare& c = Compare(), const Allocator& a = Allocator())
+                 : _base(first, last, c, a)
+            {}
+
+            multimap(const multimap& x, const Allocator& a)
+                : _base(x, a)
+            {}
+
+            multimap(multimap&& x, const Allocator& a)
+                : _base(static_cast<multimap&&>(x), a)
+            {}
+            // 特化操作
             template< class... Args >
             typename _base::iterator emplace( Args&&... args )
             { return (_base::emplace(static_cast<Args&&>(args)...)).first; }

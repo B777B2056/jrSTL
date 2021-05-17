@@ -394,8 +394,8 @@ namespace jr_std {
     struct _hashtable_iterator{
         // 迭代器通用的类型定义
         typedef U value_type;
-        typedef const U* pointer;
-        typedef const U& reference;
+        typedef U* pointer;
+        typedef U& reference;
         typedef size_t size_type;
         typedef ptrdiff_t difference_type;
         typedef forward_iterator_tag iterator_category;
