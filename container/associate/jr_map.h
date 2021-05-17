@@ -25,6 +25,8 @@ namespace jr_std {
           typedef ptrdiff_t difference_type;
           typedef _balance_bst_iterator<value_type, value_type&, value_type*> iterator;
           typedef _balance_bst_iterator<value_type, const value_type&, const value_type*> const_iterator;
+          typedef jr_std::reverse_iterator<const_iterator> const_reverse_iterator;
+          typedef jr_std::reverse_iterator<iterator> reverse_iterator;
 
         class value_compare {
           friend class _map_base;
@@ -131,6 +133,18 @@ namespace jr_std {
         const_iterator cend() const noexcept {
             return const_iterator(t.get_header(), t.get_header());
         }
+
+        reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+
+        const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+
+        const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+
+        reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+
+        const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+
+        const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
 
         // 容量
         bool empty() const noexcept { return _size == 0; }

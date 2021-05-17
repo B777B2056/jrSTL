@@ -17,6 +17,8 @@ namespace jr_std {
     public:
         typedef T* iterator;
         typedef const T* const_iterator;
+        typedef jr_std::reverse_iterator<const_iterator> const_reverse_iterator;
+        typedef jr_std::reverse_iterator<iterator> reverse_iterator;
         typedef T value_type;
         typedef Allocator allocator_type;
         typedef size_t size_type;
@@ -25,6 +27,7 @@ namespace jr_std {
         typedef const T& const_reference;
         typedef T* pointer;
         typedef const T* const_pointer;
+
     protected:
         Allocator _alloc;
         size_type _size, _cap;
@@ -300,6 +303,18 @@ namespace jr_std {
         iterator end() noexcept { return _tail; }
         const_iterator end() const noexcept { return _tail; }
         const_iterator cend() const noexcept { return _tail; }
+
+        reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+
+        const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+
+        const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+
+        reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+
+        const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+
+        const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
 
         bool empty() const noexcept { return _size == 0; }
 

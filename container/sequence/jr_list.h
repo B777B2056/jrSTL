@@ -10,8 +10,19 @@ namespace jr_std {
     template<class T, class Allocator = allocator<T> >
     class list {
     public:
+        // type define
+        typedef T value_type;
+        typedef ptrdiff_t difference_type;
+        typedef T* pointer;
+        typedef const T* const_pointer;
+        typedef T& reference;
+        typedef const T& const_reference;
+        typedef size_t size_type;
+        typedef Allocator allocator_type;
         typedef _list_iterator<T, T&, T*> iterator;
         typedef _list_iterator<T, const T&, const T*> const_iterator;
+        typedef jr_std::reverse_iterator<const_iterator> const_reverse_iterator;
+        typedef jr_std::reverse_iterator<iterator> reverse_iterator;
 
     protected:
         Allocator _alloc;
@@ -293,16 +304,6 @@ namespace jr_std {
         }
 
     public:
-        // type define
-        typedef T value_type;
-        typedef ptrdiff_t difference_type;
-        typedef T* pointer;
-        typedef const T* const_pointer;
-        typedef T& reference;
-        typedef const T& const_reference;
-        typedef size_t size_type;
-        typedef Allocator allocator_type;
-
         explicit list() : _size(0) {
            _create_empty_node();
         }
@@ -401,6 +402,18 @@ namespace jr_std {
         iterator end() noexcept { return iterator(_tail); }
         const_iterator end() const noexcept { return const_iterator(_tail); }
         const_iterator cend() noexcept { return const_iterator(_tail); }
+
+        reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+
+        const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+
+        const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+
+        reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+
+        const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+
+        const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
 
         bool empty() const noexcept { return _size == 0; }
         size_type size() const noexcept { return _size; }

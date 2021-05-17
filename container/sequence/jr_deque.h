@@ -22,6 +22,8 @@ namespace jr_std {
         typedef const T* const_pointer;
         typedef _deque_iterator<T, T&, T*, BufSize> iterator;
         typedef _deque_iterator<T, const T&, const T*, BufSize> const_iterator;
+        typedef jr_std::reverse_iterator<const_iterator> const_reverse_iterator;
+        typedef jr_std::reverse_iterator<iterator> reverse_iterator;
 
     protected:
         // 管理不同连续存储区的map定义
@@ -256,6 +258,18 @@ namespace jr_std {
         const_iterator end() const noexcept { return const_iterator(_finish.control_node, _finish.cur); }
         const_iterator cbegin() const noexcept { return const_iterator(_start.control_node); }
         const_iterator cend() const noexcept { return const_iterator(_finish.control_node, _finish.cur); }
+
+        reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+
+        const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+
+        const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+
+        reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+
+        const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+
+        const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
         // 元素访问
         reference operator[](size_type n) {
             iterator it = _start;
