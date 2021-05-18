@@ -59,13 +59,13 @@ namespace jr_std {
 
         template<class InputIt>
         void _ctor(InputIt first, InputIt last, const Allocator& alloc, std::false_type) {
-            _size = last - first;
+            _size = static_cast<size_type>(jr_std::distance(first, last));
             _cap = 2 * _size;
             _head = alloc.allocate(_cap);
             _tail = _head + _size;
             _end_of_storage = _head + _cap;
             for(iterator tmp = _head; tmp != _tail; ++tmp) {
-                _alloc.construct(tmp, *(first + (tmp - _head)));
+                _alloc.construct(tmp, *(jr_std::next(first, tmp - _head)));
             }
         }
 
