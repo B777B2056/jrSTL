@@ -1,6 +1,7 @@
 #ifndef JR_ALGORITHM_H
 #define JR_ALGORITHM_H
 
+#include <iostream>
 #include <cstring>
 #include <cstddef>
 #include <type_traits>
@@ -111,10 +112,10 @@ namespace jr_std {
     template< class ForwardIt1, class ForwardIt2, class BinaryPredicate >
     ForwardIt1 find_end( ForwardIt1 first, ForwardIt1 last,
                          ForwardIt2 s_first, ForwardIt2 s_last, BinaryPredicate p ) {
-        ForwardIt1 rfirst = reverse_iterator(last);
-        ForwardIt1 rlast = reverse_iterator(first);
-        ForwardIt1 rs_first = reverse_iterator(s_last);
-        ForwardIt1 rs_last = reverse_iterator(s_first);
+        ForwardIt1 rfirst = reverse_iterator<ForwardIt1>(last);
+        ForwardIt1 rlast = reverse_iterator<ForwardIt1>(first);
+        ForwardIt1 rs_first = reverse_iterator<ForwardIt2>(s_last);
+        ForwardIt1 rs_last = reverse_iterator<ForwardIt2>(s_first);
         while(rfirst != rlast) {
             if(p(*rfirst, *rs_first)) {
                 ForwardIt1 tmp1 = rfirst;
@@ -271,7 +272,7 @@ namespace jr_std {
     template< class InputIt, class OutputIt >
     struct _copy_dispatch {
         OutputIt operator()( InputIt first, InputIt last, OutputIt d_first ) {
-            return _copy(first, last, d_first, iterator_traits<InputIt>::iterator_category());
+            return _copy(first, last, d_first, typename iterator_traits<InputIt>::iterator_category());
         }
     };
 
@@ -303,7 +304,7 @@ namespace jr_std {
     // 完全泛化版本
     template< class InputIt, class OutputIt >
     OutputIt copy( InputIt first, InputIt last, OutputIt d_first ) {
-        return _copy_dispatch(first, last, d_first);
+        return _copy_dispatch<InputIt, OutputIt >()(first, last, d_first);
     }
 
     // char/wchar_t具有平凡特性，可以直接操作内存，速度很快
@@ -359,7 +360,7 @@ namespace jr_std {
 
     template< class BidirIt1, class BidirIt2 >
     BidirIt2 copy_backward( BidirIt1 first, BidirIt1 last, BidirIt2 d_last ) {
-        auto res = copy(reverse_iterator(last), reverse_iterator(first), reverse_iterator(d_last));
+        auto res = copy(reverse_iterator<BidirIt1>(last), reverse_iterator<BidirIt1>(first), reverse_iterator<BidirIt2>(d_last));
         return res.base();
     }
 
@@ -391,7 +392,7 @@ namespace jr_std {
 
     template< class BidirIt1, class BidirIt2 >
     BidirIt2 move_backward( BidirIt1 first, BidirIt1 last, BidirIt2 d_last ) {
-        return move(reverse_iterator(last), reverse_iterator(first), reverse_iterator(d_last));
+        return move(reverse_iterator<BidirIt1>(last), reverse_iterator<BidirIt1>(first), reverse_iterator<BidirIt2>(d_last));
     }
 
     template< class ForwardIt, class T >
@@ -431,7 +432,6 @@ namespace jr_std {
             *first = g(*first);
             ++first;
         }
-        return first;
     }
 
     template< class ForwardIt, class Generator >
@@ -441,12 +441,11 @@ namespace jr_std {
             *first = g(*first);
             ++first;
         }
-        return first;
     }
 
     template< class ForwardIt, class Generator >
     void generate( ForwardIt first, ForwardIt last, Generator g ) {
-        return _generate(first, last, g, iterator_traits<ForwardIt>::iterator_category());
+        _generate(first, last, g, typename iterator_traits<ForwardIt>::iterator_category());
     }
 
     template< class OutputIt, class Size, class Generator >
@@ -575,14 +574,16 @@ namespace jr_std {
             *first = *last;
             *last = tmp;
             ++first;
+            if(first == last)
+                break;
             --last;
         }
     }
 
     template< class BidirIt, class OutputIt >
     OutputIt reverse_copy( BidirIt first, BidirIt last, OutputIt d_first ) {
-        BidirIt rfirst = reverse_iterator(last);
-        BidirIt rlast = reverse_iterator(first);
+        BidirIt rfirst = reverse_iterator<BidirIt>(last);
+        BidirIt rlast = reverse_iterator<BidirIt>(first);
         while(rfirst != rlast) {
             *d_first = *rfirst;
             ++rfirst;
@@ -593,14 +594,16 @@ namespace jr_std {
 
     template< class ForwardIt >
     ForwardIt _rotate( ForwardIt first, ForwardIt n_first, ForwardIt last, input_iterator_tag ) {
-        while(n_first != last) {
-            ForwardIt tmp_it = n_first;
-            while(first != tmp_it) {
-                typename iterator_traits<ForwardIt>::value_type tmp = *first;
-                *first = *n_first;
-                *n_first = tmp;
-                ++first;
-                ++n_first;
+        if(first != n_first){
+            while(n_first != last) {
+                ForwardIt tmp_it = n_first;
+                while(first != tmp_it) {
+                    typename iterator_traits<ForwardIt>::value_type tmp = *first;
+                    *first = *n_first;
+                    *n_first = tmp;
+                    ++first;
+                    ++n_first;
+                }
             }
         }
         return first;
@@ -608,15 +611,17 @@ namespace jr_std {
 
     template< class ForwardIt >
     ForwardIt _rotate( ForwardIt first, ForwardIt n_first, ForwardIt last, bidectional_iterator_tag ) {
-        reverse(first, n_first);
-        reverse(n_first, last);
-        reverse(first, last);
+        if(first != n_first) {
+            reverse(first, n_first);
+            reverse(n_first, last);
+            reverse(first, last);
+        }
         return first;
     }
 
     template< class ForwardIt >
     ForwardIt rotate( ForwardIt first, ForwardIt n_first, ForwardIt last ) {
-        return _rotate(first, n_first, last, iterator_traits<ForwardIt>::iterator_category());
+        return _rotate(first, n_first, last, typename iterator_traits<ForwardIt>::iterator_category());
     }
 
     template< class ForwardIt, class OutputIt >
@@ -814,19 +819,93 @@ namespace jr_std {
     template< class InputIt1, class InputIt2, class OutputIt, class Compare>
     OutputIt merge( InputIt1 first1, InputIt1 last1,
                     InputIt2 first2, InputIt2 last2,
-                    OutputIt d_first, Compare comp );
+                    OutputIt d_first, Compare comp ) {
+        if(first1 == last1)
+            d_first = copy(first2, last2, d_first);
+        else if(first2 == last2)
+            d_first = copy(first1, last1, d_first);
+        else {
+            if(comp(*first1, *first2)) {
+                while((first1 != last1) && (first2 != last2)) {
+                    if(comp(*first1, *first2)) {
+                        *d_first = *first1;
+                        ++first1;
+                        ++d_first;
+                    }
+                    else {
+                        *d_first = *first2;
+                        ++first2;
+                        ++d_first;
+                    }
+                }
+            } else {
+                while((first1 != last1) && (first2 != last2)) {
+                    if(comp(*first2, *first1)) {
+                        *d_first = *first2;
+                        ++first2;
+                        ++d_first;
+                    }
+                    else {
+                        *d_first = *first1;
+                        ++first1;
+                        ++d_first;
+                    }
+                }
+            }
+            while(first1 != last1) {
+                *d_first = *first1;
+                ++first1;
+                ++d_first;
+            }
+            while(first2 != last2) {
+                *d_first = *first2;
+                ++first2;
+                ++d_first;
+            }
+        }
+        return d_first;
+    }
 
     template< class InputIt1, class InputIt2, class OutputIt >
     OutputIt merge( InputIt1 first1, InputIt1 last1,
                     InputIt2 first2, InputIt2 last2,
-                    OutputIt d_first );
+                    OutputIt d_first ) {
+        typedef typename iterator_traits<InputIt1>::value_type type1;
+        typedef typename iterator_traits<InputIt2>::value_type type2;
+        return merge(first1, last1, first2, last2, d_first,
+                     [](const type1& a, const type2& b)->bool { return a < b; });
+    }
 
-    // 原地归并
+    // 原地归并(完全不同于普通归并！！！！)
     template< class BidirIt, class Compare>
-    void inplace_merge( BidirIt first, BidirIt middle, BidirIt last, Compare comp );
+    void inplace_merge( BidirIt first, BidirIt middle, BidirIt last, Compare comp ) {
+        if(first == last)
+            return;
+        else {
+            BidirIt it_mid = middle;
+            while((first != middle) && (it_mid != last)) {
+                while((first != middle) && !comp(*it_mid, *first)) {
+                    ++first;
+                }
+                BidirIt tmp = it_mid;
+                ptrdiff_t cnt = 0; // 旋转计数，对于第二序列需要旋转多少个元素进行计数
+                while((it_mid != last) && comp(*it_mid, *first)) {
+                    ++cnt;
+                    ++it_mid;
+                }
+                rotate(first, tmp, it_mid);
+                if(first != middle)
+                    jr_std::advance(first, cnt);
+            }
+        }
+    }
 
     template< class BidirIt >
-    void inplace_merge( BidirIt first, BidirIt middle, BidirIt last );
+    void inplace_merge( BidirIt first, BidirIt middle, BidirIt last ) {
+        typedef typename iterator_traits<BidirIt>::value_type type;
+        return inplace_merge(first, middle, last,
+                     [](const type& a, const type& b)->bool { return a < b; });
+    }
 
     /*比较操作*/
     template< class InputIt1, class InputIt2, class BinaryPredicate >
@@ -849,42 +928,148 @@ namespace jr_std {
                      [](const type1& a, const type2& b)->bool { return a == b; });
     }
 
-    template< class InputIt1, class InputIt2 >
-    bool lexicographical_compare( InputIt1 first1, InputIt1 last1,
-                                  InputIt2 first2, InputIt2 last2 );
+    template< class InputIt1, class InputIt2, class Compare >
+    bool _lexicographical_compare( InputIt1 first1, InputIt1 last1,
+                                   InputIt2 first2, InputIt2 last2,
+                                   Compare comp, input_iterator_tag, input_iterator_tag ) {
+        while((first1 != last1) && (first2 != last2)) {
+            if(!comp(*first1, *first2))
+                return false;
+            ++first1;
+            ++first2;
+        }
+        return first1 == last1;
+    }
+
+    template< class InputIt1, class InputIt2, class Compare >
+    bool _lexicographical_compare( InputIt1 first1, InputIt1 last1,
+                                   InputIt2 first2, InputIt2 last2,
+                                   Compare comp, random_access_iterator_tag, random_access_iterator_tag ) {
+        if(comp(last1-first1, last2-first2))
+            return true;
+        if(comp(last2-first2, last1-first1))
+            return false;
+        while(first1 != last1) {
+            if(!comp(*first1, *first2))
+                return false;
+            ++first1;
+            ++first2;
+        }
+        return true;
+    }
 
     template< class InputIt1, class InputIt2, class Compare >
     bool lexicographical_compare( InputIt1 first1, InputIt1 last1,
                                   InputIt2 first2, InputIt2 last2,
-                                  Compare comp );
+                                  Compare comp ) {
+        return _lexicographical_compare(first1, last1, first2, last2, comp,
+                                        iterator_traits<InputIt1>::iterator_category(),
+                                        iterator_traits<InputIt2>::iterator_category());
+    }
+
+    template< class InputIt1, class InputIt2 >
+    bool lexicographical_compare( InputIt1 first1, InputIt1 last1,
+                                  InputIt2 first2, InputIt2 last2 ) {
+        typedef typename iterator_traits<InputIt1>::value_type type1;
+        typedef typename iterator_traits<InputIt2>::value_type type2;
+        return lexicographical_compare(first1, last1, first2, last2,
+                                       [](const type1& a, const type2& b)->bool { return a < b; });
+    }
 
     /*二分搜索操作*/
     template< class ForwardIt, class T, class Compare >
-    ForwardIt lower_bound( ForwardIt first, ForwardIt last, const T& value, Compare comp );
+    ForwardIt lower_bound( ForwardIt first, ForwardIt last, const T& value, Compare comp ) {
+        if(first == last)
+            return first;
+        typedef typename iterator_traits<ForwardIt>::difference_type dis_type;
+        dis_type start = 0, end = jr_std::distance(first, last) - 1;
+        while(start <= end) {
+            dis_type mid = start + (end - start) / 2;
+            ForwardIt middle = first;
+            jr_std::advance(middle, mid);
+            if(comp(*middle, value)) {
+                start = mid + 1;
+            } else if(comp(value, *middle)) {
+                end = mid - 1;
+            } else {
+                return middle;
+            }
+        }
+        return last;
+    }
 
     template< class ForwardIt, class T >
-    ForwardIt lower_bound( ForwardIt first, ForwardIt last, const T& value );
+    ForwardIt lower_bound( ForwardIt first, ForwardIt last, const T& value ) {
+        return lower_bound(first, last, value, [](const T& a, const T& b)->bool { return a < b; });
+    }
 
     template< class ForwardIt, class T, class Compare >
-    ForwardIt upper_bound( ForwardIt first, ForwardIt last, const T& value, Compare comp );
+    ForwardIt upper_bound( ForwardIt first, ForwardIt last, const T& value, Compare comp ) {
+        if(first == last || comp(value, *first))
+            return first;
+        ForwardIt middle, ret = last;
+        typedef typename iterator_traits<ForwardIt>::difference_type dis_type;
+        dis_type start = 0, end = jr_std::distance(first, last) - 1;
+        while(start <= end) {
+            dis_type mid = start + (end - start) / 2;
+            ForwardIt middle = first;
+            jr_std::advance(middle, mid);
+            if(comp(*middle, value)) {
+                start = mid + 1;
+            } else {
+                ret = middle;
+                ++ret;
+                end = mid - 1;
+            }
+        }
+        return ret;
+    }
 
     template< class ForwardIt, class T >
-    ForwardIt upper_bound( ForwardIt first, ForwardIt last, const T& value );
+    ForwardIt upper_bound( ForwardIt first, ForwardIt last, const T& value ) {
+        return upper_bound(first, last, value, [](const T& a, const T& b)->bool { return a < b; });
+    }
 
     template< class ForwardIt, class T, class Compare >
-    bool binary_search( ForwardIt first, ForwardIt last, const T& value, Compare comp );
+    bool binary_search( ForwardIt first, ForwardIt last, const T& value, Compare comp ) {
+        if(first == last)
+            return false;
+        typedef typename iterator_traits<ForwardIt>::difference_type dis_type;
+        dis_type start = 0, end = jr_std::distance(first, last) - 1;
+        while(start <= end) {
+            dis_type mid = start + (end - start) / 2;
+            ForwardIt middle = first;
+            jr_std::advance(middle, mid);
+            if(comp(*middle, value)) {
+                start = mid + 1;
+            } else if(comp(value, *middle)) {
+                end = mid - 1;
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
 
     template< class ForwardIt, class T >
-    bool binary_search( ForwardIt first, ForwardIt last, const T& value );
+    bool binary_search( ForwardIt first, ForwardIt last, const T& value ) {
+        return binary_search(first, last, value,
+                             [](const T& a, const T& b)->bool { return a < b; });
+    }
 
     template< class ForwardIt, class T, class Compare >
     pair<ForwardIt,ForwardIt>
-    equal_range( ForwardIt first, ForwardIt last,
-                 const T& value, Compare comp );
+    equal_range( ForwardIt first, ForwardIt last, const T& value, Compare comp ) {
+        return pair<ForwardIt,ForwardIt>(lower_bound(first, last, value, comp),
+                                         upper_bound(first, last, value, comp));
+    }
 
     template< class ForwardIt, class T >
     pair<ForwardIt,ForwardIt>
-    equal_range( ForwardIt first, ForwardIt last, const T& value );
+    equal_range( ForwardIt first, ForwardIt last, const T& value ) {
+        return equal_range(first, last, value,
+                           [](const T& a, const T& b)->bool { return a < b; });
+    }
 
     /*划分操作*/
     template< class InputIt, class UnaryPredicate >
