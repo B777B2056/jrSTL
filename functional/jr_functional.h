@@ -2,6 +2,8 @@
 #define JR_FUNCTIONAL_H
 
 #include <memory>
+#include <tuple>
+#include <bits/invoke.h>
 #include <type_traits>
 
 namespace jr_std {
@@ -105,10 +107,6 @@ namespace jr_std {
     { return _Mem_Fn_Var<M, T>(pm); }
 
     /*绑定器*/
-    // 绑定参数，相当于使用绑定到 args 的参数调用 f 。
-    template< class F, class... Args >
-    struct bind;
-
     // 判断T是否为bind类型
     template< class T >
     struct is_bind_expression;
@@ -138,6 +136,70 @@ namespace jr_std {
     template< int _N >
     struct is_placeholder<_Place_Holders<_N> >
             : std::integral_constant<int, _N> {};
+
+    // 有Bug
+//    template< class F, class... Args >
+//    struct _Bind_Without_Ret_Type {
+//        protected:
+//            F fun;  // 保存函数
+//            std::tuple<Args&&...> args;  // 保存函数入参
+//            // 如果参数为非占位符，就返回其自身
+//            template<class TArgs, class InputPara>
+//            struct choose_para {
+//                decltype (auto) operator()(TArgs& a, InputPara&&) {
+//                    return a;
+//                }
+//            };
+//            // 如果参数为占位符N，就返回当前入参里第N个参数
+//            template<int _N, class InputPara>
+//            struct choose_para<_Place_Holders<_N>, InputPara> {
+//                decltype (auto) operator()(_Place_Holders<_N>& a, InputPara&& ip) {
+//                    return std::get<_N>(static_cast<InputPara&&>(ip));
+//                }
+//            };
+//            // 调用
+//            template< int...index, class TArg, class InputPara >
+//            decltype (auto) bind_invoke(TArg& a, InputPara&& ip) {
+//                return std::__invoke(fun, choose_para<TArg, InputPara>(std::get<index>(a),
+//                                                      static_cast<InputPara&&>(ip))...);
+//            }
+
+//        public:
+//            _Bind_Without_Ret_Type(F&& f, Args&&... a)
+//                : fun(std::forward(f)),
+//                  args(std::forward_as_tuple(a...)) {}
+
+//            template< class... InputPara >
+//            decltype (auto) operator()(InputPara&&... ip) {
+//                return bind_invoke(std::index_sequence_for<Args...>{}, args,
+//                                   static_cast<InputPara&&>(ip)...);
+//            }
+//    };
+
+//    template< class R, class F, class... Args >
+//    struct _Bind_With_Ret_Type {
+//    protected:
+//        F (R::*fptr)(Args...);
+
+//    public:
+//        _Bind_With_Ret_Type(F (R::*x)(Args...)) : fptr(x) {}
+
+//        F operator()(R *object, Args&&... args)
+//        { return (object->*fptr)(static_cast<Args&&>(args)...); }
+
+//        F operator()(R &object, Args&&... args)
+//        { return (object.*fptr)(static_cast<Args&&>(args)...); }
+//    };
+
+//    template< class F, class... Args >
+//    _Bind_Without_Ret_Type<F, Args...> bind(F&& f, Args&&...) {
+//        return _Bind_Without_Ret_Type<F, Args...>(f);
+//    }
+
+//    template< class R, class F, class... Args >
+//    _Bind_With_Ret_Type<R, F, Args...> bind(F&& f, Args&&...) {
+//        return _Bind_With_Ret_Type<R, F, Args...>(f);
+//    }
 
     /*引用包装*/
     // 包装引用于可复制、可赋值对象的类模板，该类的对象的表现如同一个引用
