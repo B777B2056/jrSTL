@@ -239,6 +239,13 @@ namespace jr_std {
     }
 
     /*修改序列的操作*/
+    template< class ForwardIt1, class ForwardIt2 >
+    void iter_swap( ForwardIt1 a, ForwardIt2 b ) {
+        typename iterator_traits<ForwardIt1>::value_type tmp = *a;
+        *a = *b;
+        *b = tmp;
+    }
+
     //逐个拷贝元素，循环结束条件为循环次数达到last-first次
     template< class InputIt, class OutputIt >
     OutputIt _copy_d( InputIt first, InputIt last, OutputIt d_first ) {
@@ -595,18 +602,26 @@ namespace jr_std {
     template< class ForwardIt >
     ForwardIt _rotate( ForwardIt first, ForwardIt n_first, ForwardIt last, input_iterator_tag ) {
         if(first != n_first){
-            while(n_first != last) {
-                ForwardIt tmp_it = n_first;
-                while(first != tmp_it) {
-                    typename iterator_traits<ForwardIt>::value_type tmp = *first;
-                    *first = *n_first;
-                    *n_first = tmp;
+            ForwardIt tmp_it = n_first, ret = first;
+            jr_std::advance(ret, jr_std::distance(n_first, last));
+            while(tmp_it != last) {
+                while((first != n_first) && (tmp_it != last)) {
+                    iter_swap(first, tmp_it);
                     ++first;
-                    ++n_first;
+                    ++tmp_it;
+                }
+                // 左长右短
+                if(first != n_first) {
+                    tmp_it = n_first;
+                }
+                // 左短右长
+                if(tmp_it != last) {
+                    n_first = tmp_it;
                 }
             }
-        }
-        return first;
+            return ret;
+        } else
+            return last;
     }
 
     template< class ForwardIt >
@@ -616,6 +631,7 @@ namespace jr_std {
             reverse(n_first, last);
             reverse(first, last);
         }
+        jr_std::advance(first, jr_std::distance(n_first, last));
         return first;
     }
 
@@ -643,6 +659,9 @@ namespace jr_std {
 
     template< class ForwardIt, class BinaryPredicate >
     ForwardIt unique( ForwardIt first, ForwardIt last, BinaryPredicate p ) {
+        if(first == last)
+            return last;
+        ForwardIt ret = last, le = first;
         while(first != last) {
             ForwardIt next = first;
             ++next;
@@ -651,19 +670,14 @@ namespace jr_std {
             if(p(*next, *first)) {
                 while(p(*next, *first) && (next != last)) {
                     ++next;
+                    --ret;
                 }
-                if(next == last)
-                    break;
-                ++first;
-                for(ForwardIt it = next; first != it; ++first) {
-                    *first = *next;
-                    ++next;
-                }
+                rotate(++first, next, last);
             } else {
                 ++first;
             }
         }
-        return first;
+        return ret;
     }
 
     template< class ForwardIt >
@@ -722,13 +736,6 @@ namespace jr_std {
     template< class T2, size_t N >
     void swap( T2 (&a)[N], T2 (&b)[N]) noexcept {
         swap_ranges(a, a + N, b);
-    }
-
-    template< class ForwardIt1, class ForwardIt2 >
-    void iter_swap( ForwardIt1 a, ForwardIt2 b ) {
-        typename iterator_traits<ForwardIt1>::value_type tmp = *a;
-        *a = *b;
-        *b = tmp;
     }
 
     template< class RandomIt, class URBG >
@@ -893,7 +900,7 @@ namespace jr_std {
                     ++cnt;
                     ++it_mid;
                 }
-                rotate(first, tmp, it_mid);
+                jr_std::rotate(first, tmp, it_mid);
                 if(first != middle)
                     jr_std::advance(first, cnt);
             }
@@ -903,8 +910,8 @@ namespace jr_std {
     template< class BidirIt >
     void inplace_merge( BidirIt first, BidirIt middle, BidirIt last ) {
         typedef typename iterator_traits<BidirIt>::value_type type;
-        return inplace_merge(first, middle, last,
-                     [](const type& a, const type& b)->bool { return a < b; });
+        jr_std::inplace_merge(first, middle, last,
+                      [](const type& a, const type& b)->bool { return a < b; });
     }
 
     /*比较操作*/
@@ -982,20 +989,20 @@ namespace jr_std {
         if(first == last)
             return first;
         typedef typename iterator_traits<ForwardIt>::difference_type dis_type;
-        dis_type start = 0, end = jr_std::distance(first, last) - 1;
-        while(start <= end) {
+        dis_type start = 0, end = jr_std::distance(first, last);
+        while(start < end) {
             dis_type mid = start + (end - start) / 2;
             ForwardIt middle = first;
             jr_std::advance(middle, mid);
             if(comp(*middle, value)) {
                 start = mid + 1;
-            } else if(comp(value, *middle)) {
-                end = mid - 1;
             } else {
-                return middle;
+                end = mid;
+
             }
         }
-        return last;
+        jr_std::advance(first, start);
+        return first;
     }
 
     template< class ForwardIt, class T >
@@ -1007,19 +1014,19 @@ namespace jr_std {
     ForwardIt upper_bound( ForwardIt first, ForwardIt last, const T& value, Compare comp ) {
         if(first == last || comp(value, *first))
             return first;
-        ForwardIt middle, ret = last;
+        ForwardIt middle, ret;
         typedef typename iterator_traits<ForwardIt>::difference_type dis_type;
-        dis_type start = 0, end = jr_std::distance(first, last) - 1;
-        while(start <= end) {
+        dis_type start = 0, end = jr_std::distance(first, last);
+        while(start < end) {
             dis_type mid = start + (end - start) / 2;
             ForwardIt middle = first;
             jr_std::advance(middle, mid);
-            if(comp(*middle, value)) {
-                start = mid + 1;
+            if(comp(value, *middle)) {
+                end = mid;
             } else {
+                start = mid + 1;
                 ret = middle;
                 ++ret;
-                end = mid - 1;
             }
         }
         return ret;

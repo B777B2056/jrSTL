@@ -2,7 +2,7 @@
 #define JR_UNORDERED_SET_H
 
 #include <cstddef>
-#include <functional>
+#include "../../functional/jr_functional.h"
 #include "../../memory/jr_allocator.h"
 #include "../../container/utils/jr_hashtable.h"
 
@@ -106,14 +106,16 @@ namespace jr_std {
     ~_hashset_base() = default;
 
     _hashset_base& operator=(const _hashset_base& x) {
-        if(this == &x)  return;
+        if(this == &x)
+            return *this;
         _tab = x._tab;
         _num_of_elem = x._num_of_elem;
         return *this;
     }
 
     _hashset_base& operator=(_hashset_base&& x) {
-        if(this == &x)  return;
+        if(this == &x)
+            return *this;
         _tab = static_cast<table&&>(x._tab);
         _num_of_elem = x._num_of_elem;
         return *this;
@@ -390,7 +392,7 @@ namespace jr_std {
 
   template<class Key,
            class Hash = std::hash<Key>,
-           class Pred = std::equal_to<Key>,
+           class Pred = jr_std::equal_to<Key>,
            class Allocator = jr_std::allocator<Key>>
   class unordered_set : public _hashset_base<Key, Hash, Pred, Allocator, false> {
   private:

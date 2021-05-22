@@ -5,39 +5,27 @@
 #include "container/sequence/jr_vector.h"
 #include "algorithm/jr_algorithm.h"
 
-template<class Iter>
-void merge_sort(Iter first, Iter last)
-{
-    if (last - first > 1) {
-        Iter middle = first + (last - first) / 2;
-        merge_sort(first, middle);
-        merge_sort(middle, last);
-        std::cout << "Middle = " << *middle;
-        std::cout << ", Before merge: ";
-        for(Iter i = first; i != last; i++) {
-            std::cout << *i << " ";
-        }
-        std::cout << std::endl;
-        jr_std::inplace_merge(first, middle, last);
-        std::cout << "After merge: ";
-        for(Iter i = first; i != last; i++) {
-            std::cout << *i << " ";
-        }
-        std::cout << std::endl;
-    }
-}
-
-
 int main() {
     jr_std::vector<int> v;
-    int m[] = {8, 2, -2, 0, 11, 11, 1, 7, 3};
+    int m[] = {1,2,1,1,3,3,3,4,5,4};
     for(int n : m)
         v.push_back(n);
-    merge_sort(v.begin(), v.end());
-    for(auto n : v) {
-        std::cout << n << ' ';
-    }
-    std::cout << '\n';
+    // 移除相继（毗邻）的重复元素
+    auto last = jr_std::unique(v.begin(), v.end());
+    // v 现在保有 {1 2 1 3 4 5 4 x x x} ，其中 x 不确定
+    v.erase(last, v.end());
+    for (int i : v)
+      std::cout << i << " ";
+    std::cout << "\n";
+
+    // sort 后 unique 以移除所有重复
+    std::sort(v.begin(), v.end()); // {1 1 2 3 4 4 5}
+    last = jr_std::unique(v.begin(), v.end());
+    // v 现在保有 {1 2 3 4 5 x x} ，其中 'x' 不确定
+    v.erase(last, v.end());
+    for (int i : v)
+      std::cout << i << " ";
+    std::cout << "\n";
 
     return 0;
 }
