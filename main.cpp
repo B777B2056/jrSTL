@@ -1,31 +1,27 @@
 #include <iostream>
+#include <string>
 #include <random>
 #include <functional>
+#include <numeric>
 #include <algorithm>
 #include "container/sequence/jr_vector.h"
+#include "container/sequence/jr_forward_list.h"
 #include "algorithm/jr_algorithm.h"
 
 int main() {
     jr_std::vector<int> v;
-    int m[] = {1,2,1,1,3,3,3,4,5,4};
-    for(int n : m)
+    for(int n : {5,6,7,8,9,10, -10,-200,0,1,2,3,4,5,6,7,8,9,10})
         v.push_back(n);
-    // 移除相继（毗邻）的重复元素
-    auto last = jr_std::unique(v.begin(), v.end());
-    // v 现在保有 {1 2 1 3 4 5 4 x x x} ，其中 x 不确定
-    v.erase(last, v.end());
-    for (int i : v)
-      std::cout << i << " ";
-    std::cout << "\n";
+        std::cout << "Original vector:\n    ";
+        for (int elem : v)
+            std::cout << elem << ' ';
 
-    // sort 后 unique 以移除所有重复
-    std::sort(v.begin(), v.end()); // {1 1 2 3 4 4 5}
-    last = jr_std::unique(v.begin(), v.end());
-    // v 现在保有 {1 2 3 4 5 x x} ，其中 'x' 不确定
-    v.erase(last, v.end());
-    for (int i : v)
-      std::cout << i << " ";
-    std::cout << "\n";
+        auto it = jr_std::stable_partition(v.begin(), v.end(), [](int i){return i % 2 == 0;});
+
+        std::cout << "\nPartitioned vector:\n    ";
+        std::copy(std::begin(v), it, jr_std::ostream_iterator<int>(std::cout, " "));
+        std::cout << " * ";
+        std::copy(it, std::end(v), jr_std::ostream_iterator<int>(std::cout, " "));
 
     return 0;
 }
