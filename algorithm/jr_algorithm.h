@@ -1269,67 +1269,199 @@ namespace jr_std {
         buffer = new type[len];
         if(buffer) {
             // 内存充足，可分配缓冲区
-            auto ret = _stable_partition_with_buffer(first, last, buffer, p);
+            auto ret = jr_std::_stable_partition_with_buffer(first, last, buffer, p);
             delete []buffer;
             return ret;
         } else {
             // 内存不足，不可分配缓冲区
-            return _stable_partition_without_buffer(first, last, p);
+            return jr_std::_stable_partition_without_buffer(first, last, p);
         }
     }
 
     /*集合操作*/
     template< class InputIt1, class InputIt2, class Compare >
     bool includes( InputIt1 first1, InputIt1 last1,
-                   InputIt2 first2, InputIt2 last2, Compare comp );
+                   InputIt2 first2, InputIt2 last2, Compare comp ) {
+        while((first1 != last1) && (first2 != last2)) {
+            if(!comp(*first1, *first2) && !comp(*first2, *first1)) {
+                first1++;
+                first2++;
+            } else if(comp(*first1, *first2)){
+                ++first1;
+            } else {
+                return false;
+            }
+        }
+        return first2 == last2;
+    }
 
     template< class InputIt1, class InputIt2 >
     bool includes( InputIt1 first1, InputIt1 last1,
-                   InputIt2 first2, InputIt2 last2 );
+                   InputIt2 first2, InputIt2 last2 ) {
+        typedef typename iterator_traits<InputIt1>::value_type type1;
+        typedef typename iterator_traits<InputIt2>::value_type type2;
+        return jr_std::includes(first1, last1, first2, last2,
+                                [](const type1& a, const type2& b)
+                                ->bool { return a < b; });
+    }
 
+    /* 差集
+     * 比较元素大小，较小元素所在迭代器自增;
+     * 遇到相等内容时不记录，二者迭代器同时自增;
+     * 只记录集合1比集合2小的集合1内的元素
+     */
     template< class InputIt1, class InputIt2,
               class OutputIt, class Compare >
     OutputIt set_difference( InputIt1 first1, InputIt1 last1,
                              InputIt2 first2, InputIt2 last2,
-                             OutputIt d_first, Compare comp );
+                             OutputIt d_first, Compare comp ) {
+        while((first1 != last1) && (first2 != last2)) {
+            if(!comp(*first1, *first2) && !comp(*first2, *first1)) {
+                ++first1;
+                ++first2;
+            } else if(comp(*first1, *first2)){
+                *d_first++ = *first1;
+                ++first1;
+            } else {
+                ++first2;
+            }
+        }
+        for(; first1 != last1; ++first1)
+            *d_first++ = *first1;
+        return d_first;
+    }
 
     template< class InputIt1, class InputIt2, class OutputIt >
     OutputIt set_difference( InputIt1 first1, InputIt1 last1,
                              InputIt2 first2, InputIt2 last2,
-                             OutputIt d_first );
+                             OutputIt d_first ) {
+        typedef typename iterator_traits<InputIt1>::value_type type1;
+        typedef typename iterator_traits<InputIt2>::value_type type2;
+        return jr_std::set_difference(first1, last1,
+                                      first2, last2,
+                                      d_first,
+                                      [](const type1& a, const type2& b)
+                                      ->bool { return a < b; });
+    }
 
+    /* 交集
+     * 比较元素大小，不相等时不记录，较小元素所在迭代器自增;
+     * 遇到相等内容时记录集合1的元素，二者迭代器同时自增
+     */
     template< class InputIt1, class InputIt2,
               class OutputIt, class Compare >
     OutputIt set_intersection( InputIt1 first1, InputIt1 last1,
                                InputIt2 first2, InputIt2 last2,
-                               OutputIt d_first, Compare comp );
+                               OutputIt d_first, Compare comp ) {
+        while((first1 != last1) && (first2 != last2)) {
+            if(!comp(*first1, *first2) && !comp(*first2, *first1)) {
+                *d_first++ = *first1;
+                ++first1;
+                ++first2;
+            } else if(comp(*first1, *first2)) {
+                ++first1;
+            } else {
+                ++first2;
+            }
+        }
+        return d_first;
+    }
 
     template< class InputIt1, class InputIt2, class OutputIt >
     OutputIt set_intersection( InputIt1 first1, InputIt1 last1,
                                InputIt2 first2, InputIt2 last2,
-                               OutputIt d_first );
+                               OutputIt d_first ) {
+        typedef typename iterator_traits<InputIt1>::value_type type1;
+        typedef typename iterator_traits<InputIt2>::value_type type2;
+        return jr_std::set_intersection(first1, last1,
+                                        first2, last2,
+                                        d_first,
+                                        [](const type1& a, const type2& b)
+                                        ->bool { return a < b; });
+    }
 
+    /* 对称差集
+     * 比较元素大小，只记录较小的那个元素，然后较小元素所在迭代器自增;
+     * 遇到相等内容时不记录，二者迭代器同时自增
+     */
     template< class InputIt1, class InputIt2,
               class OutputIt, class Compare >
     OutputIt set_symmetric_difference( InputIt1 first1, InputIt1 last1,
                                        InputIt2 first2, InputIt2 last2,
-                                       OutputIt d_first, Compare comp );
+                                       OutputIt d_first, Compare comp ) {
+        while((first1 != last1) && (first2 != last2)) {
+            if(!comp(*first1, *first2) && !comp(*first2, *first1)) {
+                ++first1;
+                ++first2;
+            } else if(comp(*first1, *first2)){
+                *d_first++ = *first1;
+                ++first1;
+            } else {
+                *d_first++ = *first2;
+                ++first2;
+            }
+        }
+        for(; first1 != last1; ++first1)
+            *d_first++ = *first1;
+        for(; first2 != last2; ++first2)
+            *d_first++ = *first2;
+        return d_first;
+    }
 
     template< class InputIt1, class InputIt2, class OutputIt >
     OutputIt set_symmetric_difference( InputIt1 first1, InputIt1 last1,
                                        InputIt2 first2, InputIt2 last2,
-                                       OutputIt d_first );
+                                       OutputIt d_first ) {
+        typedef typename iterator_traits<InputIt1>::value_type type1;
+        typedef typename iterator_traits<InputIt2>::value_type type2;
+        return jr_std::set_symmetric_difference(first1, last1,
+                                                first2, last2,
+                                                d_first,
+                                                [](const type1& a, const type2& b)
+                                                ->bool { return a < b; });
+    }
 
+    /* 并集
+     * 比较元素大小，只记录较小的那个元素，然后较小元素所在迭代器自增;
+     * 遇到相等内容时记录集合1的元素，二者迭代器同时自增
+     */
     template< class InputIt1, class InputIt2,
               class OutputIt, class Compare >
     OutputIt set_union( InputIt1 first1, InputIt1 last1,
                         InputIt2 first2, InputIt2 last2,
-                        OutputIt d_first, Compare comp );
+                        OutputIt d_first, Compare comp ) {
+        while((first1 != last1) && (first2 != last2)) {
+            if(!comp(*first1, *first2) && !comp(*first2, *first1)) {
+                *d_first++ = *first1;
+                ++first1;
+                ++first2;
+            } else if(comp(*first1, *first2)){
+                *d_first++ = *first1;
+                ++first1;
+            } else {
+                *d_first++ = *first2;
+                ++first2;
+            }
+        }
+        for(; first1 != last1; ++first1)
+            *d_first++ = *first1;
+        for(; first2 != last2; ++first2)
+            *d_first++ = *first2;
+        return d_first;
+    }
 
     template< class InputIt1, class InputIt2, class OutputIt >
     OutputIt set_union( InputIt1 first1, InputIt1 last1,
                         InputIt2 first2, InputIt2 last2,
-                        OutputIt d_first );
+                        OutputIt d_first ) {
+        typedef typename iterator_traits<InputIt1>::value_type type1;
+        typedef typename iterator_traits<InputIt2>::value_type type2;
+        return jr_std::set_union(first1, last1,
+                                 first2, last2,
+                                 d_first,
+                                 [](const type1& a, const type2& b)
+                                 ->bool { return a < b; });
+    }
 
     /*堆操作*/
     // 向上过滤
