@@ -236,7 +236,7 @@ namespace jr_std {
 
         vector( std::initializer_list<T> init,
                 const Allocator& a = Allocator() )
-            : _cap(2*init.size()), _size(init.size()), _alloc(a) {
+            : _cap(2*init.size()), _size(0), _alloc(a) {
             _head = _alloc.allocate(_cap);
             _tail = _head;
             _end_of_storage = _head + _cap;

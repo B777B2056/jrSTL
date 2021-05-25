@@ -1918,7 +1918,27 @@ namespace jr_std {
     template< class RandomIt, class Compare >
     void nth_element( RandomIt first, RandomIt nth, RandomIt last,
                       Compare comp ) {
-
+        if(nth == last)
+            return;
+        // 利用最大堆找到排序后的第n个元素（即第(长度-n)个最大元素）
+        typename jr_std::iterator_traits<RandomIt>::difference_type n;
+        n = last - nth;
+        jr_std::make_heap(first, last, comp);
+        for(RandomIt t = last; n; --n, --t) {
+            jr_std::pop_heap(first, t, comp);
+        }
+        // 左右两边同时遍历，交换不符合大小要求的元素
+        RandomIt low = first, high = last - 1;
+        while(true) {
+            while((low < nth) && !comp(*nth, *low))
+                ++low;
+            while((nth < high) && comp(*high, *nth))
+                --high;
+            if((low < nth) && (nth < high))
+                jr_std::iter_swap(low, high);
+            else
+                break;
+        }
     }
 
     template< class RandomIt >
