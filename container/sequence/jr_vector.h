@@ -42,14 +42,17 @@ namespace jr_std {
             }
             _head = destination;
             _tail = tmp;
-            if(old_head)
+            if(old_head) {
                 _alloc.destroy(old_head);
+                _alloc.deallocate(old_head, 1);
+                old_head = nullptr;
+            }
         }
 
-        void _ctor(size_type count, const_reference value, const Allocator& alloc, std::true_type) {
+        void _ctor(size_type count, const_reference value, std::true_type) {
             _size = count;
             _cap = 2 * _size;
-            _head = alloc.allocate(_cap);
+            _head = _alloc.allocate(_cap);
             _tail = _head + _size;
             _end_of_storage = _head + _cap;
             for(iterator tmp = _head; tmp != _tail; ++tmp) {
@@ -58,10 +61,10 @@ namespace jr_std {
         }
 
         template<class InputIt>
-        void _ctor(InputIt first, InputIt last, const Allocator& alloc, std::false_type) {
+        void _ctor(InputIt first, InputIt last, std::false_type) {
             _size = static_cast<size_type>(jr_std::distance(first, last));
             _cap = 2 * _size;
-            _head = alloc.allocate(_cap);
+            _head = _alloc.allocate(_cap);
             _tail = _head + _size;
             _end_of_storage = _head + _cap;
             for(iterator tmp = _head; tmp != _tail; ++tmp) {
@@ -102,8 +105,9 @@ namespace jr_std {
             ++_tail;
         }
 
-        iterator _insert(const_iterator pos, size_type count, const_reference value, std::true_type) {
-            difference_type dis = pos - _head;
+        iterator _insert(const_iterator pos, size_type count,
+                         const_reference value, std::true_type) {
+            difference_type dis = jr_std::distance(cbegin(), pos);
             if(_size + count > _cap) {
                 _cap = 2 * (_size + count);
                 _move_elements(_alloc.allocate(_cap));
@@ -123,7 +127,8 @@ namespace jr_std {
         }
 
         template<class InputIt>
-        iterator _insert(const_iterator pos, InputIt first, InputIt last, std::false_type) {
+        iterator _insert(const_iterator pos, InputIt first,
+                         InputIt last, std::false_type) {
             difference_type dis = pos - _head;
             iterator pos_mutable;
             if(first < last) {
@@ -181,10 +186,9 @@ namespace jr_std {
             other._end_of_storage = nullptr;
         }
 
-        vector( const vector& other, const Allocator& alloc ) {
-            _cap = other._cap;
-            _size = other._size;
-            _head = alloc.allocate(_cap);
+        vector( const vector& other, const Allocator& a )
+            : _cap(other._cap), _size(other._size), _alloc(a) {
+            _head = _alloc.allocate(_cap);
             _tail = _head + _size;
             _end_of_storage = other._end_of_storage;
             for(iterator tmp = _head; tmp != _tail; ++tmp) {
@@ -192,9 +196,8 @@ namespace jr_std {
             }
         }
 
-        vector( vector&& other, const Allocator& ) {
-            _cap = other._cap;
-            _size = other._size;
+        vector( vector&& other, const Allocator& a )
+            : _cap(other._cap), _size(other._size), _alloc(a) {
             _head = other._head;
             _tail = other._tail;
             _end_of_storage = other._end_of_storage;
@@ -205,29 +208,40 @@ namespace jr_std {
             other._end_of_storage = nullptr;
         }
 
-        vector( size_type count, const_reference value, const Allocator& alloc = Allocator() ) {
-            _ctor(count, value, alloc, std::true_type());
+        vector( size_type count, const_reference value, const Allocator& a = Allocator() )
+            : _alloc(a) {
+            _ctor(count, value, std::true_type());
         }
 
-        explicit vector( size_type count ) {
-            _cap = 2 * count;
-            _size = count;
+        explicit vector( size_type count )
+            : _cap(2*count), _size(count) {
             _head = _alloc.allocate(_cap);
             _tail = _head + _size;
             _end_of_storage = _head + _cap;
         }
 
-        explicit vector( const Allocator& )
-            : _size(0), _cap(4) {
+        explicit vector( const Allocator& a)
+            : _cap(4), _size(0), _alloc(a) {
             _head = _alloc.allocate(_cap);
             _tail = _head;
             _end_of_storage = _head + _cap;
         }
 
         template< class InputIt >
-        vector( InputIt first, InputIt last, const Allocator& alloc = Allocator() ) {
+        vector( InputIt first, InputIt last, const Allocator& a = Allocator() )
+            : _alloc(a) {
             typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
-            _ctor(first, last, alloc, type());
+            _ctor(first, last, type());
+        }
+
+        vector( std::initializer_list<T> init,
+                const Allocator& a = Allocator() )
+            : _cap(2*init.size()), _size(init.size()), _alloc(a) {
+            _head = _alloc.allocate(_cap);
+            _tail = _head;
+            _end_of_storage = _head + _cap;
+            for(auto it = init.begin(); it != init.end(); ++it)
+                push_back(*it);
         }
 
         ~vector() {
@@ -268,6 +282,12 @@ namespace jr_std {
         void assign( size_type count, const_reference value,std::true_type ) {
             clear();
             _assign(count, value, std::true_type());
+        }
+
+        void assign( std::initializer_list<T> ilist ) {
+            clear();
+            for(auto it = ilist.begin(); it != ilist.end(); ++it)
+                push_back(*it);
         }
 
         template<class InputIt>
@@ -435,6 +455,18 @@ namespace jr_std {
             ++_tail;
             ++_size;
             return pos_mutable;
+        }
+
+        iterator insert( const_iterator pos, std::initializer_list<T> ilist ) {
+            iterator ret = begin();
+            jr_std::advance(ret, jr_std::distance(cbegin(), pos));
+            difference_type n = 0;
+            for(auto it = ilist.begin(); it != ilist.end(); ++it) {
+                insert(pos, *it);
+                pos = cbegin();
+                jr_std::advance(pos, ++n);
+            }
+            return ret;
         }
 
         template< class InputIt >

@@ -25,8 +25,8 @@ namespace jr_std {
             typedef ptrdiff_t difference_type;
             typedef _balance_bst_iterator<Key, const Key&, const Key*> iterator;
             typedef _balance_bst_iterator<Key, const Key&, const Key*> const_iterator;
-            typedef reverse_iterator<const_iterator> const_reverse_iterator;
-            typedef reverse_iterator<iterator> reverse_iterator;
+            typedef jr_std::reverse_iterator<const_iterator> const_reverse_iterator;
+            typedef jr_std::reverse_iterator<iterator> reverse_iterator;
 
         protected:
             typedef _tree_node<Key> tnode;
@@ -38,13 +38,16 @@ namespace jr_std {
 
         public:
             // 构造/复制/销毁
-            _set_base() : _size(0), t(), comp(Compare())
+            _set_base()
+                : _size(0), t(), comp(Compare())
             {}
 
-            explicit _set_base(const Allocator&) : _size(0), t()
+            explicit _set_base(const Allocator& a)
+                : _size(0), t(), _alloc_data(a)
             {}
 
-            explicit _set_base(const Compare& c, const Allocator& a = Allocator())
+            explicit _set_base(const Compare& c,
+                               const Allocator& a = Allocator())
                 : _size(0), t(), comp(c), _alloc_data(a)
             {}
 
@@ -74,6 +77,14 @@ namespace jr_std {
                 _size = x._size;
                 x._size = 0;
                 t = static_cast<tree&&>(x.t);
+            }
+
+            _set_base( std::initializer_list<value_type> init,
+                       const Compare& comp = Compare(),
+                       const Allocator& alloc = Allocator() )
+                : _set_base(comp, alloc) {
+                for(auto it = init.begin(); it != init.end(); ++it)
+                    insert(*it);
             }
 
             virtual ~_set_base()  = default;
@@ -185,6 +196,11 @@ namespace jr_std {
                 bool isInsert = t.insert_hint(m, hint._node);
                 if(isInsert) ++_size;
                 return find(m);
+            }
+
+            void insert( std::initializer_list<value_type> ilist ) {
+                for(auto it = ilist.begin(); it != ilist.end(); ++it)
+                    insert(*it);
             }
 
             template< class InputIt >
@@ -320,7 +336,7 @@ namespace jr_std {
             typedef _set_base<Key, Compare, Allocator, false> _base;
 
         public:
-            // 构造（继承父类）
+            // 委托构造（继承父类）
             set() {}
 
             explicit set(const Allocator& a) : _base(a)
@@ -343,6 +359,12 @@ namespace jr_std {
 
             set(set&& x, const Allocator& a)
                 : _base(static_cast<set&&>(x), a)
+            {}
+
+            set( std::initializer_list<typename _base::value_type> init,
+                 const Compare& comp = Compare(),
+                 const Allocator& alloc = Allocator() )
+                : _base(init, comp, alloc)
             {}
     };
 
@@ -377,6 +399,12 @@ namespace jr_std {
             multiset(multiset&& x, const Allocator& a)
                 : _base(static_cast<multiset&&>(x), a)
             {}
+
+            multiset( std::initializer_list<typename _base::value_type> init,
+                      const Compare& comp = Compare(),
+                      const Allocator& alloc = Allocator() )
+                : _base(init, comp, alloc)
+            {}
             // 特化操作
             template< class... Args >
             typename _base::iterator emplace( Args&&... args )
@@ -387,6 +415,9 @@ namespace jr_std {
 
             typename _base::iterator insert( typename _base::value_type&& value )
             { return _base::insert(static_cast<typename _base::value_type&&>(value)).first; }
+
+            void insert( std::initializer_list<typename _base::value_type> ilist )
+            { _base::insert(ilist); }
     };
 
     // 交换

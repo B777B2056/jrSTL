@@ -260,7 +260,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef T result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x + y;
             }
     };
@@ -272,7 +273,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef T result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x - y;
             }
     };
@@ -284,7 +286,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef T result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x * y;
             }
     };
@@ -296,7 +299,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef T result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x / y;
             }
     };
@@ -308,7 +312,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef T result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x % y;
             }
     };
@@ -319,7 +324,7 @@ namespace jr_std {
             typedef T argument_type;
             typedef T result_type;
         public:
-            result_type operator()(const argument_type& x){
+            result_type operator()(const argument_type& x) const {
                 return -x;
             }
     };
@@ -332,7 +337,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef bool result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x == y;
             }
     };
@@ -344,7 +350,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef bool result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x != y;
             }
     };
@@ -356,7 +363,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef bool result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x < y;
             }
     };
@@ -368,7 +376,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef bool result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x > y;
             }
     };
@@ -380,7 +389,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef bool result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x <= y;
             }
     };
@@ -392,7 +402,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef bool result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x >= y;
             }
     };
@@ -405,7 +416,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef bool result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x and y;
             }
     };
@@ -417,7 +429,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef bool result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x or y;
             }
     };
@@ -428,7 +441,8 @@ namespace jr_std {
             typedef T argument_type;
             typedef bool result_type;
         public:
-            result_type operator()(const argument_type& x){
+            result_type
+            operator()(const argument_type& x) const {
                 return not x;
             }
     };
@@ -441,7 +455,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef bool result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x & y;
             }
     };
@@ -453,7 +468,8 @@ namespace jr_std {
             typedef T second_argument_type;
             typedef bool result_type;
         public:
-            result_type operator()(const first_argument_type& x, const second_argument_type& y){
+            result_type
+            operator()(const first_argument_type& x, const second_argument_type& y) const {
                 return x | y;
             }
     };

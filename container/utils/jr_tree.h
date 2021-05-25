@@ -287,11 +287,9 @@ namespace jr_std {
             _alloc_node.deallocate(_header, 1);
         }
 
-    private:
         // 阻止生成复制运算符
-        _Balance_BST& operator=(const _Balance_BST& x);
+        _Balance_BST& operator=(const _Balance_BST& x) = delete;
 
-    public:
         // 移动运算符
         _Balance_BST& operator=(_Balance_BST&& x) {
             _root = x._root;
@@ -306,7 +304,7 @@ namespace jr_std {
         tnode* get_header() const { return _header; }
 
         // 查找，返回空指针说明目标元素不存在
-        tnode *search(const T& target) const {
+        tnode *search(const T& target) {
             tnode *tmp = _root;
             while(tmp) {
                 if(comp(tmp->data, target)) {
@@ -320,7 +318,7 @@ namespace jr_std {
             return _header;
         }
 
-        tnode *search(T&& target) const {
+        tnode *search(T&& target) {
             tnode *tmp = _root;
             while(tmp) {
                 if(comp(tmp->data, target)) {

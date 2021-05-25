@@ -2,7 +2,7 @@
 #define JR_UNORDERED_MAP_H
 
 #include <cstddef>
-#include <functional>
+#include "../../functional/jr_functional.h"
 #include "../../memory/jr_allocator.h"
 #include "../../container/utils/jr_hashtable.h"
 
@@ -105,6 +105,16 @@ namespace jr_std {
         : _hf(hasher()), _eql(key_equal()), _alloc_data(Allocator()),
           _tab(static_cast<table&&>(x._tab)), _num_of_elem(x._num_of_elem)
     {}
+
+    _hashmap_base( std::initializer_list<value_type> init,
+                   size_type bucket_count,
+                   const hasher& hash = hasher(),
+                   const key_equal& equal = key_equal(),
+                   const Allocator& alloc = Allocator() )
+        : _hashmap_base(bucket_count, hash, equal, alloc) {
+        for(auto it = init.begin(); it != init.end(); ++it)
+            insert(*it);
+    }
 
     virtual ~_hashmap_base() = default;
 
@@ -230,6 +240,11 @@ namespace jr_std {
         } else {
             return end();
         }
+    }
+
+    void insert( std::initializer_list<value_type> ilist ) {
+        for(auto it = ilist.begin(); it != ilist.end(); ++it)
+            insert(*it);
     }
 
     template<class InputIt>
@@ -391,7 +406,7 @@ namespace jr_std {
 
   template<class Key, class T,
            class Hash = std::hash<Key>,
-           class Pred = std::equal_to<Key>,
+           class Pred = jr_std::equal_to<Key>,
            class Allocator = jr_std::allocator<pair<const Key, T> > >
   class unordered_map : public _hashmap_base<Key, T, Hash, Pred, Allocator, false> {
   private:
@@ -436,6 +451,14 @@ namespace jr_std {
       unordered_map(unordered_map&& x, const Allocator& a)
           : _base(static_cast<unordered_map&&>(x), a)
       {}
+
+      unordered_map( std::initializer_list<typename _base::value_type> init,
+                     typename _base::size_type bucket_count = 11,
+                     const Hash& hash = Hash(),
+                     const Pred& equal = Pred(),
+                     const Allocator& alloc = Allocator() )
+        : _base(init, bucket_count, hash, equal, alloc)
+      {}
       // 元素访问
       typename _base::mapped_type& operator[](const typename _base::key_type& x) {
           return (*((_base::insert(typename _base::value_type(x, T()))).first)).second;
@@ -454,7 +477,7 @@ namespace jr_std {
 
   template<class Key, class T,
            class Hash = std::hash<Key>,
-           class Pred = std::equal_to<Key>,
+           class Pred = jr_std::equal_to<Key>,
            class Allocator = jr_std::allocator<pair<const Key, T> > >
   class unordered_multimap : public _hashmap_base<Key, T, Hash, Pred, Allocator, true> {
   private:
@@ -499,6 +522,14 @@ namespace jr_std {
       unordered_multimap(unordered_multimap&& x, const Allocator& a)
           : _base(static_cast<unordered_multimap&&>(x), a)
       {}
+
+      unordered_multimap( std::initializer_list<typename _base::value_type> init,
+                     typename _base::size_type bucket_count = 11,
+                     const Hash& hash = Hash(),
+                     const Pred& equal = Pred(),
+                     const Allocator& alloc = Allocator() )
+        : _base(init, bucket_count, hash, equal, alloc)
+      {}
       // 特化操作
       template< class... Args >
       typename _base::iterator emplace( Args&&... args )
@@ -509,6 +540,9 @@ namespace jr_std {
 
       typename _base::iterator insert( typename _base::value_type&& value )
       { return (_base::insert(static_cast<typename _base::value_type&&>(value))).first; }
+
+      void insert( std::initializer_list<typename _base::value_type> ilist )
+      { _base::insert(ilist); }
   };
 
   // 交换

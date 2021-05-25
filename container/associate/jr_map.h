@@ -87,6 +87,14 @@ namespace jr_std {
             x._size = 0;
         }
 
+        _map_base( std::initializer_list<value_type> init,
+                   const Compare& comp = Compare(),
+                   const Allocator& alloc = Allocator() )
+            : _map_base(comp, alloc) {
+            for(auto it = init.begin(); it != init.end(); ++it)
+                insert(*it);
+        }
+
         virtual ~_map_base() = default;
 
         _map_base& operator=(const _map_base& x) {
@@ -196,6 +204,11 @@ namespace jr_std {
             bool isInsert = t.insert_hint(m, hint._node);
             if(isInsert) ++_size;
             return find(x.first);
+        }
+
+        void insert( std::initializer_list<value_type> ilist ) {
+            for(auto it = ilist.begin(); it != ilist.end(); ++it)
+                insert(*it);
         }
 
         template< class InputIt >
@@ -340,8 +353,8 @@ namespace jr_std {
         }
     };
 
-    template<class Key, class T, class Compare = less<Key>,
-             class Allocator = allocator<pair<const Key, T> > >
+    template<class Key, class T, class Compare = jr_std::less<Key>,
+             class Allocator = jr_std::allocator<pair<const Key, T> > >
     class map : public _map_base<Key, T, Compare, Allocator, false> {
       private:
           typedef _map_base<Key, T, Compare, Allocator, false> _base;
@@ -370,6 +383,12 @@ namespace jr_std {
 
           map(map&& x, const Allocator& a)
               : _base(static_cast<map&&>(x), a)
+          {}
+
+          map( std::initializer_list<typename _base::value_type> init,
+               const Compare& comp = Compare(),
+               const Allocator& alloc = Allocator() )
+              : _base(init, comp, alloc)
           {}
           // 元素访问
           typename _base::mapped_type& operator[](const typename _base::key_type& x) {
@@ -418,6 +437,12 @@ namespace jr_std {
             multimap(multimap&& x, const Allocator& a)
                 : _base(static_cast<multimap&&>(x), a)
             {}
+
+            multimap( std::initializer_list<typename _base::value_type> init,
+                      const Compare& comp = Compare(),
+                      const Allocator& alloc = Allocator() )
+                : _base(init, comp, alloc)
+            {}
             // 特化操作
             template< class... Args >
             typename _base::iterator emplace( Args&&... args )
@@ -428,6 +453,9 @@ namespace jr_std {
 
             typename _base::iterator insert( typename _base::value_type&& value )
             { return (_base::insert(static_cast<typename _base::value_type&&>(value))).first; }
+
+            void insert( std::initializer_list<typename _base::value_type> ilist )
+            { _base::insert(ilist); }
     };
 
       // 交换

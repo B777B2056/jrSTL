@@ -103,6 +103,16 @@ namespace jr_std {
           _tab(static_cast<table&&>(x._tab)), _num_of_elem(x._num_of_elem)
     {}
 
+    _hashset_base( std::initializer_list<value_type> init,
+                   size_type bucket_count,
+                   const hasher& hash = hasher(),
+                   const key_equal& equal = key_equal(),
+                   const Allocator& alloc = Allocator() )
+        : _hashset_base(bucket_count, hash, equal, alloc) {
+        for(auto it = init.begin(); it != init.end(); ++it)
+            insert(*it);
+    }
+
     ~_hashset_base() = default;
 
     _hashset_base& operator=(const _hashset_base& x) {
@@ -231,6 +241,11 @@ namespace jr_std {
         } else {
             return end();
         }
+    }
+
+    void insert( std::initializer_list<value_type> ilist ) {
+        for(auto it = ilist.begin(); it != ilist.end(); ++it)
+            insert(*it);
     }
 
     template<class InputIt>
@@ -437,6 +452,14 @@ namespace jr_std {
       unordered_set(unordered_set&& x, const Allocator& a)
           : _base(static_cast<unordered_set&&>(x), a)
       {}
+
+      unordered_set( std::initializer_list<typename _base::value_type> init,
+                     typename _base::size_type bucket_count = 11,
+                     const Hash& hash = Hash(),
+                     const Pred& equal = Pred(),
+                     const Allocator& alloc = Allocator() )
+        : _base(init, bucket_count, hash, equal, alloc)
+      {}
   };
 
   template<class Key,
@@ -487,6 +510,14 @@ namespace jr_std {
           : _base(static_cast<unordered_multiset&&>(x), a)
       {}
 
+      unordered_multiset( std::initializer_list<typename _base::value_type> init,
+                     typename _base::size_type bucket_count = 11,
+                     const Hash& hash = Hash(),
+                     const Pred& equal = Pred(),
+                     const Allocator& alloc = Allocator() )
+        : _base(init, bucket_count, hash, equal, alloc)
+      {}
+
       // 特化操作
       template< class... Args >
       typename _base::iterator emplace( Args&&... args )
@@ -497,6 +528,9 @@ namespace jr_std {
 
       typename _base::iterator insert( typename _base::value_type&& value )
       { return (_base::insert(static_cast<typename _base::value_type&&>(value))).first; }
+
+      void insert( std::initializer_list<typename _base::value_type> ilist )
+      { _base::insert(ilist); }
   };
 
   // 交换

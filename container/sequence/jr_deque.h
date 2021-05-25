@@ -221,6 +221,13 @@ namespace jr_std {
             _move(static_cast<deque&&>(other));
         }
 
+        deque( std::initializer_list<T> init,
+               const Allocator& a = Allocator() )
+            : deque(a) {
+            for(auto it = init.begin(); it != init.end(); ++it)
+                push_back(*it);
+        }
+
         // 析构函数
         ~deque() {
             _free_all();
@@ -241,6 +248,19 @@ namespace jr_std {
         void assign( size_type count, const T& value ) {
             _free_all();
             _ctor(count, value, std::true_type());
+        }
+
+        void assign( std::initializer_list<T> ilist ) {
+            _free_all();
+            _map_size = ilist.size() / BufSize + 1;
+            _map = _alloc_map.allocate(_map_size + 1);
+            for(size_type i = 0; i <= _map_size; i++) {
+                _map[i] = _alloc.allocate(BufSize + 1);
+            }
+            _start.jmp_node(&_map[0]);
+            _finish.jmp_node(&_map[0]);
+            for(auto it = ilist.begin(); it != ilist.end(); ++it)
+                push_back(*it);
         }
 
         template< class InputIt >
@@ -353,6 +373,15 @@ namespace jr_std {
                 ++tmp;
             }
             return before_pos;
+        }
+
+        iterator insert( const_iterator pos, std::initializer_list<T> ilist ) {
+            iterator ret = begin();
+            jr_std::advance(ret, jr_std::distance(cbegin(), pos));
+            for(auto it = ilist.begin(); it != ilist.end(); ++it) {
+                insert(pos++, *it);
+            }
+            return ret;
         }
 
         template< class InputIt >

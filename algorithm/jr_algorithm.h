@@ -959,20 +959,20 @@ namespace jr_std {
         if(first == last)
             return;
         else {
-            BidirIt it_mid = middle;
-            while((first != middle) && (it_mid != last)) {
-                while((first != middle) && !comp(*it_mid, *first)) {
+            while((first != middle) && (middle != last)) {
+                // 找到左侧第一个大于中点值的位置
+                while((first != middle) && !comp(*middle, *first)) {
                     ++first;
                 }
-                BidirIt tmp = it_mid;
-                ptrdiff_t cnt = 0; // 旋转计数，对于第二序列需要旋转多少个元素进行计数
-                while((it_mid != last) && comp(*it_mid, *first)) {
-                    ++cnt;
-                    ++it_mid;
+                // 找到右侧与上述位置归并后紧挨着的位置
+                BidirIt tmp = middle;
+                while((middle != last) && comp(*middle, *first)) {
+                    ++middle;
                 }
-                jr_std::rotate(first, tmp, it_mid);
-                if(first != middle)
-                    jr_std::advance(first, cnt);
+                // 将二者中间夹的部分旋转到尾端
+                jr_std::rotate(first, tmp, middle);
+                // 缩小区间范围，跳过刚刚已完成归并的内容（即被旋转到尾部的范围）
+                jr_std::advance(first, jr_std::distance(tmp, middle));
             }
         }
     }
@@ -1468,17 +1468,20 @@ namespace jr_std {
     template< class RandomIt, class Compare >
     void push_heap( RandomIt first, RandomIt last,
                     Compare comp ) {
-        if(first == last - 1)   return;
+        if(first == last - 1 || first == last)
+            return;
+        typedef typename jr_std::iterator_traits<RandomIt>::value_type type;
+        typedef typename jr_std::iterator_traits<RandomIt>::difference_type dis_type;
         RandomIt target = last - 1;
-        ptrdiff_t index = jr_std::distance(first, target - 1);
-        typename jr_std::iterator_traits<RandomIt>::value_type tmp;
-        while((index >= 0) && comp(first[index], *target)) {
-            tmp = first[index];
-            first[index] = *target;
-            *target = tmp;
-            target = first + index;
-            index = (index - 1) / 2;
+        type target_var = *target;
+        dis_type index = jr_std::distance(first, target);
+        dis_type parent = (index - 1) / 2;
+        while(index && comp(*(first+parent), target_var)) {
+            *(first+index) = *(first+parent);
+            index = parent;
+            parent = (index - 1) / 2;
         }
+        *(first+index) = target_var;
     }
 
     template< class RandomIt >
@@ -1491,10 +1494,9 @@ namespace jr_std {
 
     template< class RandomIt, class Compare >
     void make_heap( RandomIt first, RandomIt last, Compare comp ) {
-        RandomIt tmp = first + 1;
+        RandomIt tmp = first;
         while(tmp != last)
-            jr_std::push_heap(first, tmp++, comp);
-        jr_std::push_heap(first, last, comp);
+            jr_std::push_heap(first, ++tmp, comp);
     }
 
     template< class RandomIt >
@@ -1508,17 +1510,19 @@ namespace jr_std {
     // 向下过滤
     template< class RandomIt, class Compare >
     void pop_heap( RandomIt first, RandomIt last, Compare comp ) {
-        if(first == last - 1)   return;
+        if(first == last - 1)
+            return;
+        typedef typename jr_std::iterator_traits<RandomIt>::value_type type;
+        typedef typename jr_std::iterator_traits<RandomIt>::difference_type dis_type;
         RandomIt target = last - 1;
         // 交换first与last-1位置的元素, 同时保存交换前的堆尾元素
         // 即交换堆顶与堆尾的元素
-        typename jr_std::iterator_traits<RandomIt>::value_type tmp;
-        tmp = *target;
+        type tmp = *target;
         *target = *first;
         *first = tmp;
         // 上滤节点，将其调整为最大堆
-        ptrdiff_t len = jr_std::distance(first, target - 1);
-        ptrdiff_t parent = 0, child = parent * 2 + 1;
+        dis_type len = jr_std::distance(first, target);
+        dis_type parent = 0, child = parent * 2 + 1;
         while(child < len) {
             // 在左右儿子里找最大的那个
             if((child < len)
@@ -1561,12 +1565,14 @@ namespace jr_std {
                           [](const type& x, const type& y)
                           ->bool { return x < y; });
     }
-    /*C++11新增*/
+
     template< class RandomIt, class Compare >
     bool is_heap( RandomIt first, RandomIt last, Compare comp ) {
-        if(first == last || first == last - 1)   return true;
-        ptrdiff_t len = jr_std::distance(first, last - 1);
-        ptrdiff_t parent = 0, child = parent * 2 + 1;
+        if(first == last || first == last - 1)
+            return true;
+        typedef typename jr_std::iterator_traits<RandomIt>::difference_type dis_type;
+        dis_type len = jr_std::distance(first, last - 1);
+        dis_type parent = 0, child = parent * 2 + 1;
         while(child < len) {
             if(child < len) {
                 if(comp(first[parent], first[child]))
@@ -1611,72 +1617,317 @@ namespace jr_std {
     /*排列操作*/
     template< class ForwardIt1, class ForwardIt2, class BinaryPredicate >
     bool is_permutation( ForwardIt1 first1, ForwardIt1 last1,
-                         ForwardIt2 first2, BinaryPredicate p );
+                         ForwardIt2 first2, BinaryPredicate p ) {
+        int cnt = 0;
+        ForwardIt2 last2 = first2;
+        typename iterator_traits<ForwardIt1>::difference_type len;
+        len = jr_std::distance(first1, last1);
+        jr_std::advance(last2, len);
+        for(; first1 != last1; ++first1) {
+            for(ForwardIt2 it = first2; it != last2; ++it) {
+                if(p(*first1, *it)) {
+                    ++cnt;
+                    break;
+                }
+            }
+        }
+        return cnt == len;
+    }
 
     template< class ForwardIt1, class ForwardIt2 >
     bool is_permutation( ForwardIt1 first1, ForwardIt1 last1,
-                         ForwardIt2 first2 );
+                         ForwardIt2 first2 ) {
+        typedef typename iterator_traits<ForwardIt1>::value_type type1;
+        typedef typename iterator_traits<ForwardIt2>::value_type type2;
+        return jr_std::is_permutation(first1, last1, first2,
+                                      [](const type1& a, const type2& b)
+                                      ->bool { return a == b; });
+    }
 
     template< class BidirIt, class Compare >
-    bool next_permutation( BidirIt first, BidirIt last, Compare comp );
+    bool next_permutation( BidirIt first, BidirIt last, Compare comp ) {
+        if(first == last)
+            return false;
+        BidirIt rit = last;
+        if(--rit == first)
+            return false;
+        BidirIt lit = rit;
+        while(first != lit) {
+            rit = lit--;
+            if(comp(*lit, *rit)) {
+                BidirIt j = last;
+                --j;
+                while(!comp(*lit, *j))
+                    --j;
+                jr_std::iter_swap(lit, j);
+                jr_std::reverse(rit, last);
+                return true;
+            }
+        }
+        jr_std::reverse(first, last);
+        return false;
+    }
 
     template< class BidirIt >
-    bool next_permutation( BidirIt first, BidirIt last );
+    bool next_permutation( BidirIt first, BidirIt last ) {
+        typedef typename iterator_traits<BidirIt>::value_type type;
+        return jr_std::next_permutation(first, last,
+                                        [](const type& a, const type& b)
+                                        ->bool { return a < b; });
+    }
 
     template< class BidirIt, class Compare >
-    bool prev_permutation( BidirIt first, BidirIt last, Compare comp);
+    bool prev_permutation( BidirIt first, BidirIt last, Compare comp) {
+        if(first == last)
+            return false;
+        BidirIt rit = last;
+        if(--rit == first)
+            return false;
+        BidirIt lit = rit;
+        while(first != lit) {
+            rit = lit--;
+            if(comp(*rit, *lit)) {
+                BidirIt j = last;
+                --j;
+                while((j != rit) && !comp(*j, *lit))
+                    --j;
+                jr_std::iter_swap(lit, j);
+                jr_std::reverse(rit, last);
+                return true;
+            }
+        }
+        jr_std::reverse(first, last);
+        return false;
+    }
 
     template< class BidirIt >
-    bool prev_permutation( BidirIt first, BidirIt last);
+    bool prev_permutation( BidirIt first, BidirIt last) {
+        typedef typename iterator_traits<BidirIt>::value_type type;
+        return jr_std::prev_permutation(first, last,
+                                        [](const type& a, const type& b)
+                                        ->bool { return a < b; });
+    }
 
     /*排序操作*/
     template< class ForwardIt, class Compare >
-    bool is_sorted( ForwardIt first, ForwardIt last, Compare comp );
+    bool is_sorted( ForwardIt first, ForwardIt last, Compare comp ) {
+        for( ; ; ++first) {
+            ForwardIt next = first;
+            ++next;
+            if(next == last)
+                break;
+            if(comp(*next, *first))
+                return false;
+        }
+        return true;
+    }
 
     template< class ForwardIt >
-    bool is_sorted( ForwardIt first, ForwardIt last );
+    bool is_sorted( ForwardIt first, ForwardIt last ) {
+        typedef typename iterator_traits<ForwardIt>::value_type type;
+        return jr_std::is_sorted(first, last,
+                                 [](const type& a, const type& b)
+                                 ->bool { return a < b; });
+    }
 
     template< class ForwardIt, class Compare >
     ForwardIt is_sorted_until( ForwardIt first, ForwardIt last,
-                               Compare comp );
+                               Compare comp ) {
+        for( ; ; ++first) {
+            ForwardIt next = first;
+            ++next;
+            if(next == last)
+                break;
+            if(comp(*next, *first))
+                return next;
+        }
+        return last;
+    }
 
     template< class ForwardIt >
-    ForwardIt is_sorted_until( ForwardIt first, ForwardIt last );
-
-    template< class RandomIt, class Compare >
-    void sort( RandomIt first, RandomIt last, Compare comp );
-
-    template< class RandomIt >
-    void sort( RandomIt first, RandomIt last );
+    ForwardIt is_sorted_until( ForwardIt first, ForwardIt last ) {
+        typedef typename iterator_traits<ForwardIt>::value_type type;
+        return jr_std::is_sorted_until(first, last,
+                                       [](const type& a, const type& b)
+                                       ->bool { return a < b; });
+    }
 
     template< class RandomIt, class Compare >
     void partial_sort( RandomIt first, RandomIt middle, RandomIt last,
-                       Compare comp );
+                       Compare comp ) {
+        // first到middle建最大堆
+        jr_std::make_heap(first, middle, comp);
+        for(RandomIt it = middle; it != last; ++it) {
+            if(comp(*it, *first)) {
+                // 将前半部分最大元素与后半部分小于它的元素互换
+                jr_std::iter_swap(first, it);
+                jr_std::make_heap(first, middle, comp);
+            }
+        }
+        jr_std::sort_heap(first, middle, comp);
+    }
 
     template< class RandomIt >
-    void partial_sort( RandomIt first, RandomIt middle, RandomIt last );
+    void partial_sort( RandomIt first, RandomIt middle, RandomIt last ) {
+        typedef typename iterator_traits<RandomIt>::value_type type;
+        jr_std::partial_sort(first, middle, last,
+                             [](const type& a, const type& b)
+                             ->bool { return a < b; });
+    }
 
     template< class InputIt, class RandomIt, class Compare >
     RandomIt partial_sort_copy( InputIt first, InputIt last,
                                 RandomIt d_first, RandomIt d_last,
-                                Compare comp );
+                                Compare comp ) {
+        typedef typename jr_std::iterator_traits<InputIt>::value_type type;
+        typename jr_std::iterator_traits<InputIt>::difference_type len;
+        len = jr_std::distance(first, last);
+        type *buffer = nullptr, *b = nullptr;
+        buffer = new type[len];
+        // 缓冲区分配失败，原样返回
+        if(!buffer)
+            return d_first;
+        RandomIt pos = d_first;
+        for(b = buffer; first != last; ++first, ++b) {
+            *b = *first;
+        }
+        jr_std::partial_sort(buffer, buffer + len, b, comp);
+        while((d_first != d_last) && (buffer != b)) {
+            *d_first = *buffer;
+            ++d_first;
+            ++buffer;
+        }
+        return d_first;
+    }
 
     template< class InputIt, class RandomIt >
     RandomIt partial_sort_copy( InputIt first, InputIt last,
-                                RandomIt d_first, RandomIt d_last );
+                                RandomIt d_first, RandomIt d_last ) {
+        typedef typename iterator_traits<RandomIt>::value_type type;
+        return jr_std::partial_sort_copy(first, last, d_first, d_last,
+                                         [](const type& a, const type& b)
+                                         ->bool { return a < b; });
+    }
 
+    // 插入排序
     template< class RandomIt, class Compare >
-    void stable_sort( RandomIt first, RandomIt last, Compare comp );
+    void _insertion_sort( RandomIt first, RandomIt last, Compare comp ) {
+        for(RandomIt i = first; i != last; ++i) {
+            typename jr_std::iterator_traits<RandomIt>::value_type t;
+            t = *i;
+            RandomIt j;
+            for(j = i; (j != first) && comp(t, *(j - 1)); j--) {
+                *j = *(j - 1);
+            }
+            *j = t;
+        }
+    }
+
+    // 找三者的中位数
+    template< class RandomIt, class Compare >
+    RandomIt _find_pivot( RandomIt a, RandomIt b, RandomIt c, Compare comp ) {
+        if(comp(*a, *b)) {
+            if(comp(*b, *c))
+                return b;
+            else {
+                if(comp(*a, *c))
+                    return c;
+                else
+                    return a;
+            }
+        } else {
+            if(comp(*a, *c))
+                return a;
+            else {
+                if(comp(*b, *c))
+                    return c;
+                else
+                    return b;
+            }
+        }
+    }
+
+    // 可控制递归深度与区间长度的快速排序
+    template< class RandomIt, class Compare >
+    void _quick_sort( RandomIt first, RandomIt last, Compare comp, int depth ) {
+        if(last - first <= 5) {
+            // 当前区间长度小于阈值，则转为插入排序
+            jr_std::_insertion_sort(first, last, comp);
+            return;
+        }
+        if(depth > 16) {
+            // 递归深度超过阈值，则转为堆排序
+            jr_std::partial_sort(first, last, last, comp);
+            return;
+        }
+        RandomIt middle = first + (last - first) / 2;
+        // 寻找主元
+        RandomIt pivot = jr_std::_find_pivot(first, middle, last - 1, comp);
+        // 划分区间
+        jr_std::iter_swap(pivot, last - 1);  // 将主元放在末尾，简化区间划分过程
+        RandomIt low = first, high = last - 2;
+        while(true) {     // 左右两边同时扫描，交换不满足条件的两个元素
+            while(comp(*low, *(last - 1)))
+                ++low;
+            while(comp(*(last - 1), *high))
+                --high;
+            if(low < high)
+                jr_std::iter_swap(low, high);
+            else
+                break;
+        }
+        jr_std::iter_swap(low, last - 1);  // 将主元交换至原位置
+        // 递归排序
+        _quick_sort(first, low, comp, ++depth);
+        _quick_sort(low + 1, last, comp, ++depth);
+    }
+
+    // Intro排序
+    template< class RandomIt, class Compare >
+    void sort( RandomIt first, RandomIt last, Compare comp ) {
+        jr_std::_quick_sort(first, last, comp, 0); // 初始递归深度为0
+    }
 
     template< class RandomIt >
-    void stable_sort( RandomIt first, RandomIt last );
+    void sort( RandomIt first, RandomIt last ) {
+        typedef typename iterator_traits<RandomIt>::value_type type;
+        jr_std::sort(first, last,
+                    [](const type& a, const type& b)
+                    ->bool { return a < b; });
+    }
+
+    // 归并排序
+    template< class RandomIt, class Compare >
+    void stable_sort( RandomIt first, RandomIt last, Compare comp ) {
+        if(last - first <= 1)
+            return;
+        RandomIt middle = first + (last - first) / 2;
+        jr_std::stable_sort(first, middle, comp);
+        jr_std::stable_sort(middle, last, comp);
+        jr_std::inplace_merge(first, middle, last, comp);
+    }
+
+    template< class RandomIt >
+    void stable_sort( RandomIt first, RandomIt last ) {
+        typedef typename iterator_traits<RandomIt>::value_type type;
+        jr_std::stable_sort(first, last,
+                           [](const type& a, const type& b)
+                           ->bool { return a < b; });
+    }
 
     template< class RandomIt, class Compare >
     void nth_element( RandomIt first, RandomIt nth, RandomIt last,
-                      Compare comp );
+                      Compare comp ) {
+
+    }
 
     template< class RandomIt >
-    void nth_element( RandomIt first, RandomIt nth, RandomIt last );
+    void nth_element( RandomIt first, RandomIt nth, RandomIt last ) {
+        typedef typename iterator_traits<RandomIt>::value_type type;
+        jr_std::nth_element(first, nth, last,
+                           [](const type& a, const type& b)
+                           ->bool { return a < b; });
+    }
 }
 
 #endif // JR_ALGORITHM_H

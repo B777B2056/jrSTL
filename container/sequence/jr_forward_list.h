@@ -231,6 +231,19 @@ template<class T, class Allocator = jr_std::allocator<T> >
         x._create_empty_list();
     }
 
+    forward_list( std::initializer_list<T> init,
+                  const Allocator& a = Allocator() )
+        : forward_list(a) {
+        _forward_node<T> *h = _head;
+        for(auto it = init.begin(); it != init.end(); ++it) {
+            _forward_node<T> *node = _alloc_node.allocate(1);
+            _alloc.construct(&(node->data), *it);
+            node->next = h->next;
+            h->next = node;
+            h = h->next;
+        }
+    }
+
     ~forward_list() {
         while(_head) {
             _forward_node<T> *t = _head->next;
@@ -269,6 +282,18 @@ template<class T, class Allocator = jr_std::allocator<T> >
         clear();
         typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
         _build_n(first, last, type());
+    }
+
+    void assign( std::initializer_list<T> ilist ) {
+        clear();
+        _forward_node<T> *h = _head;
+        for(auto it = ilist.begin(); it != ilist.end(); ++it) {
+            _forward_node<T> *node = _alloc_node.allocate(1);
+            _alloc.construct(&(node->data), *it);
+            node->next = h->next;
+            h->next = node;
+            h = h->next;
+        }
     }
 
     void assign(size_type n, const T& value) {
@@ -325,6 +350,16 @@ template<class T, class Allocator = jr_std::allocator<T> >
 
     iterator insert_after(const_iterator position, size_type n, const T& x) {
         return _insert(position, n, x, std::true_type());
+    }
+
+    iterator insert_after( const_iterator pos, std::initializer_list<T> ilist ) {
+        iterator it = begin();
+        advance(it, distance(cbefore_begin(), pos));
+        for(auto it = ilist.begin(); it != ilist.end(); ++it) {
+            insert_after(pos, *it);
+            ++pos;
+        }
+        return it;
     }
 
     template<class InputIt>

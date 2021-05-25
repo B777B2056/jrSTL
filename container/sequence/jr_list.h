@@ -308,30 +308,49 @@ namespace jr_std {
            _create_empty_node();
         }
 
+        explicit list( const Allocator& a )
+            : _size(0), _alloc(a) {
+            _create_empty_node();
+        }
+
         explicit list( size_type n ) : _size(n) {
             _create_empty_node();
             while(n--) { _insert2tail(T()); }
         }
 
-        list(size_type n, const_reference value, const Allocator& a = Allocator()) : _size(n) {
+        list(size_type n, const_reference value,
+             const Allocator& a = Allocator())
+            : _size(n), _alloc(a) {
             _ctor(n, value, a, std::true_type());
         }
 
         template<class InputIt>
-        list(InputIt first, InputIt last, const Allocator& a = Allocator()) {
+        list(InputIt first, InputIt last,
+             const Allocator& a = Allocator()) : _alloc(a) {
             typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
             _ctor(first, last, a, type());
         }
 
         list(const list& x) : _size(x._size) {
-            if(this == &x)  return;
+            if(this == &x)
+                return;
+            _create_empty_node();
+            for(_node<T> *t=x._head->next; t!=x._tail; t=t->next)
+                _insert2tail(t->data);
+        }
+
+        list( const list& x, const Allocator& a )
+            : _alloc(a) {
+            if(this == &x)
+                return;
             _create_empty_node();
             for(_node<T> *t=x._head->next; t!=x._tail; t=t->next)
                 _insert2tail(t->data);
         }
 
         list(list&& x) {
-            if(this == &x)  return;
+            if(this == &x)
+                return;
             _size = x._size;
             _head = x._head;
             _tail = x._tail;
@@ -339,6 +358,26 @@ namespace jr_std {
             x._head = nullptr;
             x._tail = nullptr;
             x._create_empty_node();
+        }
+
+        list( list&& x, const Allocator& a )
+            : _alloc(a) {
+            if(this == &x)
+                return;
+            _size = x._size;
+            _head = x._head;
+            _tail = x._tail;
+            x._size = 0;
+            x._head = nullptr;
+            x._tail = nullptr;
+            x._create_empty_node();
+        }
+
+        list( std::initializer_list<T> init,
+              const Allocator& a = Allocator() )
+            : list(a) {
+            for(auto it = init.begin(); it != init.end(); ++it)
+                push_back(*it);
         }
 
         ~list() {
@@ -391,6 +430,12 @@ namespace jr_std {
         void assign(size_type n, const_reference t) {
             clear();
             _assign(n, t, std::true_type());
+        }
+
+        void assign( std::initializer_list<T> ilist ) {
+            clear();
+            for(auto it = ilist.begin(); it != ilist.end(); ++it)
+                push_back(*it);
         }
 
         allocator_type get_allocator() const noexcept { return _alloc; }
@@ -525,6 +570,14 @@ namespace jr_std {
             ++_size;
             iterator it = begin();
             advance(it, distance(cbegin(), position));
+            return it;
+        }
+
+        iterator insert( const_iterator pos, std::initializer_list<T> ilist ) {
+            iterator it = begin();
+            advance(it, distance(cbegin(), pos));
+            for(auto it = ilist.begin(); it != ilist.end(); ++it)
+                insert(pos, *it);
             return it;
         }
 

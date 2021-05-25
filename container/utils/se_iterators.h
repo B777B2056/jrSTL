@@ -403,10 +403,10 @@ namespace jr_std {
         typedef _hashtable_node<U> hnode;
         typedef _hashtable<U, Hash, KeyEqual, Allocator, isMulti> table;
         size_type offset;
-        table *tab;
+        const table *tab;
         hnode *cur;
         // construct iterator
-        _hashtable_iterator(hnode *n, table *t, size_type o)
+        _hashtable_iterator(hnode *n, const table *t, size_type o)
             : offset(o), tab(t), cur(n)
         {}
 
