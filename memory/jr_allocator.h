@@ -1,8 +1,6 @@
 #ifndef JR_ALLOCATOR_H
 #define JR_ALLOCATOR_H
 
-/*C++11 Standard*/
-
 #include <new>
 #include <cstdlib>
 #include <cstddef>

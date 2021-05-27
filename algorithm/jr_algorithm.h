@@ -1,7 +1,6 @@
 #ifndef JR_ALGORITHM_H
 #define JR_ALGORITHM_H
 
-#include <iostream>
 #include <cstring>
 #include <cstddef>
 #include <type_traits>

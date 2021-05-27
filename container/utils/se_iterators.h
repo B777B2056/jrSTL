@@ -1,7 +1,6 @@
 #ifndef ITERATORS_H
 #define ITERATORS_H
 
-#include <iostream>
 #include <cstddef>
 #include "../../iterator/jr_iterator.h"
 #include "../../memory/jr_allocator.h"

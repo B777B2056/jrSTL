@@ -1,7 +1,6 @@
 #ifndef JR_HASHTABLE_H
 #define JR_HASHTABLE_H
 
-#include <iostream>
 #include <cstddef>
 #include <functional>
 #include "../../container/sequence/jr_vector.h"

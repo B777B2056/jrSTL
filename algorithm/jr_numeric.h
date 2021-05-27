@@ -1,7 +1,6 @@
 #ifndef JR_NUMERIC_H
 #define JR_NUMERIC_H
 
-#include <cmath>
 #include "../iterator/jr_iterator.h"
 
 namespace jr_std {

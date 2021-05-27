@@ -1,11 +1,6 @@
 #ifndef JR_ITERATOR_H
 #define JR_ITERATOR_H
 
-/* C++11 Standard
- * Cause tags of iterator_category is different with STL, this iterator cannot adapt to STL
- */
-
-#include <iostream>
 #include <cstddef>
 
 namespace jr_std {
