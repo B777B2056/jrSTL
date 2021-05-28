@@ -140,6 +140,8 @@ namespace jr_std {
 
         vector( const vector& other )
             :_size(other._size), _cap(other._cap) {
+            if(this == &other)
+                return;
             _head = _alloc.allocate(_cap);
             _tail = _head + _size;
             _end_of_storage = _head + _cap;
@@ -151,6 +153,8 @@ namespace jr_std {
         vector( vector&& other )
              : _size(other._size), _cap(other._cap),
                _head(other._head), _tail(other._tail), _end_of_storage(other._end_of_storage) {
+            if(this == &other)
+                return;
             other._cap = 0;
             other._size = 0;
             other._head = nullptr;
@@ -160,6 +164,8 @@ namespace jr_std {
 
         vector( const vector& other, const Allocator& a )
             : _alloc(a), _size(other._size), _cap(other._cap) {
+            if(this == &other)
+                return;
             _head = _alloc.allocate(_cap);
             _tail = _head + _size;
             _end_of_storage = other._end_of_storage;
@@ -171,6 +177,8 @@ namespace jr_std {
         vector( vector&& other, const Allocator& a )
             : _alloc(a), _size(other._size), _cap(other._cap),
               _head(other._head), _tail(other._tail), _end_of_storage(other._end_of_storage) {
+            if(this == &other)
+                return;
             other._cap = 0;
             other._size = 0;
             other._head = nullptr;
@@ -315,17 +323,23 @@ namespace jr_std {
 
         const_iterator cend() const noexcept { return _tail; }
 
-        reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+        reverse_iterator rbegin() noexcept
+        { return reverse_iterator(end()); }
 
-        const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+        const_reverse_iterator rbegin() const noexcept
+        { return const_reverse_iterator(end()); }
 
-        const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+        const_reverse_iterator crbegin() const noexcept
+        { return const_reverse_iterator(end()); }
 
-        reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+        reverse_iterator rend() noexcept
+        { return reverse_iterator(begin()); }
 
-        const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+        const_reverse_iterator rend() const noexcept
+        { return const_reverse_iterator(begin()); }
 
-        const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
+        const_reverse_iterator crend() const noexcept
+        { return const_reverse_iterator(begin()); }
 
         bool empty() const noexcept { return _size == 0; }
 

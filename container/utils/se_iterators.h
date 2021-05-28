@@ -1,6 +1,7 @@
 #ifndef ITERATORS_H
 #define ITERATORS_H
 
+#include <iostream>
 #include <cstddef>
 #include "../../iterator/jr_iterator.h"
 #include "../../memory/jr_allocator.h"
@@ -146,8 +147,33 @@ namespace jr_std {
             jmp_node(d);
             cur = c;
         }
+
+        _deque_iterator(const _deque_iterator&) = default;
+
+        _deque_iterator(_deque_iterator&& x) {
+            cur = x.cur;
+            first = x.first;
+            last = x.last;
+            control_node = x.control_node;
+            x.cur = x.first = x.last = nullptr;
+            x.control_node = nullptr;
+        }
         // 析构函数
         ~_deque_iterator() = default;
+        // 拷贝、移动运算符
+        _deque_iterator& operator=(const _deque_iterator&) = default;
+
+        _deque_iterator& operator=(_deque_iterator&& x) {
+            if(this == &x)
+                return *this;
+            cur = x.cur;
+            first = x.first;
+            last = x.last;
+            control_node = x.control_node;
+            x.cur = x.first = x.last = nullptr;
+            x.control_node = nullptr;
+            return *this;
+        }
         // 跳跃函数
         void jmp_node(map_pointer d) {
             control_node = d;
@@ -214,15 +240,15 @@ namespace jr_std {
 
         _deque_iterator& operator+=(difference_type n) {
             if(n > 0) {
-                difference_type d = last - cur - 1;
-                if(n <= d) {
+                difference_type d = last - cur;
+                if(n < d) {
                     cur += n;
                 } else {
                     difference_type block_jmp = (n - d) / block_size + 1;
                     control_node += block_jmp;
-                    first = *control_node;
+                    first = control_node[0];
                     last = first + block_size;
-                    cur = first + (n - d - 1) % block_size;
+                    cur = first + (n - d) % block_size;
                 }
             } else if(n < 0) {
                 n = -n;
@@ -232,7 +258,7 @@ namespace jr_std {
                 } else {
                     difference_type block_jmp = (n - d - 1) / block_size + 1;
                     control_node -= block_jmp;
-                    first = *control_node;
+                    first = control_node[0];
                     last = first + block_size;
                     cur = last - (n - d - (block_jmp - 1) * block_size);
                 }

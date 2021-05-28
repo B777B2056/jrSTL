@@ -38,34 +38,41 @@ namespace jr_std {
         typename Allocator::template rebind<pointer>::other _alloc_map;
 
     protected:
+        void _init(size_type map_size) {
+            _map = _alloc_map.allocate(map_size + 1);
+            for(size_type i = 0; i <= _map_size; i++)
+                _map[i] = _alloc.allocate(BufSize + 1);
+            _start.jmp_node(&_map[0]);
+            _finish.jmp_node(&_map[0]);
+        }
+
+        void _free_all() {
+            for(size_type i = 0; i <= _map_size; i++) {
+                for(size_type j = 0; j <= BufSize; j++)
+                    _alloc.destroy(&_map[i][j]);
+                _alloc.deallocate(_map[i], BufSize + 1);
+            }
+            _alloc_map.deallocate(_map, _map_size + 1);
+        }
+
         void _ctor(size_type count, const T& value, std::true_type) {
             _map_size = count / BufSize + 1;
-            _map = _alloc_map.allocate(_map_size + 1);
+            _init(_map_size);
             size_type i, j, cnt = 0;
             for(i = 0; i <= _map_size; i++) {
-                _map[i] = _alloc.allocate(BufSize + 1);
                 for(j = 0; (j < BufSize) && (cnt < count); j++) {
                     _alloc.construct(&_map[i][j], value);
                     ++cnt;
                 }
             }
-            _start.jmp_node(&_map[0]);
-            _finish.jmp_node(&_map[count / BufSize]);
-            cnt = count % BufSize;;
-            while(cnt--)
-                ++_finish;
+            _finish += count;
         }
 
         template<class InputIt>
         void _ctor(InputIt first, InputIt last, std::false_type) {
             difference_type count = last - first;
             _map_size = count / BufSize + 1;
-            _map = _alloc_map.allocate(_map_size + 1);
-            for(size_type i = 0; i <= _map_size; i++) {
-                _map[i] = _alloc.allocate(BufSize + 1);
-            }
-            _start.jmp_node(&_map[0]);
-            _finish.jmp_node(&_map[0]);
+            _init(_map_size);
             while(first != last) {
                 _alloc.construct(_finish.cur, *first);
                 ++first;
@@ -73,29 +80,19 @@ namespace jr_std {
             }
         }
 
-        void _free_all() {
-            if(!_map_size)  return;
-            for(size_type i = 0; i <= _map_size; i++) {
-                for(size_type j = 0; j < BufSize; j++)
-                    _alloc.destroy(&_map[i][j]);
-                _alloc.deallocate(_map[i], BufSize + 1);
-            }
-            _start.jmp_node(&_map[0]);
-            _finish.jmp_node(&_map[0]);
-        }
-
         void _copy(const deque& other) {
             iterator first = other._start;
             iterator last = other._finish;
-            _free_all();
             _ctor(first, last, std::false_type());
         }
 
         void _move(deque&& other) {
             _map_size = other._map_size;
             _map = other._map;
-            _start = other._start;
-            _finish = other._finish;
+            _start = std::move(other._start);
+            _finish = std::move(other._finish);
+            other._map_size = 1;
+            other._init(other._map_size);
         }
 
         void _move_map(size_type n) {
@@ -155,41 +152,25 @@ namespace jr_std {
 
         template<class InputIt>
         iterator _insert(const_iterator pos, InputIt first, InputIt last, std::false_type){
-            size_type osz = size();
-            difference_type count = jr_std::distance(first, last);
-            if(osz + count > BufSize * _map_size) {
-                difference_type pdis = jr_std::distance(cbegin(), pos);
-                _move_map(osz + count);
-                pos = cbegin();
-                jr_std::advance(pos, pdis);
-            }
-            iterator i_pos = _move_elements_forward_n(pos, static_cast<difference_type>(count));
-            iterator before_pos = i_pos - count, tmp = before_pos;
-            while(tmp != i_pos) {
-                _alloc.construct(&(*tmp), *first);
-                ++tmp;
+            difference_type dis = pos - cbegin();
+            while(first != last) {
+                iterator it = insert(pos, *first);
+                pos = cbegin() + (it - begin());
+                ++pos;
                 ++first;
             }
-            return before_pos;
+            return begin() + dis;
         }
 
     public:
         // 构造函数
         deque() : _map_size(1) {
-            _map = _alloc_map.allocate(_map_size + 1);
-            for(size_type i = 0; i <= _map_size; i++)
-                _map[i] = _alloc.allocate(BufSize + 1);
-            _start.jmp_node(&_map[0]);
-            _finish.jmp_node(&_map[0]);
+            _init(_map_size);
         }
 
         explicit deque( const Allocator& a)
             : _map_size(1), _alloc(a) {
-            _map = _alloc_map.allocate(_map_size + 1);
-            for(size_type i = 0; i <= _map_size; i++)
-                _map[i] = _alloc.allocate(BufSize + 1);
-            _start.jmp_node(&_map[0]);
-            _finish.jmp_node(&_map[0]);
+            _init(_map_size);
         }
 
         explicit deque( size_type count ) {
@@ -212,12 +193,14 @@ namespace jr_std {
 
         deque( const deque& other )
             : _map_size(0){
-            if(this == &other)  return;
+            if(this == &other)
+                return;
             _copy(other);
         }
 
         deque( deque&& other ) {
-            if(this == &other)  return;
+            if(this == &other)
+                return;
             _move(static_cast<deque&&>(other));
         }
 
@@ -232,69 +215,84 @@ namespace jr_std {
         ~deque() {
             _free_all();
         }
+
         // 拷贝重载
         deque& operator=( const deque& other ) {
-            if(this == &other)  return *this;
+            if(this == &other)
+                return *this;
+            clear();
             _copy(other);
             return *this;
         }
         // 移动重载
         deque& operator=( deque&& other ) {
-            if(this == &other)  return *this;
+            if(this == &other)
+                return *this;
+            _free_all();
             _move(static_cast<deque&&>(other));
             return *this;
         }
         // 赋值操作
         void assign( size_type count, const T& value ) {
-            _free_all();
+            clear();
             _ctor(count, value, std::true_type());
         }
 
         void assign( std::initializer_list<T> ilist ) {
-            _free_all();
-            _map_size = ilist.size() / BufSize + 1;
-            _map = _alloc_map.allocate(_map_size + 1);
-            for(size_type i = 0; i <= _map_size; i++) {
-                _map[i] = _alloc.allocate(BufSize + 1);
-            }
-            _start.jmp_node(&_map[0]);
-            _finish.jmp_node(&_map[0]);
+            clear();
             for(auto it = ilist.begin(); it != ilist.end(); ++it)
                 push_back(*it);
         }
 
         template< class InputIt >
         void assign( InputIt first, InputIt last ) {
-            _free_all();
+            clear();
             typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
             _ctor(first, last, type());
         }
 
-        allocator_type get_allocator() const noexcept { return _alloc; }
+        allocator_type get_allocator() const noexcept
+        { return _alloc; }
         // 迭代器
-        iterator begin() noexcept { return _start; }
-        const_iterator begin() const noexcept { return const_iterator(_start.control_node); }
-        iterator end() noexcept { return _finish; }
-        const_iterator end() const noexcept { return const_iterator(_finish.control_node, _finish.cur); }
-        const_iterator cbegin() const noexcept { return const_iterator(_start.control_node); }
-        const_iterator cend() const noexcept { return const_iterator(_finish.control_node, _finish.cur); }
+        iterator begin() noexcept
+        { return _start; }
 
-        reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+        const_iterator begin() const noexcept
+        { return const_iterator(_start.control_node); }
 
-        const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+        iterator end() noexcept
+        { return _finish; }
 
-        const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+        const_iterator end() const noexcept
+        { return const_iterator(_finish.control_node, _finish.cur); }
 
-        reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+        const_iterator cbegin() const noexcept
+        { return const_iterator(_start.control_node); }
 
-        const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+        const_iterator cend() const noexcept
+        { return const_iterator(_finish.control_node, _finish.cur); }
 
-        const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
+        reverse_iterator rbegin() noexcept
+        { return reverse_iterator(end()); }
+
+        const_reverse_iterator rbegin() const noexcept
+        { return const_reverse_iterator(end()); }
+
+        const_reverse_iterator crbegin() const noexcept
+        { return const_reverse_iterator(end()); }
+
+        reverse_iterator rend() noexcept
+        { return reverse_iterator(begin()); }
+
+        const_reverse_iterator rend() const noexcept
+        { return const_reverse_iterator(begin()); }
+
+        const_reverse_iterator crend() const noexcept
+        { return const_reverse_iterator(begin()); }
+
         // 元素访问
         reference operator[](size_type n) {
-            iterator it = _start;
-            it += n;
-            return *it;
+            return *(_start + n);
         }
 
         const_reference operator[](size_type n) const {
@@ -304,14 +302,22 @@ namespace jr_std {
         }
 
         reference at(size_type n) { return (*this)[n]; }
+
         const_reference at(size_type n) const { return (*this)[n]; }
+
         reference front() { return *_start; }
+
         const_reference front() const { return *_start; }
+
         reference back() { return *(_finish - 1); }
+
         const_reference back() const { return *(_finish - 1); }
+
         // 容量
-        bool empty() const noexcept { return _start == _finish;}
+        bool empty() const noexcept { return _start == _finish; }
+
         size_type size() const noexcept { return _finish - _start; }
+
         size_type max_size() const noexcept { return UINT_MAX; }
 
         void resize(size_type sz, const T& c) {
@@ -336,12 +342,11 @@ namespace jr_std {
 
         void resize(size_type sz) { resize(sz, T()); }
 
-        void shrink_to_fit() {
-            _move_map(size());
-        }
+        void shrink_to_fit() { _move_map(size()); }
 
         void clear() noexcept {
-            if(!_map_size)  return;
+            if(!_map_size)
+                return;
             for(size_type i = 0; i <= _map_size; i++) {
                 for(size_type j = 0; j < BufSize; j++)
                     _alloc.destroy(&_map[i][j]);
@@ -393,6 +398,8 @@ namespace jr_std {
         iterator erase( const_iterator first, const_iterator last ) {
             difference_type n = last - first;
             iterator it = iterator(last.control_node, last.cur);
+            if(first == last)
+                return it;
             iterator tmp = _finish;
             _finish -= n;
             for(; it != tmp; it++) {
@@ -457,7 +464,8 @@ namespace jr_std {
         }
 
         void swap( deque& other ) {
-            if(this == &other)  return;
+            if(this == &other)
+                return;
             {
                 size_type st = _map_size;
                 _map_size = other._map_size;
