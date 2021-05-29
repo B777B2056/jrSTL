@@ -58,7 +58,7 @@ namespace jr_std {
 
         template<class InputIt>
         void _ctor(InputIt first, InputIt last, std::false_type) {
-            _size = static_cast<size_type>(jr_std::distance(first, last));
+            _size = static_cast<size_type>(last - first);
             _cap = 2 * _size;
             _head = _alloc.allocate(_cap);
             _tail = _head + _size;
@@ -101,14 +101,13 @@ namespace jr_std {
 
         iterator _insert(const_iterator pos, size_type count,
                          const_reference value, std::true_type) {
-            difference_type dis = jr_std::distance(cbegin(), pos);
+            difference_type dis = pos - cbegin();
             if(_size + count > _cap) {
                 _cap = 2 * (_size + count);
                 _move_elements(_alloc.allocate(_cap));
                 _end_of_storage = _head + _cap;
             }
-            iterator pos_mutable = begin();
-            jr_std::advance(pos_mutable, dis);
+            iterator pos_mutable = begin() + dis;
             for(iterator tmp = _tail + count - 1; tmp != pos_mutable; --tmp) {
                 *tmp = *(tmp - count);
             }
@@ -121,9 +120,10 @@ namespace jr_std {
         }
 
         template<class InputIt>
-        iterator _insert(const_iterator pos, InputIt first,
-                         InputIt last, std::false_type) {
-            difference_type dis = jr_std::distance(cbegin(), pos);
+        iterator _insert(const_iterator pos,
+                         InputIt first, InputIt last,
+                         std::false_type) {
+            difference_type dis = pos - cbegin();
             while(first != last) {
                 pos = insert(pos, *first++);
                 pos++;
@@ -152,7 +152,8 @@ namespace jr_std {
 
         vector( vector&& other )
              : _size(other._size), _cap(other._cap),
-               _head(other._head), _tail(other._tail), _end_of_storage(other._end_of_storage) {
+               _head(other._head), _tail(other._tail),
+               _end_of_storage(other._end_of_storage) {
             if(this == &other)
                 return;
             other._cap = 0;
@@ -176,7 +177,8 @@ namespace jr_std {
 
         vector( vector&& other, const Allocator& a )
             : _alloc(a), _size(other._size), _cap(other._cap),
-              _head(other._head), _tail(other._tail), _end_of_storage(other._end_of_storage) {
+              _head(other._head), _tail(other._tail),
+              _end_of_storage(other._end_of_storage) {
             if(this == &other)
                 return;
             other._cap = 0;
@@ -186,7 +188,8 @@ namespace jr_std {
             other._end_of_storage = nullptr;
         }
 
-        vector( size_type count, const_reference value, const Allocator& a = Allocator() )
+        vector( size_type count, const_reference value,
+                const Allocator& a = Allocator() )
             : _alloc(a) {
             _ctor(count, value, std::true_type());
         }
@@ -206,7 +209,8 @@ namespace jr_std {
         }
 
         template< class InputIt >
-        vector( InputIt first, InputIt last, const Allocator& a = Allocator() )
+        vector( InputIt first, InputIt last,
+                const Allocator& a = Allocator() )
             : _alloc(a) {
             typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
             _ctor(first, last, type());
@@ -289,65 +293,113 @@ namespace jr_std {
             _assign(first, last, type());
         }
 
-        allocator_type get_allocator() const noexcept { return _alloc; }
+        allocator_type get_allocator() const noexcept {
+            return _alloc;
+        }
 
-        reference operator[]( size_type pos ) { return *(_head + pos); }
+        reference operator[]( size_type pos ) {
+            return *(_head + pos);
+        }
 
-        const_reference operator[]( size_type pos ) const { return *(_head + pos); }
+        const_reference operator[]( size_type pos ) const {
+            return *(_head + pos);
+        }
 
-        reference at( size_type pos ) { return *(_head + pos); }
+        reference at( size_type pos ) {
+            return *(_head + pos);
+        }
 
-        const_reference at( size_type pos ) const { return *(_head + pos); }
+        const_reference at( size_type pos ) const {
+            return *(_head + pos);
+        }
 
-        pointer data() noexcept { return _head; }
+        pointer data() noexcept {
+            return _head;
+        }
 
-        const_pointer data() const noexcept { return _head; }
+        const_pointer data() const noexcept {
+            return _head;
+        }
 
-        reference front() { return *_head; }
+        reference front() {
+            return *_head;
+        }
 
-        const_reference front() const { return *_head; }
+        const_reference front() const {
+            return *_head;
+        }
 
-        reference back() { return *(_tail - 1); }
+        reference back() {
+            return *(_tail - 1);
+        }
 
-        const_reference back() const { return *(_tail - 1); }
+        const_reference back() const {
+            return *(_tail - 1);
+        }
 
-        iterator begin() noexcept { return _head; }
+        iterator begin() noexcept {
+            return _head;
+        }
 
-        const_iterator begin() const noexcept { return _head; }
+        const_iterator begin() const noexcept {
+            return _head;
+        }
 
-        const_iterator cbegin() const noexcept { return _head; }
+        const_iterator cbegin() const noexcept {
+            return _head;
+        }
 
-        iterator end() noexcept { return _tail; }
+        iterator end() noexcept {
+            return _tail;
+        }
 
-        const_iterator end() const noexcept { return _tail; }
+        const_iterator end() const noexcept {
+            return _tail;
+        }
 
-        const_iterator cend() const noexcept { return _tail; }
+        const_iterator cend() const noexcept {
+            return _tail;
+        }
 
-        reverse_iterator rbegin() noexcept
-        { return reverse_iterator(end()); }
+        reverse_iterator rbegin() noexcept {
+            return reverse_iterator(end());
+        }
 
-        const_reverse_iterator rbegin() const noexcept
-        { return const_reverse_iterator(end()); }
+        const_reverse_iterator rbegin() const noexcept {
+            return const_reverse_iterator(end());
+        }
 
-        const_reverse_iterator crbegin() const noexcept
-        { return const_reverse_iterator(end()); }
+        const_reverse_iterator crbegin() const noexcept {
+            return const_reverse_iterator(end());
+        }
 
-        reverse_iterator rend() noexcept
-        { return reverse_iterator(begin()); }
+        reverse_iterator rend() noexcept {
+            return reverse_iterator(begin());
+        }
 
-        const_reverse_iterator rend() const noexcept
-        { return const_reverse_iterator(begin()); }
+        const_reverse_iterator rend() const noexcept {
+            return const_reverse_iterator(begin());
+        }
 
-        const_reverse_iterator crend() const noexcept
-        { return const_reverse_iterator(begin()); }
+        const_reverse_iterator crend() const noexcept {
+            return const_reverse_iterator(begin());
+        }
 
-        bool empty() const noexcept { return _size == 0; }
+        bool empty() const noexcept {
+            return _size == 0;
+        }
 
-        size_type size() const noexcept { return _size; }
+        size_type size() const noexcept {
+            return _size;
+        }
 
-        size_type max_size() const noexcept { return _cap; }
+        size_type max_size() const noexcept {
+            return _cap;
+        }
 
-        size_type capacity() const noexcept { return _cap; }
+        size_type capacity() const noexcept {
+            return _cap;
+        }
 
         void reserve( size_type new_cap ) {
             if (new_cap > _cap) {
@@ -419,7 +471,9 @@ namespace jr_std {
             }
         }
 
-        void resize( size_type count ) { resize(count, T()); }
+        void resize( size_type count ) {
+            resize(count, T());
+        }
 
         iterator erase( iterator pos ) {
             if(pos == end())
@@ -487,13 +541,21 @@ namespace jr_std {
             return _insert(pos, first, last, type());
         }
 
-        void push_back( const_reference value ) { insert(end(), value); }
+        void push_back( const_reference value ) {
+            insert(end(), value);
+        }
 
-        void push_back( T&& value ) { insert(end(), static_cast<T&&>(value)); }
+        void push_back( T&& value ) {
+            insert(end(), static_cast<T&&>(value));
+        }
 
-        void pop_back() { erase(end() - 1); }
+        void pop_back() {
+            erase(end() - 1);
+        }
 
-        void clear() noexcept {  erase(begin(), end()); }
+        void clear() noexcept {
+            erase(begin(), end());
+        }
 
         template< class... Args >
         iterator emplace( const_iterator pos, Args&&... args ) {
@@ -530,7 +592,14 @@ namespace jr_std {
     };
 
     template< class T, class Alloc >
-    bool operator==( const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs ) {
+    void swap( jr_std::vector<T,Alloc>& lhs,
+               jr_std::vector<T,Alloc>& rhs ) {
+        lhs.swap(rhs);
+    }
+
+    template< class T, class Alloc >
+    bool operator==( const jr_std::vector<T, Alloc>& lhs,
+                     const jr_std::vector<T, Alloc>& rhs ) {
         if (lhs.size() != rhs.size())
             return false;
         for(size_t i = 0; i < lhs.size(); i++) {
@@ -541,12 +610,14 @@ namespace jr_std {
     }
 
     template< class T, class Alloc >
-    bool operator!=( const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs ) {
+    bool operator!=( const jr_std::vector<T, Alloc>& lhs,
+                     const jr_std::vector<T, Alloc>& rhs ) {
         return !(lhs == rhs);
     }
 
     template< class T, class Alloc >
-    bool operator<( const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs ) {
+    bool operator<( const jr_std::vector<T, Alloc>& lhs,
+                    const jr_std::vector<T, Alloc>& rhs ) {
         if (lhs.size() < rhs.size())
             return true;
         if (lhs.size() > rhs.size() || operator==(lhs, rhs))
@@ -559,7 +630,8 @@ namespace jr_std {
     }
 
     template< class T, class Alloc >
-    bool operator>( const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs ) {
+    bool operator>( const jr_std::vector<T, Alloc>& lhs,
+                    const jr_std::vector<T, Alloc>& rhs ) {
         if (lhs.size() > rhs.size())
             return true;
         if (lhs.size() < rhs.size() || operator==(lhs, rhs))
@@ -572,12 +644,14 @@ namespace jr_std {
     }
 
     template< class T, class Alloc >
-    bool operator>=( const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs ) {
+    bool operator>=( const jr_std::vector<T, Alloc>& lhs,
+                     const jr_std::vector<T, Alloc>& rhs ) {
         return !(lhs < rhs);
     }
 
     template< class T, class Alloc >
-    bool operator<=( const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs ) {
+    bool operator<=( const jr_std::vector<T, Alloc>& lhs,
+                     const jr_std::vector<T, Alloc>& rhs ) {
         return !(lhs > rhs);
     }
 
