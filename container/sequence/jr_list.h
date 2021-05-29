@@ -1,6 +1,7 @@
 #ifndef JR_LIST_H
 #define JR_LIST_H
 
+#include <iostream>
 #include <type_traits>
 #include <cstddef>
 #include "../../memory/jr_allocator.h"
@@ -24,23 +25,15 @@ namespace jr_std {
         typedef jr_std::reverse_iterator<const_iterator> const_reverse_iterator;
         typedef jr_std::reverse_iterator<iterator> reverse_iterator;
 
-    protected:
+    private:
         Allocator _alloc;
         // Use same rule with type T to build a list node allocator
         typename Allocator::template rebind<_node<T> >::other _alloc_node;
         _node<T> *_head, *_tail;
         size_t _size;
-        // Create empty list
-        void _create_empty_node() {
-            _head = _create_node();
-            _tail = _create_node();
-            _head->next = _tail;
-            _tail->prev = _head;
-        }
         // Create a list node without value
         _node<T> *_create_node() {
-            _node<T> *node = _alloc_node.allocate(1);
-            return node;
+            return _alloc_node.allocate(1);
         }
         // Create a list node with value
         _node<T> *_create_node(const T& value) {
@@ -53,6 +46,13 @@ namespace jr_std {
             _node<T> *node = _alloc_node.allocate(1);
             _alloc_node.construct(&(node->data), static_cast<T&&>(value));
             return node;
+        }
+        // Create empty list
+        void _create_empty_node() {
+            _head = _create_node();
+            _tail = _create_node();
+            _head->next = _tail;
+            _tail->prev = _head;
         }
         // Destroy a list node
         void _destroy_node(_node<T> *node) {
@@ -83,6 +83,7 @@ namespace jr_std {
             _head->next = n2;
             _destroy_node(n1);
         }
+
         // Insert a node into list tail
         void _insert2tail(const T& value) {
             _node<T> *node = _create_node(value);
@@ -109,17 +110,18 @@ namespace jr_std {
             _destroy_node(n1);
         }
 
-        void _ctor(size_t n, const T& value, const Allocator& a, std::true_type) {
-            _alloc = a;
+        void _ctor(size_t n, const T& value,
+                   std::true_type) {
+            if(_size != n)
+                _size = n;
             _create_empty_node();
             while(n--)
                 _insert2tail(value);
         }
 
         template<class InputIt>
-        void _ctor(InputIt first, InputIt last, const Allocator& a, std::false_type) {
+        void _ctor(InputIt first, InputIt last, std::false_type) {
             _size = 0;
-            _alloc = a;
             _create_empty_node();
             while(first != last) {
                 _insert2tail(first._cur_node->data);
@@ -161,10 +163,10 @@ namespace jr_std {
         }
 
         iterator _insert(const_iterator position, size_t n, const T& x, std::true_type) {
-            iterator it = begin();
-            difference_type dis = distance(cbegin(), position);
+            difference_type dis = jr_std::distance(cbegin(), position);
             if(!n) {
-                advance(it, dis);
+                iterator it = begin();
+                jr_std::advance(it, dis);
                 return it;
             }
             _size += n;
@@ -177,18 +179,18 @@ namespace jr_std {
                 n1->prev = node;
                 node->prev = n2;
                 n2 = n2->next;
-                --position;
             }
-            advance(it, dis);
+            iterator it = begin();
+            jr_std::advance(it, dis);
             return it;
         }
 
         template<class InputIt>
         iterator _insert(const_iterator position, InputIt first, InputIt last, std::false_type) {
-            iterator it = begin();
-            difference_type dis = distance(cbegin(), position);
+            difference_type dis = jr_std::distance(cbegin(), position);
             if(first == last) {
-                advance(it, dis);
+                iterator it = begin();
+                jr_std::advance(it, dis);
                 return it;
             }
             difference_type n = distance(first, last);
@@ -204,16 +206,19 @@ namespace jr_std {
                 n2 = n2->next;
                 ++first;
             }
-            advance(it, dis);
+            iterator it = begin();
+            jr_std::advance(it, dis);
             return it;
         }
 
         template<class Compare>
         _node<T> *_merge_list(_node<T> *l1_h, _node<T> *l2_h,
-                                     _node<T> *t1, _node<T> *t2,
-                                     Compare comp, bool& is_change) {
-            if(!l1_h)   return l2_h;
-            if(!l2_h)   return l1_h;
+                              _node<T> *t1, _node<T> *t2,
+                              Compare comp, bool& is_change) {
+            if(!l1_h)
+                return l2_h;
+            if(!l2_h)
+                return l1_h;
             _node<T> *dummy = _create_node();
             _node<T> *n1, *n2;
             if(comp(l1_h->data, l2_h->data)) {
@@ -255,11 +260,11 @@ namespace jr_std {
                     n2 = n5;
                 }
             }
-            if(n1 != t1) {
+            if((n1 != t1) && last2) {
                 last2->next = n1;
                 n1->prev = last2;
             }
-            if(n2 != t2) {
+            if((n2 != t2) && last) {
                 last->next = n2;
                 n2->prev = last;
                 if(t2) {
@@ -313,25 +318,30 @@ namespace jr_std {
             _create_empty_node();
         }
 
-        explicit list( size_type n ) : _size(n) {
+        explicit list( size_type n )
+            : _size(n) {
             _create_empty_node();
-            while(n--) { _insert2tail(T()); }
+            while(n--) {
+                _insert2tail(T());
+            }
         }
 
         list(size_type n, const_reference value,
              const Allocator& a = Allocator())
             : _size(n), _alloc(a) {
-            _ctor(n, value, a, std::true_type());
+            _ctor(n, value, std::true_type());
         }
 
         template<class InputIt>
         list(InputIt first, InputIt last,
-             const Allocator& a = Allocator()) : _alloc(a) {
+             const Allocator& a = Allocator())
+            : _alloc(a) {
             typedef std::integral_constant<bool, std::is_integral<InputIt>::value> type;
-            _ctor(first, last, a, type());
+            _ctor(first, last, type());
         }
 
-        list(const list& x) : _size(x._size) {
+        list(const list& x)
+            : _size(x._size) {
             if(this == &x)
                 return;
             _create_empty_node();
@@ -381,16 +391,17 @@ namespace jr_std {
         }
 
         ~list() {
-            _node<T> *tmp;
-            while(_head) {
-                tmp = _head->next;
+            while(_head != _tail) {
+                _node<T> *tmp = _head->next;
                 _destroy_node(_head);
                 _head = tmp;
             }
+            _destroy_node(_tail);
         }
 
         list& operator=(const list& x) {
             if(this != &x) {
+                clear();
                 _node<T> *tmp, *th = _head->next;
                 while(th && th != _tail) {
                     tmp = th->next;
@@ -409,6 +420,7 @@ namespace jr_std {
 
         list& operator=(list&& other) {
             if(this != &other) {
+                clear();
                 _size = other._size;
                 _head = other._head;
                 _tail = other._tail;
@@ -535,6 +547,7 @@ namespace jr_std {
 
         template<class... Args>
         iterator emplace(const_iterator position, Args&&... args) {
+            difference_type dis = jr_std::distance(cbegin(), position);
             _node<T> *n1 = position._cur_node;
             _node<T> *n2 = position._cur_node->prev;
             _node<T> *n = _create_node();
@@ -546,7 +559,7 @@ namespace jr_std {
             --position;
             ++_size;
             iterator it = begin();
-            advance(it, distance(cbegin(), position));
+            jr_std::advance(it, dis);
             return it;
         }
 
@@ -559,6 +572,7 @@ namespace jr_std {
         }
 
         iterator insert(const_iterator position, T&& x) {
+            difference_type dis = jr_std::distance(cbegin(), position);
             _node<T> *n1 = position._cur_node;
             _node<T> *n2 = position._cur_node->prev;
             _node<T> *node = _create_node(static_cast<T&&>(x));
@@ -569,15 +583,16 @@ namespace jr_std {
             --position;
             ++_size;
             iterator it = begin();
-            advance(it, distance(cbegin(), position));
+            jr_std::advance(it, dis);
             return it;
         }
 
         iterator insert( const_iterator pos, std::initializer_list<T> ilist ) {
-            iterator it = begin();
-            advance(it, distance(cbegin(), pos));
+            difference_type dis = jr_std::distance(cbegin(), pos);
             for(auto it = ilist.begin(); it != ilist.end(); ++it)
                 insert(pos, *it);
+            iterator it = begin();
+            jr_std::advance(it, dis);
             return it;
         }
 
@@ -733,9 +748,8 @@ namespace jr_std {
             _node<T> *h1 = _head->next, *h2 = x._head->next;
             h1->prev = _head->next = nullptr;
             h2->prev = x._head->next = nullptr;
-            h1 = _merge_list(h1, h2,
-                                    _tail, x._tail,
-                                    comp, is_change);
+            h1 = _merge_list(h1, h2, _tail, x._tail,
+                                     comp, is_change);
             _head->next = h1;
             h1->prev = _head;
             if(is_change) {
@@ -805,14 +819,19 @@ namespace jr_std {
         }
 
         void reverse() noexcept {
-            if(_size < 2)  return;
+            if(_size < 2)
+                return;
             _node<T> *pre = nullptr, *cur = nullptr, *next = nullptr;
-            for(cur = _head; cur; cur = next) {
+            for(cur = _head->next; cur != _tail; cur = next) {
                 next = cur->next;
+                pre = cur->prev;
                 cur->prev = cur->next;
                 cur->next = pre;
-                pre = cur;
             }
+            _head->prev = _head->next;
+            _head->next = nullptr;
+            _tail->next = _tail->prev;
+            _tail->prev = nullptr;
             _node<T> *tmp = _head;
             _head = _tail;
             _tail = tmp;

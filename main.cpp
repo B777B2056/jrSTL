@@ -1,13 +1,11 @@
 #include <gtest/gtest.h>
 #include <iostream>
-#include "container/sequence/jr_deque.h"
+#include "container/sequence/jr_list.h"
 
 //int main() {
-//    jr_std::deque<int> d(8, 1);
-////    for(int n : d) {
-////        std::cout << n << " ";
-////    }
-//    std::cout << d.size();
+//    jr_std::list<int> des, tmp(6, -100);
+//    std::cout << tmp.size();
+//    des.assign(tmp.begin(), tmp.end());
 //    return 0;
 //}
 
