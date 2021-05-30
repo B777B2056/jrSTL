@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <random>
 #include <list>
-#include <iostream>
 #include "../container/sequence/jr_list.h"
 
 #define MAX_SIZE 2000

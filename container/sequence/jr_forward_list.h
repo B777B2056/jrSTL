@@ -1,6 +1,6 @@
 #ifndef JR_FORWARD_LIST_H
 #define JR_FORWARD_LIST_H
-#include <iostream>
+
 #include <cstddef>
 #include <type_traits>
 #include "../../memory/jr_allocator.h"
@@ -194,6 +194,8 @@ template<class T, class Allocator = jr_std::allocator<T> >
     }
 
     forward_list(const forward_list& x) {
+        if(this == &x)
+            return;
         _create_empty_list();
         _forward_node<T> *pre = _head, *cur = nullptr;
         for(auto it = x.begin(); it != x.end(); ++it) {
@@ -206,6 +208,8 @@ template<class T, class Allocator = jr_std::allocator<T> >
     }
 
     forward_list(forward_list&& x) {
+        if(this == &x)
+            return;
         _head = x._head;
         _tail = x._tail;
         x._create_empty_list();
@@ -213,6 +217,8 @@ template<class T, class Allocator = jr_std::allocator<T> >
 
     forward_list(const forward_list& x, const Allocator& a)
         : _alloc(a) {
+        if(this == &x)
+            return;
         _create_empty_list();
         _forward_node<T> *pre = _head, *cur = nullptr;
         for(auto it = x.begin(); it != x.end(); ++it) {
@@ -226,6 +232,8 @@ template<class T, class Allocator = jr_std::allocator<T> >
 
     forward_list(forward_list&& x, const Allocator& a)
         : _alloc(a) {
+        if(this == &x)
+            return;
         _head = x._head;
         _tail = x._tail;
         x._create_empty_list();
@@ -245,12 +253,13 @@ template<class T, class Allocator = jr_std::allocator<T> >
     }
 
     ~forward_list() {
-        while(_head) {
+        while(_head != _tail) {
             _forward_node<T> *t = _head->next;
             _alloc.destroy(&(_head->data));
             _alloc_node.deallocate(_head, 1);
             _head = t;
         }
+        _alloc_node.deallocate(_tail, 1);
     }
 
     forward_list& operator=(const forward_list& x) {
@@ -301,26 +310,64 @@ template<class T, class Allocator = jr_std::allocator<T> >
         _build_n(n, value, std::true_type());
     }
 
-    allocator_type get_allocator() const noexcept { return _alloc; }
+    allocator_type get_allocator() const noexcept {
+        return _alloc;
+    }
 
     // 迭代器
-    iterator before_begin() noexcept { return iterator(_head); }
-    const_iterator before_begin() const noexcept { return const_iterator(_head); }
-    iterator begin() noexcept { return iterator(_head->next); }
-    const_iterator begin() const noexcept { return const_iterator(_head->next); }
-    iterator end() noexcept { return iterator(_tail); }
-    const_iterator end() const noexcept { return const_iterator(_tail); }
-    const_iterator cbegin() const noexcept { return const_iterator(_head->next); }
-    const_iterator cbefore_begin() const noexcept { return const_iterator(_head); }
-    const_iterator cend() const noexcept { return const_iterator(_tail); }
+    iterator before_begin() noexcept {
+        return iterator(_head);
+    }
+
+    const_iterator before_begin() const noexcept {
+        return const_iterator(_head);
+    }
+
+    iterator begin() noexcept {
+        return iterator(_head->next);
+    }
+
+    const_iterator begin() const noexcept {
+        return const_iterator(_head->next);
+    }
+
+    iterator end() noexcept {
+        return iterator(_tail);
+    }
+
+    const_iterator end() const noexcept {
+        return const_iterator(_tail);
+    }
+
+    const_iterator cbegin() const noexcept {
+        return const_iterator(_head->next);
+    }
+
+    const_iterator cbefore_begin() const noexcept {
+        return const_iterator(_head);
+    }
+
+    const_iterator cend() const noexcept {
+        return const_iterator(_tail);
+    }
 
     // 容量
-    bool empty() const noexcept { return _head->next == _tail; }
-    size_type max_size() const noexcept { return UINT_MAX; }
+    bool empty() const noexcept {
+        return _head->next == _tail;
+    }
+
+    size_type max_size() const noexcept {
+        return UINT_MAX;
+    }
 
     // 元素访问
-    reference front() { return _head->next->data; }
-    const_reference front() const { return _head->next->data; }
+    reference front() {
+        return _head->next->data;
+    }
+
+    const_reference front() const {
+        return _head->next->data;
+    }
 
     // 修改器
     template<class... Args>
@@ -353,12 +400,12 @@ template<class T, class Allocator = jr_std::allocator<T> >
     }
 
     iterator insert_after( const_iterator pos, std::initializer_list<T> ilist ) {
-        iterator it = begin();
-        advance(it, distance(cbefore_begin(), pos));
         for(auto it = ilist.begin(); it != ilist.end(); ++it) {
             insert_after(pos, *it);
             ++pos;
         }
+        iterator it = before_begin();
+        jr_std::advance(it, jr_std::distance(cbefore_begin(), pos));
         return it;
     }
 
@@ -391,15 +438,24 @@ template<class T, class Allocator = jr_std::allocator<T> >
 
     template<class... Args>
     void emplace_front(Args&&... args) {
-        emplace_after(cbegin(), static_cast<Args&&>(args)...);
+        emplace_after(cbefore_begin(), static_cast<Args&&>(args)...);
     }
 
-    void push_front(const T& x) { _insert2front(&_head, x); }
-    void push_front(T&& x) { _insert2front(&_head, static_cast<T&&>(x)); }
-    void pop_front() { erase_after(cbefore_begin()); }
+    void push_front(const T& x) {
+        _insert2front(&_head, x);
+    }
+
+    void push_front(T&& x) {
+        _insert2front(&_head, static_cast<T&&>(x));
+    }
+
+    void pop_front() {
+        erase_after(cbefore_begin());
+    }
 
     void swap(forward_list& other) {
-        if(this == &other)  return;
+        if(this == &other)
+            return;
         _forward_node<T> *tmp = nullptr;
         {
             tmp = _head;
@@ -445,7 +501,9 @@ template<class T, class Allocator = jr_std::allocator<T> >
         }
     }
 
-    void resize(size_type sz) { resize(sz, T()); }
+    void resize(size_type sz) {
+        resize(sz, T());
+    }
 
     void clear() noexcept {
         _forward_node<T> *t = nullptr, *th = _head->next;
@@ -461,7 +519,8 @@ template<class T, class Allocator = jr_std::allocator<T> >
     // forward_­list 操作
     void splice_after(const_iterator position, forward_list& x,
                       const_iterator first, const_iterator last) {
-        if((position == cend()) || (this == &x))  return;
+        if((position == cend()) || (this == &x))
+            return;
         _forward_node<T> *x_last = first._cur_node, *t = position._cur_node->next;
         while(x_last->next != last._cur_node)
             x_last = x_last->next;
@@ -482,19 +541,23 @@ template<class T, class Allocator = jr_std::allocator<T> >
     }
 
     void splice_after(const_iterator position, forward_list& x) {
-        splice_after(position, x, x.before_begin(), x.end());
+        splice_after(position, x, x.cbefore_begin(), x.cend());
     }
 
     void splice_after(const_iterator position, forward_list&& x) {
-        splice_after(position, static_cast<forward_list&&>(x), x.before_begin(), x.end());
+        splice_after(position, static_cast<forward_list&&>(x),
+                     x.cbefore_begin(), x.cend());
     }
 
-    void splice_after(const_iterator position, forward_list& x, const_iterator it) {
-        splice_after(position, x, it, x.end());
+    void splice_after(const_iterator position,
+                      forward_list& x, const_iterator it) {
+        splice_after(position, x, it, x.cend());
     }
 
-    void splice_after(const_iterator position, forward_list&& x, const_iterator it) {
-        splice_after(position, static_cast<forward_list&&>(x), it, x.end());
+    void splice_after(const_iterator position,
+                      forward_list&& x, const_iterator it) {
+        splice_after(position, static_cast<forward_list&&>(x),
+                     it, x.cend());
     }
 
     template<class Predicate>
@@ -574,15 +637,31 @@ template<class T, class Allocator = jr_std::allocator<T> >
         tmp_t->next = _tail;
     }
 
-    void remove(const T& value) { remove_if([value](const T& a)->bool { return value == a;}); }
+    void remove(const T& value) {
+        remove_if([value](const T& a)
+                  ->bool { return value == a;});
+    }
 
-    void unique() { unique([=](const T& a, const T& b)->bool { return a == b; }); }
+    void unique() {
+        unique([=](const T& a, const T& b)
+               ->bool { return a == b; });
+    }
 
-    void merge(forward_list& x) { merge(x, [=](const T& a, const T& b)->bool { return a < b; }); }
+    void merge(forward_list& x) {
+        merge(x, [=](const T& a, const T& b)
+                 ->bool { return a < b; });
+    }
 
-    void merge(forward_list&& x) { merge(static_cast<forward_list&&>(x), [=](const T& a, const T& b)->bool { return a < b; }); }
+    void merge(forward_list&& x) {
+        merge(static_cast<forward_list&&>(x),
+              [=](const T& a, const T& b)
+              ->bool { return a < b; });
+    }
 
-    void sort() { sort([=](const T& a, const T& b)->bool { return a < b; }); }
+    void sort() {
+        sort([=](const T& a, const T& b)
+             ->bool { return a < b; });
+    }
 
     void reverse() noexcept {
         if((_head->next == _tail) || (_head->next->next == _tail))  return;
@@ -599,11 +678,14 @@ template<class T, class Allocator = jr_std::allocator<T> >
         _tail = tmp;
     }
   };
+
   // 交换
   template< class T, class Alloc >
   void swap( jr_std::forward_list<T,Alloc>& lhs,
-             jr_std::forward_list<T,Alloc>& rhs )
-  { lhs.swap(rhs); }
+             jr_std::forward_list<T,Alloc>& rhs ) {
+      lhs.swap(rhs);
+  }
+
   // 比较
   template< class T, class Alloc >
   bool operator==( const jr_std::forward_list<T,Alloc>& lhs,
@@ -622,8 +704,9 @@ template<class T, class Allocator = jr_std::allocator<T> >
 
   template< class T, class Alloc >
   bool operator!=( const jr_std::forward_list<T,Alloc>& lhs,
-                   const jr_std::forward_list<T,Alloc>& rhs )
-  { return !(lhs == rhs); }
+                   const jr_std::forward_list<T,Alloc>& rhs ) {
+      return !(lhs == rhs);
+  }
 
   template< class T, class Alloc >
   bool operator<( const jr_std::forward_list<T,Alloc>& lhs,
@@ -655,13 +738,15 @@ template<class T, class Allocator = jr_std::allocator<T> >
 
   template< class T, class Alloc >
   bool operator<=( const jr_std::forward_list<T,Alloc>& lhs,
-                   const jr_std::forward_list<T,Alloc>& rhs )
-  { return !(lhs > rhs); }
+                   const jr_std::forward_list<T,Alloc>& rhs ) {
+      return !(lhs > rhs);
+  }
 
   template< class T, class Alloc >
   bool operator>=( const jr_std::forward_list<T,Alloc>& lhs,
-                   const jr_std::forward_list<T,Alloc>& rhs )
-  { return !(lhs < rhs); }
+                   const jr_std::forward_list<T,Alloc>& rhs ) {
+      return !(lhs < rhs);
+  }
 }
 
 #endif // JR_FORWARD_LIST_H
