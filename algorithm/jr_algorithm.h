@@ -3,9 +3,9 @@
 
 #include <cstring>
 #include <cstddef>
+#include <utility>
 #include <type_traits>
 #include "../iterator/jr_iterator.h"
-#include "../container/utils/jr_utility.h"
 
 namespace jr_std {
     /*不修改序列的操作*/
@@ -67,7 +67,7 @@ namespace jr_std {
                               [&value](const T& m)->bool { return value == m; }); }
 
     template< class InputIt1, class InputIt2, class BinaryPredicate >
-    jr_std::pair<InputIt1, InputIt2>
+    std::pair<InputIt1, InputIt2>
     mismatch( InputIt1 first1, InputIt1 last1, InputIt2 first2, BinaryPredicate p ) {
         while(first1 != last1) {
             if(!p(*first1, *first2))
@@ -75,11 +75,11 @@ namespace jr_std {
             ++first1;
             ++first2;
         }
-        return jr_std::pair<InputIt1, InputIt2>(first1, first2);
+        return std::pair<InputIt1, InputIt2>(first1, first2);
     }
 
     template< class InputIt1, class InputIt2 >
-    pair<InputIt1, InputIt2>
+    std::pair<InputIt1, InputIt2>
     mismatch( InputIt1 first1, InputIt1 last1, InputIt2 first2 ) {
         typedef typename jr_std::iterator_traits<InputIt1>::value_type type1;
         typedef typename jr_std::iterator_traits<InputIt2>::value_type type2;
@@ -870,24 +870,26 @@ namespace jr_std {
     }
 
     template< class T, class Compare >
-    jr_std::pair<const T&,const T&> minmax( const T& a, const T& b, Compare comp )
-    { return pair<const T&,const T&>(jr_std::min(a, b, comp), jr_std::max(a, b, comp)); }
+    std::pair<const T&,const T&> minmax( const T& a, const T& b, Compare comp )
+    { return std::pair<const T&,const T&>(jr_std::min(a, b, comp),
+                                          jr_std::max(a, b, comp)); }
 
     template< class T >
-    jr_std::pair<const T&,const T&> minmax( const T& a, const T& b )
-    { return pair<const T&,const T&>(jr_std::min(a, b), jr_std::max(a, b)); }
+    std::pair<const T&,const T&> minmax( const T& a, const T& b )
+    { return std::pair<const T&,const T&>(jr_std::min(a, b),
+                                          jr_std::max(a, b)); }
 
     template< class ForwardIt, class Compare >
-    jr_std::pair<ForwardIt,ForwardIt>
+    std::pair<ForwardIt,ForwardIt>
     minmax_element( ForwardIt first, ForwardIt last, Compare comp )
-    { return jr_std::pair<ForwardIt,ForwardIt>(jr_std::min(first, last, comp),
-                                               jr_std::max(first, last, comp)); }
+    { return std::pair<ForwardIt,ForwardIt>(jr_std::min(first, last, comp),
+                                            jr_std::max(first, last, comp)); }
 
     template< class ForwardIt >
-    jr_std::pair<ForwardIt,ForwardIt>
+    std::pair<ForwardIt,ForwardIt>
     minmax_element( ForwardIt first, ForwardIt last )
-    { return jr_std::pair<ForwardIt,ForwardIt>(jr_std::min(first, last),
-                                               jr_std::max(first, last)); }
+    { return std::pair<ForwardIt,ForwardIt>(jr_std::min(first, last),
+                                            jr_std::max(first, last)); }
 
     /*有序序列的归并操作*/
     // 非原地归并
@@ -1144,14 +1146,14 @@ namespace jr_std {
     }
 
     template< class ForwardIt, class T, class Compare >
-    jr_std::pair<ForwardIt,ForwardIt>
+    std::pair<ForwardIt,ForwardIt>
     equal_range( ForwardIt first, ForwardIt last, const T& value, Compare comp ) {
-        return jr_std::pair<ForwardIt,ForwardIt>(jr_std::lower_bound(first, last, value, comp),
-                                                 jr_std::upper_bound(first, last, value, comp));
+        return std::pair<ForwardIt,ForwardIt>(jr_std::lower_bound(first, last, value, comp),
+                                              jr_std::upper_bound(first, last, value, comp));
     }
 
     template< class ForwardIt, class T >
-    jr_std::pair<ForwardIt,ForwardIt>
+    std::pair<ForwardIt,ForwardIt>
     equal_range( ForwardIt first, ForwardIt last, const T& value ) {
         return jr_std::equal_range(first, last, value,
                                    [](const T& a, const T& b)
@@ -1178,7 +1180,7 @@ namespace jr_std {
 
     template< class InputIt, class OutputIt1,
               class OutputIt2, class UnaryPredicate >
-    jr_std::pair<OutputIt1, OutputIt2>
+    std::pair<OutputIt1, OutputIt2>
     partition_copy( InputIt first, InputIt last,
                     OutputIt1 d_first_true, OutputIt2 d_first_false,
                     UnaryPredicate p ) {
@@ -1192,7 +1194,7 @@ namespace jr_std {
             }
             ++first;
         }
-        return jr_std::pair<OutputIt1, OutputIt2>(d_first_true, d_first_false);
+        return std::pair<OutputIt1, OutputIt2>(d_first_true, d_first_false);
     }
 
     // 非稳定划分（！！！）

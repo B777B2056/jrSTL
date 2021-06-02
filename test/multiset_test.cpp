@@ -433,11 +433,8 @@ TEST(testCase, multiset_range) {
     std::pair<jr_std::multiset<int>::iterator,
             jr_std::multiset<int>::iterator>
     p2 = des.equal_range(static_cast<int>(v));
-    std::cout << v << " " << cnt << std::endl;
-    if(p1.first == src.end()) {
+    if(p1.first == src.end())
         EXPECT_EQ(p2.first == des.end(), true);
-        std::cout << *p2.first << std::endl;
-    }
     else
         EXPECT_EQ(*p1.first, *p2.first);
     if(p1.second == src.end())
