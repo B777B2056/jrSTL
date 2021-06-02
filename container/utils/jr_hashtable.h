@@ -5,7 +5,7 @@
 #include <utility>
 #include <functional>
 #include "../../container/sequence/jr_vector.h"
-#include "se_iterators.h"
+#include "jr_nodes.h"
 
 namespace jr_std {
 template<class T, class HashFun, class KeyEqualFun, class Allocator, bool isMulti>

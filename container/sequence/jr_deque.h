@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <type_traits>
 #include "../../memory/jr_allocator.h"
-#include "../utils/se_iterators.h"
+#include "../utils/jr_iterators.h"
 
 namespace jr_std {
     template<class T, class Allocator = allocator<T>, size_t BufSize = 8>
@@ -126,7 +126,7 @@ namespace jr_std {
                 iterator tmp = _finish - 1;
                 _finish += n;
                 for(; tmp != it - 1; tmp--) {
-                    *(tmp + n) = *tmp;
+                    _alloc.construct(&(*(tmp + n)), *tmp);
                 }
                 it += n;
                 return it;

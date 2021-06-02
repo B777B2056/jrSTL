@@ -3,7 +3,7 @@
 
 #include "../../functional/jr_functional.h"
 #include "../../memory/jr_allocator.h"
-#include "se_iterators.h"
+#include "jr_nodes.h"
 
 namespace jr_std {
     // 平衡二叉搜索树（现为AVL树而非红黑树）
@@ -32,8 +32,9 @@ namespace jr_std {
             int rh = _height(r->right);
             return 1 + (lh > rh ? lh : rh);
         }
+
         // 先序遍历计数目标元素
-        size_t _dfs(tnode *r, const T target) {
+        size_t _dfs(tnode *r, const T target) const {
             if(!r)
                 return 0;
             int cur = 0;
@@ -41,6 +42,7 @@ namespace jr_std {
                 cur = 1;
             return cur + _dfs(r->left, target) + _dfs(r->right, target);
         }
+
         // 向左单向旋转, n指向不平衡节点
         // 新插入节点位于不平衡节点右子树的右子树上
         void _left_rotation(tnode*& y) {
@@ -57,6 +59,7 @@ namespace jr_std {
             // 改变子树根指向
             y = x;
         }
+
         // 向右单向旋转, n指向新插入的节点
         // 新插入节点位于不平衡节点左子树的左子树上
         void _right_rotation(tnode*& y) {
@@ -73,116 +76,116 @@ namespace jr_std {
             // 改变子树根指向
             y = x;
         }
+
+        // 将不平衡的子树调整为平衡树
+        void _adjust_to_balance(tnode *&r) {
+            if(r) {
+                // 检查平衡因子，判断是否需要进行旋转
+                int balance_factor = _height(r->left) - _height(r->right);
+                // 平衡因子为2,说明以r为根的子树的左子树比右子树高2,进行相应调整
+                if(balance_factor == 2) {
+                    // 若删除节点后，左子树的左子树不低于左子树的右子树，则r子树向右旋转
+                    if(r->left && (_height(r->left->left)
+                                   >= _height(r->left->right)))
+                        _right_rotation(r);
+                    // 若删除节点后，左子树的左子树低于左子树的右子树，则r子树左-右旋转
+                    else {
+                        _left_rotation(r->left);
+                        _right_rotation(r);
+                    }
+                // 平衡因子为-2,说明以r为根的子树的右子树比左子树高2,进行相应调整
+                } else if(balance_factor == -2) {
+                    // 若删除节点后，右子树的右子树不低于右子树的左子树，则r子树向左旋转
+                    if(r->right && (_height(r->right->right)
+                                    >= _height(r->right->right)))
+                        _left_rotation(r);
+                    // 若删除节点后，右子树的右子树低于右子树的左子树，则r子树右-左旋转
+                    else {
+                        _right_rotation(r->right);
+                        _left_rotation(r);
+                    }
+                }
+            }
+            if(_root) {
+                _header->left = _header->right = _root;
+                _root->parent = _header;
+            } else {
+                _header->left = _header->right = _header;
+            }
+        }
+
         // 插入节点的递归实现
-        void _insert_helper(tnode *&r, const T& value) {
+        tnode *_insert_helper(tnode *&r, const T& value, bool& flag) {
+            tnode *ret = nullptr;
+            flag = true;
             if(!r) {
                 // 若为空树，则直接插入
                 r = _alloc_node.allocate(1);
                 _alloc_data.construct(&(r->data), value);
                 r->left = r->right = r->parent = nullptr;
+                ret = r;
             } else if(comp(value, r->data)) {
                 // 若插入位置在左子树，则先递归向左子树插入
-                _insert_helper(r->left, value);
-                if(r->left)
-                    r->left->parent = r;
-                if(r->right)
-                    r->right->parent = r;
-                // 检查平衡因子，判断是否需要进行旋转
-                int balance_factor = _height(r->left) - _height(r->right);
-                // 平衡因子为2,说明以r为根的子树的左子树比右子树高2,进行相应调整
-                if(balance_factor == 2) {
-                    // 若新增节点插入在r的左子树的左子树上，则r子树向右旋转
-                    if(comp(value, r->left->data))
-                        _right_rotation(r);
-                    // 若新增节点插入在r的左子树的右子树上，则r子树左-右旋转
-                    else {
-                        _left_rotation(r->left);
-                        _right_rotation(r);
-                    }
-                }
+                ret = _insert_helper(r->left, value, flag);
+
             } else {
-                if(comp(r->data, value) || isMulti) {
+                if (comp(r->data, value) || isMulti) {
                     // 若插入位置在右子树，则先递归向右子树插入
-                    _insert_helper(r->right, value);
-                    if(r->left)
-                        r->left->parent = r;
-                    if(r->right)
-                        r->right->parent = r;
-                    // 检查平衡因子，判断是否需要进行旋转
-                    int balance_factor = _height(r->left) - _height(r->right);
-                    // 平衡因子为-2,说明以r为根的子树的右子树比左子树高2,进行相应调整
-                    if(balance_factor == -2) {
-                        // 若新增节点插入在r的右子树的右子树上，则r子树向左旋转
-                        if(comp(r->right->data, value))
-                            _left_rotation(r);
-                        // 若新增节点插入在r的右子树的左子树上，则r子树右-左旋转
-                        else {
-                            _right_rotation(r->right);
-                            _left_rotation(r);
-                        }
-                    }
+                    ret = _insert_helper(r->right, value, flag);
+                } else {
+                    ret = r;
+                    flag = false;
                 }
             }
-            _header->left = _header->right = _root;
-            _root->parent = _header;
+            // 将父节点存储进节点内
+            if(r->left)
+                r->left->parent = r;
+            if(r->right)
+                r->right->parent = r;
+            // 调整平衡
+            _adjust_to_balance(r);
+            return ret;
         }
 
         // 插入节点的递归实现(右值引用)
-        void _insert_helper(tnode *&r, T&& value) {
+        tnode *_insert_helper(tnode *&r, T&& value, bool& flag) {
+            tnode *ret = nullptr;
+            flag = true;
             if(!r) {
                 // 若为空树，则直接插入
                 r = _alloc_node.allocate(1);
-                _alloc_data.construct(&(r->data), value);
+                _alloc_data.construct(&(r->data),
+                                      static_cast<T&&>(value));
                 r->left = r->right = r->parent = nullptr;
+                ret = r;
             } else if(comp(value, r->data)) {
                 // 若插入位置在左子树，则先递归向左子树插入
-                _insert_helper(r->left, value);
-                if(r->left)
-                    r->left->parent = r;
-                if(r->right)
-                    r->right->parent = r;
-                // 检查平衡因子，判断是否需要进行旋转
-                int balance_factor = _height(r->left) - _height(r->right);
-                // 平衡因子为2,说明以r为根的子树的左子树比右子树高2,进行相应调整
-                if(balance_factor == 2) {
-                    // 若新增节点插入在r的左子树的左子树上，则r子树向右旋转
-                    if(comp(value, r->left->data))
-                        _right_rotation(r);
-                    // 若新增节点插入在r的左子树的右子树上，则r子树左-右旋转
-                    else {
-                        _left_rotation(r->left);
-                        _right_rotation(r);
-                    }
-                }
+                ret = _insert_helper(r->left,
+                                     static_cast<T&&>(value),
+                                     flag);
             } else {
-                if(comp(r->data, value) || isMulti) {
+                if (comp(r->data, value) || isMulti) {
                     // 若插入位置在右子树，则先递归向右子树插入
-                    _insert_helper(r->right, value);
-                    if(r->left)
-                        r->left->parent = r;
-                    if(r->right)
-                        r->right->parent = r;
-                    // 检查平衡因子，判断是否需要进行旋转
-                    int balance_factor = _height(r->left) - _height(r->right);
-                    // 平衡因子为-2,说明以r为根的子树的右子树比左子树高2,进行相应调整
-                    if(balance_factor == -2) {
-                        // 若新增节点插入在r的右子树的右子树上，则r子树向左旋转
-                        if(comp(r->right->data, value))
-                            _left_rotation(r);
-                        // 若新增节点插入在r的右子树的左子树上，则r子树右-左旋转
-                        else {
-                            _right_rotation(r->right);
-                            _left_rotation(r);
-                        }
-                    }
+                    ret = _insert_helper(r->right,
+                                         static_cast<T&&>(value),
+                                         flag);
+                } else {
+                    ret = r;
+                    flag = false;
                 }
             }
-            _header->left = _header->right = _root;
-            _root->parent = _header;
+            // 将父节点存储进节点内
+            if(r->left)
+                r->left->parent = r;
+            if(r->right)
+                r->right->parent = r;
+            // 调整平衡
+            _adjust_to_balance(r);
+            return ret;
         }
 
         // 删除节点的递归实现
-        void _erase_helper(tnode *&r, const T key) {
+        void _erase_helper(tnode *&r, const T& key) {
             /*普通BST删除操作*/
             if(!r)
                 return;
@@ -221,38 +224,8 @@ namespace jr_std {
                     _erase_helper(r->right, right_min->data);
                 }
             }
-            /*将不平衡节点调整为平衡*/
-            if(r) {
-                // 检查平衡因子，判断是否需要进行旋转
-                int balance_factor = _height(r->left) - _height(r->right);
-                // 平衡因子为2,说明以r为根的子树的左子树比右子树高2,进行相应调整
-                if(balance_factor == 2) {
-                    // 若删除节点后，左子树的左子树不低于左子树的右子树，则r子树向右旋转
-                    if(r->left && (_height(r->left->left) >= _height(r->left->right)))
-                        _right_rotation(r);
-                    // 若删除节点后，左子树的左子树低于左子树的右子树，则r子树左-右旋转
-                    else {
-                        _left_rotation(r->left);
-                        _right_rotation(r);
-                    }
-                // 平衡因子为-2,说明以r为根的子树的右子树比左子树高2,进行相应调整
-                } else if(balance_factor == -2) {
-                    // 若删除节点后，右子树的右子树不低于右子树的左子树，则r子树向左旋转
-                    if(r->right && (_height(r->right->right) >= _height(r->right->right)))
-                        _left_rotation(r);
-                    // 若删除节点后，右子树的右子树低于右子树的左子树，则r子树右-左旋转
-                    else {
-                        _right_rotation(r->right);
-                        _left_rotation(r);
-                    }
-                }
-            }
-            if(_root) {
-                _header->left = _header->right = _root;
-                _root->parent = _header;
-            } else {
-                _header->left = _header->right = _header;
-            }
+            // 调整平衡
+            _adjust_to_balance(r);
         }
 
         // 析构每个节点的数据域，再释放每个节点所占空间
@@ -268,26 +241,32 @@ namespace jr_std {
 
     public:
         // 构造
-        _AVL_Tree() : _root(nullptr), comp(Compare()) {
+        _AVL_Tree()
+            : _root(nullptr), comp(Compare()) {
             _header = _alloc_node.allocate(1);
             _header->left = _header->right = _header;
         }
 
-        _AVL_Tree(Compare c) : _root(nullptr), comp(c) {
+        _AVL_Tree(Compare c)
+            : _root(nullptr), comp(c) {
             _header = _alloc_node.allocate(1);
             _header->left = _header->right = _header;
         }
 
         template<class InputIt>
         _AVL_Tree(InputIt first, InputIt last,
-                     Compare c = Compare())
+                  Compare c = Compare())
             : _root(nullptr), comp(c) {
             _header = _alloc_node.allocate(1);
-            insert(first, last);
+            bool tmp;
+            while(first != last) {
+                insert(*first, tmp);
+                ++first;
+            }
         }
 
         _AVL_Tree(_AVL_Tree&& x,
-                     Compare c = Compare()) : comp(c){
+                  Compare c = Compare()) : comp(c){
             _root = x._root;
             x._root = nullptr;
             _header = _alloc_node.allocate(1);
@@ -352,7 +331,7 @@ namespace jr_std {
             return _header;
         }
 
-        size_t count(const T& target) {
+        size_t count(const T& target) const {
             return _dfs(_root, target);
         }
 
@@ -375,47 +354,30 @@ namespace jr_std {
         }
 
         // 插入值为value的节点
-        bool insert(const T& value) {
-            if(!isMulti && (search(value) != _header))
-                return false;
-            _insert_helper(_root, value);
-            return true;
+        tnode *insert(const T& value, bool& flag) {
+            return _insert_helper(_root, value, flag);
         }
 
         // 插入值为value的节点(右值引用)
-        bool insert(T&& value) {
-            if(!isMulti && (search(static_cast<T&&>(value)) != _header))
-                return false;
-            _insert_helper(_root, static_cast<T&&>(value));
-            return true;
+        tnode *insert(T&& value, bool& flag) {
+            return _insert_helper(_root,
+                                  static_cast<T&&>(value),
+                                  flag);
         }
 
-        // 范围插入
-        template<class InputIt>
-        void insert(InputIt first, InputIt last) {
-            while(first != last) {
-                insert(*first);
-                ++first;
-            }
+        // 插入value到尽可能前于hint 的位置
+        tnode *insert_hint(const T& value, tnode *&hint, bool& flag) {
+            if(!comp(value, hint->data))
+                return insert(value, flag);
+            return _insert_helper(hint->left, value, flag);
         }
 
-        // 插入value到尽可能接近，正好前于hint 的位置
-        bool insert_hint(const T& value, tnode *&hint) {
-            if(!_root || comp(hint->data, value))
-                return insert(value);
-            if(!isMulti && (search(value) != _header))
-                return false;
-            _insert_helper(hint->left, value);
-            return true;
-        }
-
-        bool insert_hint(T&& value, tnode *&hint) {
-            if(!_root || comp(hint->data, value))
-                return insert(static_cast<T&&>(value));
-            if(!isMulti && (search(value) != _header))
-                return false;
-            _insert_helper(hint->left, static_cast<T&&>(value));
-            return true;
+        tnode *insert_hint(T&& value, tnode *&hint, bool& flag) {
+            if(!comp(value, hint->data))
+                return insert(static_cast<T&&>(value), flag);
+            return _insert_helper(hint->left,
+                                  static_cast<T&&>(value),
+                                  flag);
         }
 
         // 删除值与value相等的节点

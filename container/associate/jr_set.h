@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <utility>
 #include "../../functional/jr_functional.h"
-#include "../../container/utils/se_iterators.h"
+#include "../../container/utils/jr_iterators.h"
 #include "../../container/utils/jr_tree.h"
 
 namespace jr_std {
@@ -55,37 +55,40 @@ namespace jr_std {
             _set_base( InputIt first, InputIt last,
                  const Compare& c = Compare(),
                  const Allocator& a = Allocator() )
-                : _size(static_cast<size_type>(jr_std::distance(first, last))),
-                  t(first, last), comp(c), _alloc_data(a)
-            {}
+                : _size(0), t(), comp(c), _alloc_data(a) {
+                insert(first, last);
+            }
 
-            _set_base(const _set_base& x, const Allocator& a)
+            _set_base(const _set_base& x,
+                      const Allocator& a)
                 : _size(x.size()), t(x.begin(), x.end()), _alloc_data(a)
             {}
 
-            _set_base(_set_base&& x, const Allocator& a) : _alloc_data(a) {
-                _size = x._size;
+            _set_base(_set_base&& x,
+                      const Allocator& a)
+                : _size(x.size()),
+                  t(static_cast<tree&&>(x.t)),
+                  _alloc_data(a) {
                 x._size = 0;
-                t = static_cast<tree&&>(x.t);
             }
 
             _set_base(const _set_base& x)
-                : _size(x.size()), t(x.begin(), x.end())
+                : _size(x.size()),
+                  t(x.begin(), x.end())
             {}
 
-            _set_base(_set_base&& x) {
-                _size = x._size;
+            _set_base(_set_base&& x)
+                : _size(x.size()),
+                  t(static_cast<tree&&>(x.t)) {
                 x._size = 0;
-                t = static_cast<tree&&>(x.t);
             }
 
             _set_base( std::initializer_list<value_type> init,
                        const Compare& comp = Compare(),
                        const Allocator& alloc = Allocator() )
                 : _set_base(comp, alloc) {
-                for(auto it = init.begin(); it != init.end(); ++it) {
+                for(auto it = init.begin(); it != init.end(); ++it)
                     insert(*it);
-                }
             }
 
             virtual ~_set_base()  = default;
@@ -162,48 +165,62 @@ namespace jr_std {
             }
 
             // 容量
-            bool empty() const noexcept { return _size == 0; }
-            size_type size() const noexcept { return _size; }
-            size_type max_size() const noexcept { return UINT_MAX; }
+            bool empty() const noexcept {
+                return _size == 0;
+            }
+
+            size_type size() const noexcept {
+                return _size;
+            }
+
+            size_type max_size() const noexcept {
+                return UINT_MAX;
+            }
 
             // 修改器
         protected:
             template<class... Args>
             std::pair<iterator, bool> emplace(Args&&... args) {
+                bool flag;
                 value_type *a;
                 a = _alloc_data.allocate(1);
                 _alloc_data.construct(a, static_cast<Args&&>(args)...);
-                bool isInsert = t.insert(*a);
-                if(isInsert)
+                tnode *ret = t.insert(*a, flag);
+                if(flag)
                     ++_size;
-                return std::pair<iterator, bool>(find(*a), isInsert);
+                return std::pair<iterator, bool>(iterator(ret, t.get_header()), flag);
             }
 
         public:
             template<class... Args>
             iterator emplace_hint(const_iterator hint, Args&&... args) {
+                bool flag;
                 value_type *a;
                 a = _alloc_data.allocate(1);
                 _alloc_data.construct(a, static_cast<Args&&>(args)...);
-                bool isInsert = t.insert_hint(*a, hint._node);
-                if(isInsert)
+                tnode *ret = t.insert_hint(*a, hint._node, flag);
+                if(flag)
                     ++_size;
-                return find(*a);
+                return iterator(ret, t.get_header());
             }
 
             iterator insert(const_iterator hint, const value_type& x) {
-                bool isInsert = t.insert_hint(x, hint._node);
-                if(isInsert)
+                bool flag;
+                tnode *ret = t.insert_hint(x, hint._node, flag);
+                if(flag) {
                     ++_size;
-                return find(x);
+                }
+                return iterator(ret, t.get_header());
             }
 
             iterator insert(const_iterator hint, value_type&& x) {
+                bool flag;
                 auto m = static_cast<value_type&&>(x);
-                bool isInsert = t.insert_hint(m, hint._node);
-                if(isInsert)
+                tnode *ret = t.insert_hint(m, hint._node, flag);
+                if(flag) {
                     ++_size;
-                return find(m);
+                }
+                return iterator(ret, t.get_header());
             }
 
             void insert( std::initializer_list<value_type> ilist ) {
@@ -214,26 +231,32 @@ namespace jr_std {
             template< class InputIt >
             void insert( InputIt first, InputIt last ) {
                 while(first != last) {
-                    bool isInsert = t.insert(*first);
-                    if(isInsert) ++_size;
+                    bool flag;
+                    t.insert(*first, flag);
+                    if(flag)
+                        ++_size;
                     ++first;
                 }
             }
 
         protected:
             std::pair<iterator,bool> insert(const value_type& x) {
-                bool isInsert = t.insert(x);
-                if(isInsert)
+                bool flag;
+                tnode *ret = t.insert(x, flag);
+                if(flag) {
                     ++_size;
-                return std::pair<iterator, bool>(find(x), isInsert);
+                }
+                return std::pair<iterator, bool>(iterator(ret, t.get_header()), flag);
             }
 
             std::pair<iterator,bool> insert(value_type&& x) {
+                bool flag;
                 auto m = static_cast<value_type&&>(x);
-                bool isInsert = t.insert(m);
-                if(isInsert)
+                tnode *ret = t.insert(m, flag);
+                if(flag) {
                     ++_size;
-                return std::pair<iterator, bool>(find(x), isInsert);
+                }
+                return std::pair<iterator, bool>(iterator(ret, t.get_header()), flag);
             }
 
         public:
@@ -367,11 +390,13 @@ namespace jr_std {
             }
 
             std::pair<iterator, iterator> equal_range(const key_type& x) {
-                return std::pair<iterator, iterator>(lower_bound(x), upper_bound(x));
+                return std::pair<iterator, iterator>(lower_bound(x),
+                                                     upper_bound(x));
             }
 
             std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const {
-                return std::pair<iterator, iterator>(lower_bound(x), upper_bound(x));
+                return std::pair<iterator, iterator>(lower_bound(x),
+                                                     upper_bound(x));
             }
     };
 

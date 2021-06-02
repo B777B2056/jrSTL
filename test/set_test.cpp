@@ -17,8 +17,11 @@ TEST(testCase,set_iterator_ctor_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 1);
     jr_std::deque<int> src;
-    for(size_t i = 0; i < cnt; i++)
-        src.push_back(var--);
+    for(size_t i = 0; i < cnt; i++) {
+        int t = var;
+        src.push_back(t);
+        --var;
+    }
     // 迭代器范围构造函数
     jr_std::set<int> des(src.begin(), src.end());
     std::sort(src.begin(), src.end());
@@ -35,8 +38,12 @@ TEST(testCase,set_copy_ctor_test) {
     int var;
     get_random_size_var(50, cnt, var);
     jr_std::set<int> src;
-    for(size_t i = 0; i < cnt; i++)
-        src.insert(var--);
+    for(size_t i = 0; i < cnt; i++){
+        int t = var;
+        src.insert(t);
+        src.insert(t);
+        --var;
+    }
     // 拷贝构造函数
     jr_std::set<int> des(src);
     ASSERT_EQ(src.size(), des.size());
@@ -52,8 +59,12 @@ TEST(testCase,set_move_ctor_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     jr_std::set<int> src;
-    for(size_t i = 0; i < cnt; i++)
-            src.insert(var--);
+    for(size_t i = 0; i < cnt; i++){
+        int t = var;
+        src.insert(t);
+        src.insert(t);
+        --var;
+    }
     // 移动构造函数
     jr_std::set<int> des(std::move(src));
     ASSERT_EQ(src.empty(), true);
@@ -102,8 +113,12 @@ TEST(testCase, set_clear_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     jr_std::set<int> des;
-    for(size_t i = 0; i < cnt; i++)
-            des.insert(var--);
+    for(size_t i = 0; i < cnt; i++){
+        int t = var;
+        des.insert(t);
+        des.insert(t);
+        --var;
+    }
     des.clear();
     EXPECT_EQ(des.size(), 0);
 }
@@ -144,34 +159,44 @@ TEST(testCase, set_insert_test) {
     dit = des.begin();
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
-    // insert hint
-    auto s = src.insert(src.begin(), -901);
-    auto d = des.insert(des.cbegin(), -901);
-    if(s == src.end())
-        EXPECT_EQ(d, des.end());
-    else
-        EXPECT_EQ(*s,*d);
-    ASSERT_EQ(src.size(), des.size());
-    it = src.begin();
-    dit = des.begin();
-    for(; dit != des.end(); ++dit, ++it)
-        EXPECT_EQ(*it, *dit);
     // 初始化列表insert
-    src.insert({1,2,3,4,5});
-    des.insert({1,2,3,4,5});
+    src.insert({1,2,3,4,5,1,2,3,4,5});
+    des.insert({1,2,3,4,5,1,2,3,4,5});
     ASSERT_EQ(src.size(), des.size());
     it = src.begin();
     dit = des.begin();
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
     // 迭代器insert
-    jr_std::set<int> tmp{1,2,3,4,5};
-    std::set<int> tmp0{1,2,3,4,5};
+    jr_std::set<int> tmp{1,2,3,4,5,1,2,3,4,5};
+    std::set<int> tmp0{1,2,3,4,5,1,2,3,4,5};
     src.insert(tmp0.begin(), tmp0.end());
     des.insert(tmp.begin(), tmp.end());
     ASSERT_EQ(src.size(), des.size());
     it = src.begin();
     dit = des.begin();
+    for(; dit != des.end(); ++dit, ++it)
+        EXPECT_EQ(*it, *dit);
+}
+
+// insert hint测试
+TEST(testCase, set_insert_hint_test) {
+    std::set<int> src{1,2,3,4,8,9};
+    jr_std::set<int> des{1,2,3,4,8,9};
+    // insert hint
+    auto s_pos = src.begin();
+    auto d_pos = des.begin();
+    std::advance(s_pos, 4);
+    jr_std::advance(d_pos, 4);
+    auto s = src.insert(s_pos, 5);
+    auto d = des.insert(d_pos, 5);
+    if(s == src.end())
+        EXPECT_EQ(d, des.end());
+    else
+        EXPECT_EQ(*s,*d);
+    ASSERT_EQ(src.size(), des.size());
+    auto it = src.begin();
+    auto dit = des.begin();
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
 }
@@ -196,18 +221,26 @@ TEST(testCase, set_emplace_test) {
     auto dit = des.begin();
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
-    // emplace_hint
-    for(int n : {2,1,-6,2,5,7,3}) {
-        auto s = src.emplace_hint(src.begin(), std::move(n));
-        auto d = des.emplace_hint(des.cbegin(), std::move(n));
-        if(s == src.end())
-            EXPECT_EQ(d, des.end());
-        else
-            EXPECT_EQ(*s, *d);
-    }
+}
+
+// emplace hint测试
+TEST(testCase, set_emplace_hint_test) {
+    std::set<int> src{1,2,3,4,8,9};
+    jr_std::set<int> des{1,2,3,4,8,9};
+    // insert hint
+    auto s_pos = src.begin();
+    auto d_pos = des.begin();
+    std::advance(s_pos, 4);
+    jr_std::advance(d_pos, 4);
+    auto s = src.emplace_hint(s_pos, 5);
+    auto d = des.emplace_hint(d_pos, 5);
+    if(s == src.end())
+        EXPECT_EQ(d, des.end());
+    else
+        EXPECT_EQ(*s,*d);
     ASSERT_EQ(src.size(), des.size());
-    it = src.begin();
-    dit = des.begin();
+    auto it = src.begin();
+    auto dit = des.begin();
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
 }
@@ -220,6 +253,8 @@ TEST(testCase, set_erase_test) {
     jr_std::set<int> des;
     std::set<int> src;
     for(size_t i = 0; i < cnt; i++) {
+        src.insert(var);
+        des.insert(var);
         src.insert(var);
         des.insert(var);
         --var;
@@ -291,6 +326,8 @@ TEST(testCase, set_swap_test) {
     for(size_t i = 0; i < cnt; i++) {
         src.insert(var + 1);
         des.insert(var - 1);
+        src.insert(var + 1);
+        des.insert(var - 1);
         --var;
     }
     jr_std::set<int> tmp = src;
@@ -318,7 +355,10 @@ TEST(testCase, set_reverse_index_test) {
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
+        src.insert(i);
+        des.insert(i);
     }
+    ASSERT_EQ(des.size(), src.size());
     auto it = src.rbegin();
     auto rit = des.rbegin();
     while(rit != des.rend()) {
@@ -338,7 +378,10 @@ TEST(testCase, set_iterator_sub_test) {
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
+        src.insert(i);
+        des.insert(i);
     }
+    ASSERT_EQ(des.size(), src.size());
     auto it = src.begin();
     auto rit = des.begin();
     std::advance(it, 12);
@@ -358,7 +401,10 @@ TEST(testCase, set_count) {
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
+        src.insert(i);
+        des.insert(i);
     }
+    ASSERT_EQ(des.size(), src.size());
     for(int i = -static_cast<int>(cnt);
         i < static_cast<int>(cnt); i++) {
         EXPECT_EQ(src.count(i), des.count(i));
@@ -375,7 +421,10 @@ TEST(testCase, set_find) {
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
+        src.insert(i);
+        des.insert(i);
     }
+    ASSERT_EQ(des.size(), src.size());
     for(int i = -static_cast<int>(cnt);
         i < static_cast<int>(cnt); i++) {
         if(src.find(i) == src.end())
@@ -395,7 +444,10 @@ TEST(testCase, set_range) {
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
+        src.insert(i);
+        des.insert(i);
     }
+    ASSERT_EQ(des.size(), src.size());
     size_t v;
     get_random_size_var(MAX_SIZE, v, var);
     auto p1 = src.equal_range(static_cast<int>(v));
@@ -410,4 +462,3 @@ TEST(testCase, set_range) {
     else
         EXPECT_EQ(*p1.second, *p2.second);
 }
-

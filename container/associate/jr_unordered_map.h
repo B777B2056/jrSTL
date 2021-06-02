@@ -2,6 +2,7 @@
 #define JR_UNORDERED_MAP_H
 
 #include <cstddef>
+#include <utility>
 #include "../../functional/jr_functional.h"
 #include "../../memory/jr_allocator.h"
 #include "../../container/utils/jr_hashtable.h"
@@ -18,7 +19,7 @@ namespace jr_std {
       // 类型
       typedef Key key_type;
       typedef T mapped_type;
-      typedef pair<const Key, T> value_type;
+      typedef std::pair<const Key, T> value_type;
       typedef Allocator allocator_type;
       typedef value_type* pointer;
       typedef const value_type* const_pointer;

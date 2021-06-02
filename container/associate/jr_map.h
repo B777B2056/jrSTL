@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <utility>
 #include "../../functional/jr_functional.h"
-#include "../../container/utils/se_iterators.h"
+#include "../../container/utils/jr_iterators.h"
 #include "../../container/utils/jr_tree.h"
 
 namespace jr_std {
@@ -69,9 +69,9 @@ namespace jr_std {
             _map_base(InputIt first, InputIt last,
                       const Compare& c = Compare(),
                       const Allocator& a = Allocator())
-                 : _size(static_cast<size_type>(jr_std::distance(first, last))),
-                   comp(c), t(first, last, comp), _alloc_data(a)
-            {}
+                 : _size(0), comp(c), t(comp), _alloc_data(a) {
+                insert(first, last);
+            }
 
             _map_base(const _map_base& x, const Allocator& a)
                 : _size(x.size()), comp(Compare()),
@@ -91,7 +91,7 @@ namespace jr_std {
 
             _map_base(_map_base&& x)
                 : _size(x._size), comp(x.key_comp()),
-                t(static_cast<tree&&>(x.t), comp){
+                t(static_cast<tree&&>(x.t), comp) {
                 x._size = 0;
             }
 
@@ -189,58 +189,71 @@ namespace jr_std {
                 return UINT_MAX;
             }
 
-            // 修改器
+        // 修改器
         protected:
             template<class... Args>
             std::pair<iterator, bool> emplace(Args&&... args) {
+                bool flag;
                 value_type *a;
                 a = _alloc_data.allocate(1);
                 _alloc_data.construct(a, static_cast<Args&&>(args)...);
-                bool isInsert = t.insert(*a);
-                if(isInsert)
+                tnode *ret = t.insert(*a, flag);
+                if(flag)
                     ++_size;
-                return std::pair<iterator, bool>(find(a->first), isInsert);
+                return std::pair<iterator, bool>(iterator(ret, t.get_header()), flag);
             }
 
         public:
             template<class... Args>
             iterator emplace_hint(const_iterator hint, Args&&... args) {
+                bool flag;
                 value_type *a;
                 a = _alloc_data.allocate(1);
                 _alloc_data.construct(a, static_cast<Args&&>(args)...);
-                bool isInsert = t.insert_hint(*a, hint._node);
-                if(isInsert) ++_size;
-                return find(a->first);
+                tnode *ret = t.insert_hint(*a, hint._node, flag);
+                if(flag)
+                    ++_size;
+                return iterator(ret, t.get_header());
             }
 
         protected:
             std::pair<iterator,bool> insert(const value_type& x) {
-                bool isInsert = t.insert(x);
-                if(isInsert)
+                bool flag;
+                tnode *ret = t.insert(x, flag);
+                if(flag) {
                     ++_size;
-                return std::pair<iterator, bool>(find(x.first), isInsert);
+                }
+                return std::pair<iterator, bool>(iterator(ret, t.get_header()), flag);
             }
 
             std::pair<iterator,bool> insert(value_type&& x) {
+                bool flag;
                 auto m = static_cast<value_type&&>(x);
-                bool isInsert = t.insert(m);
-                if(isInsert)
+                tnode *ret = t.insert(m, flag);
+                if(flag) {
                     ++_size;
-                return std::pair<iterator, bool>(find(m.first), isInsert);
+                }
+                return std::pair<iterator, bool>(iterator(ret, t.get_header()), flag);
             }
 
         public:
             iterator insert(const_iterator hint, const value_type& x) {
-                bool isInsert = t.insert_hint(x, hint._node);
-                if(isInsert) ++_size;
-                return find(x.first);
+                bool flag;
+                tnode *ret = t.insert_hint(x, hint._node, flag);
+                if(flag) {
+                    ++_size;
+                }
+                return iterator(ret, t.get_header());
             }
 
             iterator insert(const_iterator hint, value_type&& x) {
+                bool flag;
                 auto m = static_cast<value_type&&>(x);
-                bool isInsert = t.insert_hint(m, hint._node);
-                if(isInsert) ++_size;
-                return find(x.first);
+                tnode *ret = t.insert_hint(m, hint._node, flag);
+                if(flag) {
+                    ++_size;
+                }
+                return iterator(ret, t.get_header());
             }
 
             void insert( std::initializer_list<value_type> ilist ) {
@@ -251,8 +264,9 @@ namespace jr_std {
             template< class InputIt >
             void insert( InputIt first, InputIt last ) {
                 while(first != last) {
-                    bool isInsert = t.insert(*first);
-                    if(isInsert)
+                    bool flag;
+                    t.insert(*first, flag);
+                    if(flag)
                         ++_size;
                     ++first;
                 }
@@ -279,13 +293,18 @@ namespace jr_std {
             }
 
             iterator erase(const_iterator first, const_iterator last) {
-                iterator result = iterator(last._node, t._header);
+                difference_type dis = jr_std::distance(cbegin(), first);
                 while(first != last) {
                     value_type t = *last;
-                    first = erase(first);
-                    last = find(t);
+                    difference_type d = jr_std::distance(cbegin(), last);
+                    iterator it = erase(first);
+                    first = last = cbegin();
+                    jr_std::advance(first, jr_std::distance(begin(), it));
+                    jr_std::advance(last, d - 1);
                 }
-                return result;
+                iterator ret = begin();
+                jr_std::advance(ret, dis);
+                return ret;
             }
 
             virtual void swap(_map_base& other) {
@@ -338,61 +357,63 @@ namespace jr_std {
             }
 
             iterator lower_bound(const key_type& x) {
-                tnode *min_elem = t.get_min();
-                value_type tx(x, T());
-                if(comp(tx, min_elem->data))
+                if(comp(x, t.get_min()->data.first))
                     return begin();
+                if(comp(t.get_max()->data.first, x))
+                    return end();
                 iterator it = begin();
-                while(comp(*it, tx) && (it != end()))
+                while(comp(it->first, x) && (it != end()))
                     ++it;
-                if(comp(tx, *it))
+                if(comp(x, it->first))
                     --it;
                 return it;
             }
 
             const_iterator lower_bound(const key_type& x) const {
-                tnode *min_elem = t.get_min();
-                value_type tx(x, T());
-                if(comp(tx, min_elem->data))
+                if(comp(x, t.get_min()->data.first))
                     return cbegin();
+                if(comp(t.get_max()->data.first, x))
+                    return cend();
                 const_iterator it = begin();
-                while(comp(*it, tx) && (it != end()))
+                while(comp(it->first, x) && (it != end()))
                     ++it;
-                if(comp(tx, *it))
+                if(comp(x, it->first))
                     --it;
                 return it;
             }
 
             iterator upper_bound(const key_type& x) {
-                tnode *max_elem = t.get_max();
-                value_type tx(x, T());
-                if(!comp(tx, max_elem->data))
+                if(comp(x, t.get_min()->data.first))
+                    return begin();
+                if(comp(t.get_max()->data.first, x))
                     return end();
                 iterator it = begin();
-                while(!comp(tx, *it) && (it != end()))
+                while(!comp(x, it->first) && (it != end()))
                     ++it;
                 return it;
             }
 
             const_iterator upper_bound(const key_type& x) const {
-                tnode *max_elem = t.get_max();
-                value_type tx(x, T());
-                if(!comp(tx, max_elem->data))
+                if(comp(x, t.get_min()->data.first))
+                    return cbegin();
+                if(comp(t.get_max()->data.first, x))
                     return cend();
                 const_iterator it = begin();
-                while(!comp(tx, *it) && (it != end()))
+                while(!comp(x, it->first) && (it != end()))
                     ++it;
                 return it;
             }
 
             std::pair<iterator, iterator>
             equal_range(const key_type& x) {
-                return std::pair<iterator, iterator>(lower_bound(x), upper_bound(x));
+                return std::pair<iterator, iterator>(lower_bound(x),
+                                                     upper_bound(x));
             }
 
             std::pair<const_iterator, const_iterator>
             equal_range(const key_type& x) const {
-                return std::pair<iterator, iterator>(lower_bound(x), upper_bound(x));
+                return std::pair<iterator, iterator>(lower_bound(x),
+                                                     upper_bound(x));
             }
     };
 
@@ -503,13 +524,16 @@ namespace jr_std {
             {}
             // 特化操作
             template< class... Args >
-            typename _base::iterator emplace( Args&&... args )
+            typename _base::iterator
+            emplace( Args&&... args )
             { return (_base::emplace(static_cast<Args&&>(args)...)).first; }
 
-            typename _base::iterator insert( const typename _base::value_type& value )
+            typename _base::iterator
+            insert( const typename _base::value_type& value )
             { return (_base::insert(value)).first; }
 
-            typename _base::iterator insert( typename _base::value_type&& value )
+            typename _base::iterator
+            insert( typename _base::value_type&& value )
             { return (_base::insert(static_cast<typename _base::value_type&&>(value))).first; }
     };
 

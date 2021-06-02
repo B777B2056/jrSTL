@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
-#include <set>
-#include <algorithm>
+#include <map>
 #include "../container/sequence/jr_deque.h"
-#include "../container/associate/jr_set.h"
+#include "../container/associate/jr_map.h"
 
 #define MAX_SIZE 2000
 
@@ -12,20 +11,19 @@ void get_random_size_var(size_t max_size,
                          size_t min_size = 0);
 
 // 迭代器范围构造函数测试
-TEST(testCase,multiset_iterator_ctor_test) {
+TEST(testCase,map_iterator_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 1);
-    jr_std::deque<int> src;
+    std::map<int, int> src;
     for(size_t i = 0; i < cnt; i++) {
         int t = var;
-        src.push_back(t);
-        src.push_back(t);
+        src.insert(std::make_pair(t, i));
+        src.insert(std::make_pair(t, i));
         --var;
     }
     // 迭代器范围构造函数
-    jr_std::multiset<int> des(src.begin(), src.end());
-    std::sort(src.begin(), src.end());
+    jr_std::map<int, int> des(src.begin(), src.end());
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     auto dit = des.begin();
@@ -34,19 +32,19 @@ TEST(testCase,multiset_iterator_ctor_test) {
 }
 
 // 拷贝构造函数测试
-TEST(testCase,multiset_copy_ctor_test) {
+TEST(testCase,map_copy_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(50, cnt, var);
-    jr_std::multiset<int> src;
-    for(size_t i = 0; i < cnt; i++) {
+    jr_std::map<int, int> src;
+    for(size_t i = 0; i < cnt; i++){
         int t = var;
-        src.insert(t);
-        src.insert(t);
+        src.insert(std::make_pair(t, i));
+        src.insert(std::make_pair(t, i));
         --var;
     }
     // 拷贝构造函数
-    jr_std::multiset<int> des(src);
+    jr_std::map<int, int> des(src);
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     auto dit = des.begin();
@@ -55,26 +53,26 @@ TEST(testCase,multiset_copy_ctor_test) {
 }
 
 // 移动构造函数测试
-TEST(testCase,multiset_move_ctor_test) {
+TEST(testCase,map_move_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::multiset<int> src;
+    jr_std::map<int, int> src;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
-        src.insert(t);
-        src.insert(t);
+        src.insert(std::make_pair(t, i));
+        src.insert(std::make_pair(t, i));
         --var;
     }
     // 移动构造函数
-    jr_std::multiset<int> des(std::move(src));
+    jr_std::map<int, int> des(std::move(src));
     ASSERT_EQ(src.empty(), true);
 }
 
 // 初始化列表构造函数测试
-TEST(testCase,multiset_initializer_list_ctor_test) {
-    std::multiset<int> src{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
-    jr_std::multiset<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+TEST(testCase,map_initializer_list_ctor_test) {
+    std::map<int, int> src{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
+    jr_std::map<int, int> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     auto dit = des.begin();
@@ -83,12 +81,12 @@ TEST(testCase,multiset_initializer_list_ctor_test) {
 }
 
 // 拷贝运算符测试
-TEST(testCase, multiset_operator_copy_test) {
+TEST(testCase, map_operator_copy_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::multiset<int> src{var, var, var};
-    jr_std::multiset<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jr_std::map<int,int> src{{var, 0}, {var, 1}, {var, 2}};
+    jr_std::map<int,int> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     des = src;
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
@@ -98,26 +96,26 @@ TEST(testCase, multiset_operator_copy_test) {
 }
 
 // 移动运算符测试
-TEST(testCase, multiset_operator_move_test) {
+TEST(testCase, map_operator_move_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::multiset<int> src{var, var, var};
-    jr_std::multiset<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jr_std::map<int,int> src{{var, 0}, {var, 1}, {var, 2}};
+    jr_std::map<int,int> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     des = std::move(src);
     ASSERT_EQ(src.empty(), true);
 }
 
 // clear测试
-TEST(testCase, multiset_clear_test) {
+TEST(testCase, map_clear_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::multiset<int> des;
+    jr_std::map<int,int> des;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
-        des.insert(t);
-        des.insert(t);
+        des.insert(std::make_pair(t, i));
+        des.insert(std::make_pair(t, i));
         --var;
     }
     des.clear();
@@ -125,18 +123,20 @@ TEST(testCase, multiset_clear_test) {
 }
 
 // insert测试
-TEST(testCase, multiset_insert_test) {
-    std::multiset<int> src;
-    jr_std::multiset<int> des;
+TEST(testCase, map_insert_test) {
+    std::map<int,int> src;
+    jr_std::map<int,int> des;
+    std::pair<const int, int> m[] = {{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     // 拷贝insert
-    for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
+    for(std::pair<const int, int> n : m) {
         auto s = src.insert(n);
         auto d = des.insert(n);
-        if(s == src.end())
-            EXPECT_EQ(d, des.end());
+        if(s.first == src.end())
+            EXPECT_EQ(d.first, des.end());
         else
-            EXPECT_EQ(*(s),
-                      *(d));
+            EXPECT_EQ(*(s.first),
+                      *(d.first));
+        EXPECT_EQ(s.second, d.second);
     }
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
@@ -144,14 +144,15 @@ TEST(testCase, multiset_insert_test) {
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
     // 移动insert
-    for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
+    for(std::pair<const int, int> n : m) {
         auto s = src.insert(std::move(n));
         auto d = des.insert(std::move(n));
-        if(s == src.end())
-            EXPECT_EQ(d, des.end());
+        if(s.first == src.end())
+            EXPECT_EQ(d.first, des.end());
         else
-            EXPECT_EQ(*(s),
-                      *(d));
+            EXPECT_EQ(*(s.first),
+                      *(d.first));
+        EXPECT_EQ(s.second, d.second);
     }
     ASSERT_EQ(src.size(), des.size());
     it = src.begin();
@@ -159,16 +160,16 @@ TEST(testCase, multiset_insert_test) {
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
     // 初始化列表insert
-    src.insert({5,2,2,4,4});
-    des.insert({5,2,2,4,4});
+    src.insert({{1,0},{2,1},{3,2},{4,3},{5,4},{1,5},{2,6},{3,7},{4,8},{5,9}});
+    des.insert({{1,0},{2,1},{3,2},{4,3},{5,4},{1,5},{2,6},{3,7},{4,8},{5,9}});
     ASSERT_EQ(src.size(), des.size());
     it = src.begin();
     dit = des.begin();
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
     // 迭代器insert
-    jr_std::set<int> tmp{1,1,1,4,5};
-    std::set<int> tmp0{1,1,1,4,5};
+    jr_std::map<int,int> tmp{{6,0},{7,1},{8,2},{9,3},{15,4},{21,5},{12,6},{33,7},{24,8},{75,9}};
+    std::map<int,int> tmp0{{6,0},{7,1},{8,2},{9,3},{15,4},{21,5},{12,6},{33,7},{24,8},{75,9}};
     src.insert(tmp0.begin(), tmp0.end());
     des.insert(tmp.begin(), tmp.end());
     ASSERT_EQ(src.size(), des.size());
@@ -179,16 +180,16 @@ TEST(testCase, multiset_insert_test) {
 }
 
 // insert hint测试
-TEST(testCase, multiset_insert_hint_test) {
-    std::set<int> src{1,2,3,4,8,9};
-    jr_std::set<int> des{1,2,3,4,8,9};
+TEST(testCase, map_insert_hint_test) {
+    std::map<int,int> src{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
+    jr_std::map<int,int> des{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
     // insert hint
     auto s_pos = src.begin();
-    auto d_pos = des.begin();
+    auto d_pos = des.cbegin();
     std::advance(s_pos, 4);
     jr_std::advance(d_pos, 4);
-    auto s = src.insert(s_pos, 5);
-    auto d = des.insert(d_pos, 5);
+    auto s = src.insert(s_pos, std::make_pair(5,3));
+    auto d = des.insert(d_pos, std::make_pair(5,3));
     if(s == src.end())
         EXPECT_EQ(d, des.end());
     else
@@ -201,18 +202,19 @@ TEST(testCase, multiset_insert_hint_test) {
 }
 
 // emplace测试
-TEST(testCase, multiset_emplace_test) {
-    std::multiset<int> src;
-    jr_std::multiset<int> des;
+TEST(testCase, map_emplace_test) {
+    std::map<int,int> src;
+    jr_std::map<int,int> des;
     // emplace
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
-        auto s = src.emplace(n);
-        auto d = des.emplace(n);
-        if(s == src.end())
-            EXPECT_EQ(d, des.end());
+        auto s = src.emplace(n, n);
+        auto d = des.emplace(n, n);
+        if(s.first == src.end())
+            EXPECT_EQ(d.first, des.end());
         else
-            EXPECT_EQ(*(s),
-                      *(d));
+            EXPECT_EQ(*(s.first),
+                      *(d.first));
+        EXPECT_EQ(s.second, d.second);
     }
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
@@ -222,16 +224,16 @@ TEST(testCase, multiset_emplace_test) {
 }
 
 // emplace hint测试
-TEST(testCase, multiset_emplace_hint_test) {
-    std::set<int> src{1,2,3,4,8,9};
-    jr_std::set<int> des{1,2,3,4,8,9};
+TEST(testCase, map_emplace_hint_test) {
+    std::map<int,int> src{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
+    jr_std::map<int,int> des{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
     // insert hint
     auto s_pos = src.begin();
-    auto d_pos = des.begin();
+    auto d_pos = des.cbegin();
     std::advance(s_pos, 4);
     jr_std::advance(d_pos, 4);
-    auto s = src.emplace_hint(s_pos, 5);
-    auto d = des.emplace_hint(d_pos, 5);
+    auto s = src.emplace_hint(s_pos, 5, 10);
+    auto d = des.emplace_hint(d_pos, 5, 10);
     if(s == src.end())
         EXPECT_EQ(d, des.end());
     else
@@ -244,19 +246,17 @@ TEST(testCase, multiset_emplace_hint_test) {
 }
 
 // erase测试
-TEST(testCase, multiset_erase_test) {
+TEST(testCase, map_erase_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 20);
-    jr_std::multiset<int> des;
-    std::multiset<int> src;
+    jr_std::map<int,int> des;
+    std::map<int,int> src;
     for(size_t i = 0; i < cnt; i++) {
-        src.insert(var);
-        des.insert(var);
-        src.insert(var);
-        des.insert(var);
-        src.insert(var);
-        des.insert(var);
+        src.insert(std::make_pair(var,i));
+        des.insert(std::make_pair(var,i));
+        src.insert(std::make_pair(var,i));
+        des.insert(std::make_pair(var,i));
         --var;
     }
     // 单位置erase
@@ -284,7 +284,7 @@ TEST(testCase, multiset_erase_test) {
               *(des.erase(j, j0)));
     ASSERT_EQ(src.size(), des.size());
     it = src.begin();
-    dit = des.cbegin();
+    dit = des.begin();
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
     // 边界测试
@@ -317,20 +317,20 @@ TEST(testCase, multiset_erase_test) {
 }
 
 // swap测试
-TEST(testCase, multiset_swap_test) {
+TEST(testCase, map_swap_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::multiset<int> src;
-    jr_std::multiset<int> des;
+    jr_std::map<int,int> src;
+    jr_std::map<int,int> des;
     for(size_t i = 0; i < cnt; i++) {
-        src.insert(var + 1);
-        des.insert(var - 1);
-        src.insert(var + 1);
-        des.insert(var - 1);
+        src.insert(std::make_pair(var + 1, i));
+        des.insert(std::make_pair(var - 1, i));
+        src.insert(std::make_pair(var + 1, i));
+        des.insert(std::make_pair(var - 1, i));
         --var;
     }
-    jr_std::multiset<int> tmp = src;
+    jr_std::map<int,int> tmp = src;
     src.swap(des);
     ASSERT_EQ(tmp.size(), des.size());
     auto it = tmp.begin();
@@ -346,18 +346,19 @@ TEST(testCase, multiset_swap_test) {
 }
 
 // 逆序访问测试
-TEST(testCase, multiset_reverse_index_test) {
+TEST(testCase, map_reverse_index_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    std::multiset<int> src;
-    jr_std::multiset<int> des;
+    std::map<int,int> src;
+    jr_std::map<int,int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
-        src.insert(i);
-        des.insert(i);
-        src.insert(i);
-        des.insert(i);
+        src.insert(std::make_pair(i, i));
+        des.insert(std::make_pair(i, i));
+        src.insert(std::make_pair(i, i));
+        des.insert(std::make_pair(i, i));
     }
+    ASSERT_EQ(des.size(), src.size());
     auto it = src.rbegin();
     auto rit = des.rbegin();
     while(rit != des.rend()) {
@@ -368,18 +369,19 @@ TEST(testCase, multiset_reverse_index_test) {
 }
 
 // 迭代器-运算
-TEST(testCase, multiset_iterator_sub_test) {
+TEST(testCase, map_iterator_sub_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 20);
-    std::multiset<int> src;
-    jr_std::multiset<int> des;
+    std::map<int,int> src;
+    jr_std::map<int,int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
-        src.insert(i);
-        des.insert(i);
-        src.insert(i);
-        des.insert(i);
+        src.insert(std::make_pair(i, i));
+        des.insert(std::make_pair(i, i));
+        src.insert(std::make_pair(i, i));
+        des.insert(std::make_pair(i, i));
     }
+    ASSERT_EQ(des.size(), src.size());
     auto it = src.begin();
     auto rit = des.begin();
     std::advance(it, 12);
@@ -390,20 +392,21 @@ TEST(testCase, multiset_iterator_sub_test) {
 }
 
 // count测试
-TEST(testCase, multiset_count) {
+TEST(testCase, map_count) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    std::multiset<int> src;
-    jr_std::multiset<int> des;
+    std::map<int,int> src;
+    jr_std::map<int,int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
-        src.insert(i);
-        des.insert(i);
-        src.insert(i);
-        des.insert(i);
-        src.insert(i);
-        des.insert(i);
+        src.insert(std::make_pair(i, i));
+        des.insert(std::make_pair(i, i));
+        src.insert(std::make_pair(i, i));
+        des.insert(std::make_pair(i, i));
+        src.insert(std::make_pair(i, i));
+        des.insert(std::make_pair(i, i));
     }
+    ASSERT_EQ(des.size(), src.size());
     for(int i = -static_cast<int>(cnt);
         i < static_cast<int>(cnt); i++) {
         EXPECT_EQ(src.count(i), des.count(i));
@@ -411,18 +414,19 @@ TEST(testCase, multiset_count) {
 }
 
 // find测试
-TEST(testCase, multiset_find) {
+TEST(testCase, map_find) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    std::multiset<int> src;
-    jr_std::multiset<int> des;
+    std::map<int,int> src;
+    jr_std::map<int,int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
-        src.insert(i);
-        des.insert(i);
-        src.insert(i);
-        des.insert(i);
+        src.insert(std::make_pair(i, i));
+        des.insert(std::make_pair(i, i));
+        src.insert(std::make_pair(i, i));
+        des.insert(std::make_pair(i, i));
     }
+    ASSERT_EQ(des.size(), src.size());
     for(int i = -static_cast<int>(cnt);
         i < static_cast<int>(cnt); i++) {
         if(src.find(i) == src.end())
@@ -433,24 +437,23 @@ TEST(testCase, multiset_find) {
 }
 
 // lower_bound,upper_bound,equal_range测试
-TEST(testCase, multiset_range) {
+TEST(testCase, map_range) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    std::multiset<int> src;
-    jr_std::multiset<int> des;
+    std::map<int,int> src;
+    jr_std::map<int,int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
-        src.insert(i);
-        des.insert(i);
-        src.insert(i);
-        des.insert(i);
+        src.insert(std::make_pair(i, i));
+        des.insert(std::make_pair(i, i));
+        src.insert(std::make_pair(i, i));
+        des.insert(std::make_pair(i, i));
     }
+    ASSERT_EQ(des.size(), src.size());
     size_t v;
-    get_random_size_var(MAX_SIZE, v, var, 20);
+    get_random_size_var(MAX_SIZE, v, var);
     auto p1 = src.equal_range(static_cast<int>(v));
-    std::pair<jr_std::multiset<int>::iterator,
-            jr_std::multiset<int>::iterator>
-    p2 = des.equal_range(static_cast<int>(v));
+    auto p2 = des.equal_range(static_cast<int>(v));
     if(p1.first == src.end())
         EXPECT_EQ(p2.first == des.end(), true);
     else

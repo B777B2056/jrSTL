@@ -12,5 +12,7 @@ target_sources(${PROJECT_NAME} PUBLIC "test/vector_test.cpp"
                                       "test/queue_test.cpp"
                                       "test/priority_queue_test.cpp"
                                       "test/set_test.cpp"
-                                      "test/multiset_test.cpp")
+                                      "test/multiset_test.cpp"
+                                      "test/map_test.cpp"
+                                      "test/multimap_test.cpp")
 target_link_libraries(${PROJECT_NAME} gtest gtest_main)
