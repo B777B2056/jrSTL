@@ -364,7 +364,8 @@ namespace jr_std {
             typedef bool result_type;
         public:
             result_type
-            operator()(const first_argument_type& x, const second_argument_type& y) const {
+            operator()(const first_argument_type& x,
+                       const second_argument_type& y) const {
                 return x < y;
             }
     };

@@ -3,16 +3,15 @@
 
 #include "../../functional/jr_functional.h"
 #include "../../memory/jr_allocator.h"
-#include "../../container/utils/jr_utility.h"
 #include "se_iterators.h"
 
 namespace jr_std {
     // 平衡二叉搜索树（现为AVL树而非红黑树）
     template<class T,
-             bool isMutli,
+             bool isMulti,
              class Compare,
              class Allocator >
-    class _Balance_BST{
+    class _AVL_Tree{
         // 友元类声明，放出访问根节点、_header权限（因为swap的缘故）
         template<class T1, class T2, class T3, bool a> friend class _set_base;
         template<class T1, class T2, class T3, class T4, bool a > friend class _map_base;
@@ -22,7 +21,6 @@ namespace jr_std {
         tnode *_root;
         tnode *_header; // _header标记迭代器end位置（仅用nullptr代表end会造成未查明的指针错误...）
         Compare comp;
-        bool isInsert;
         Allocator _alloc_data;
         typename Allocator::template rebind<tnode>::other _alloc_node;
 
@@ -33,6 +31,15 @@ namespace jr_std {
             int lh = _height(r->left);
             int rh = _height(r->right);
             return 1 + (lh > rh ? lh : rh);
+        }
+        // 先序遍历计数目标元素
+        size_t _dfs(tnode *r, const T target) {
+            if(!r)
+                return 0;
+            int cur = 0;
+            if(!comp(r->data, target) && !comp(target, r->data))
+                cur = 1;
+            return cur + _dfs(r->left, target) + _dfs(r->right, target);
         }
         // 向左单向旋转, n指向不平衡节点
         // 新插入节点位于不平衡节点右子树的右子树上
@@ -67,15 +74,15 @@ namespace jr_std {
             y = x;
         }
         // 插入节点的递归实现
-        tnode *_insert_helper(tnode *r, const T& value) {
+        void _insert_helper(tnode *&r, const T& value) {
             if(!r) {
                 // 若为空树，则直接插入
                 r = _alloc_node.allocate(1);
                 _alloc_data.construct(&(r->data), value);
-                r->parent = nullptr;
+                r->left = r->right = r->parent = nullptr;
             } else if(comp(value, r->data)) {
                 // 若插入位置在左子树，则先递归向左子树插入
-                r->left = _insert_helper(r->left, value);
+                _insert_helper(r->left, value);
                 if(r->left)
                     r->left->parent = r;
                 if(r->right)
@@ -94,9 +101,9 @@ namespace jr_std {
                     }
                 }
             } else {
-                if(comp(r->data, value) || isMutli) {
+                if(comp(r->data, value) || isMulti) {
                     // 若插入位置在右子树，则先递归向右子树插入
-                    r->right = _insert_helper(r->right, value);
+                    _insert_helper(r->right, value);
                     if(r->left)
                         r->left->parent = r;
                     if(r->right)
@@ -115,20 +122,21 @@ namespace jr_std {
                         }
                     }
                 }
+            }
+            _header->left = _header->right = _root;
+            _root->parent = _header;
+        }
 
-            }
-            return r;
-        }
         // 插入节点的递归实现(右值引用)
-        tnode *_insert_helper(tnode *r, T&& value) {
+        void _insert_helper(tnode *&r, T&& value) {
             if(!r) {
                 // 若为空树，则直接插入
                 r = _alloc_node.allocate(1);
                 _alloc_data.construct(&(r->data), value);
-                r->parent = nullptr;
+                r->left = r->right = r->parent = nullptr;
             } else if(comp(value, r->data)) {
                 // 若插入位置在左子树，则先递归向左子树插入
-                r->left = _insert_helper(r->left, value);
+                _insert_helper(r->left, value);
                 if(r->left)
                     r->left->parent = r;
                 if(r->right)
@@ -147,9 +155,9 @@ namespace jr_std {
                     }
                 }
             } else {
-                if(comp(r->data, value) || isMutli) {
+                if(comp(r->data, value) || isMulti) {
                     // 若插入位置在右子树，则先递归向右子树插入
-                    r->right = _insert_helper(r->right, value);
+                    _insert_helper(r->right, value);
                     if(r->left)
                         r->left->parent = r;
                     if(r->right)
@@ -169,16 +177,19 @@ namespace jr_std {
                     }
                 }
             }
-            return r;
+            _header->left = _header->right = _root;
+            _root->parent = _header;
         }
+
         // 删除节点的递归实现
-        tnode *_erase_helper(tnode *r, const T& key) {
+        void _erase_helper(tnode *&r, const T key) {
             /*普通BST删除操作*/
-            if(!r)  return nullptr;
+            if(!r)
+                return;
             if(comp(key, r->data)) {
-                r->left = _erase_helper(r->left, key);
+                _erase_helper(r->left, key);
             } else if(comp(r->data, key)) {
-                r->right = _erase_helper(r->right, key);
+                _erase_helper(r->right, key);
             } else {
                 if(!r->left && !r->right) {
                     // 待删除节点为叶节点, 直接删除
@@ -205,10 +216,9 @@ namespace jr_std {
                     tnode *right_min = r->right;
                     while(right_min->left)
                         right_min = right_min->left;
-
                     _alloc_data.destroy(&(r->data));
                     _alloc_data.construct(&(r->data), right_min->data);
-                    r->right = _erase_helper(r->right, r->data);
+                    _erase_helper(r->right, right_min->data);
                 }
             }
             /*将不平衡节点调整为平衡*/
@@ -237,8 +247,14 @@ namespace jr_std {
                     }
                 }
             }
-            return  r;
+            if(_root) {
+                _header->left = _header->right = _root;
+                _root->parent = _header;
+            } else {
+                _header->left = _header->right = _header;
+            }
         }
+
         // 析构每个节点的数据域，再释放每个节点所占空间
         void _delete_all(tnode *&r) {
             if(!r)
@@ -252,58 +268,62 @@ namespace jr_std {
 
     public:
         // 构造
-        _Balance_BST() : _root(nullptr), comp(Compare()) {
+        _AVL_Tree() : _root(nullptr), comp(Compare()) {
             _header = _alloc_node.allocate(1);
-            _header->left = _header;
+            _header->left = _header->right = _header;
         }
 
-        _Balance_BST(Compare c) : _root(nullptr), comp(c) {
+        _AVL_Tree(Compare c) : _root(nullptr), comp(c) {
             _header = _alloc_node.allocate(1);
-            _header->left = _header;
+            _header->left = _header->right = _header;
         }
 
         template<class InputIt>
-        _Balance_BST(InputIt first, InputIt last, Compare c = Compare())
+        _AVL_Tree(InputIt first, InputIt last,
+                     Compare c = Compare())
             : _root(nullptr), comp(c) {
             _header = _alloc_node.allocate(1);
-            _header->left = _header;
-            while(first != last) {
-                this->insert(*first);
-                ++first;
-            }
+            insert(first, last);
         }
 
-        _Balance_BST(_Balance_BST&& x, Compare c = Compare()) : comp(c){
+        _AVL_Tree(_AVL_Tree&& x,
+                     Compare c = Compare()) : comp(c){
             _root = x._root;
             x._root = nullptr;
             _header = _alloc_node.allocate(1);
-            _header->left = _root;
-            _root->parent = _header;
-            x._header->left = x._header;
+            _header->left = _header->right = _root;
+            if(_root)
+                _root->parent = _header;
+            x._header->left = x._header->right = x._header;
         }
 
-        ~_Balance_BST() {
+        ~_AVL_Tree() {
             _delete_all(_root);
             _alloc_node.deallocate(_header, 1);
         }
 
         // 阻止生成复制运算符
-        _Balance_BST& operator=(const _Balance_BST& x) = delete;
+        _AVL_Tree& operator=(const _AVL_Tree& x) = delete;
 
         // 移动运算符
-        _Balance_BST& operator=(_Balance_BST&& x) {
+        _AVL_Tree& operator=(_AVL_Tree&& x) {
+            if(this == &x)
+                return *this;
             _root = x._root;
             x._root = nullptr;
-            _header->left = _root;
-            _root->parent = _header;
-            x._header->left = x._header;
+            _header->left = _header->right = _root;
+            if(_root)
+                _root->parent = _header;
+            x._header->left = x._header->right = x._header;
             return *this;
         }
 
         // 返回_header标志节点，方便构造end迭代器
-        tnode* get_header() const { return _header; }
+        tnode* get_header() const {
+            return _header;
+        }
 
-        // 查找，返回空指针说明目标元素不存在
+        // 查找，返回头指针说明目标元素不存在
         tnode *search(const T& target) {
             tnode *tmp = _root;
             while(tmp) {
@@ -332,6 +352,10 @@ namespace jr_std {
             return _header;
         }
 
+        size_t count(const T& target) {
+            return _dfs(_root, target);
+        }
+
         tnode* get_min() const {
             if(!_root)
                 return _header;
@@ -352,20 +376,18 @@ namespace jr_std {
 
         // 插入值为value的节点
         bool insert(const T& value) {
-            isInsert = true;
-            _root = _insert_helper(_root, value);
-            _root->parent = _header;
-            _header->left = _root;
-            return isInsert;
+            if(!isMulti && (search(value) != _header))
+                return false;
+            _insert_helper(_root, value);
+            return true;
         }
 
         // 插入值为value的节点(右值引用)
         bool insert(T&& value) {
-            isInsert = true;
-            _root = _insert_helper(_root, static_cast<T&&>(value));
-            _root->parent = _header;
-            _header->left = _root;
-            return isInsert;
+            if(!isMulti && (search(static_cast<T&&>(value)) != _header))
+                return false;
+            _insert_helper(_root, static_cast<T&&>(value));
+            return true;
         }
 
         // 范围插入
@@ -379,36 +401,26 @@ namespace jr_std {
 
         // 插入value到尽可能接近，正好前于hint 的位置
         bool insert_hint(const T& value, tnode *&hint) {
-            if(!_root)
+            if(!_root || comp(hint->data, value))
                 return insert(value);
-            isInsert = true;
-            hint->left = _insert_helper(hint->left, value);
-            if(hint->left)
-                hint->left->parent = hint;
-            _root->parent = _header;
-            _header->left = _root;
-            return isInsert;
+            if(!isMulti && (search(value) != _header))
+                return false;
+            _insert_helper(hint->left, value);
+            return true;
         }
 
         bool insert_hint(T&& value, tnode *&hint) {
-            if(!_root)
+            if(!_root || comp(hint->data, value))
                 return insert(static_cast<T&&>(value));
-            isInsert = true;
-            hint->left = _insert_helper(hint->left, static_cast<T&&>(value));
-            if(hint->left)
-                hint->left->parent = hint;
-            _root->parent = _header;
-            _header->left = _root;
-            return isInsert;
+            if(!isMulti && (search(value) != _header))
+                return false;
+            _insert_helper(hint->left, static_cast<T&&>(value));
+            return true;
         }
 
         // 删除值与value相等的节点
         void erase(const T& key) {
-            // 递归删除目标节点
-            _root = _erase_helper(_root, key);
-            if(_root)
-                _root->parent = _header;
-            _header->left = _root;
+            _erase_helper(_root, key);
         }
 
         // 删除所有元素

@@ -527,7 +527,7 @@ namespace jr_std {
     /*Operating of iterator*/
     template< class InputIt, class Distance >
     void _advance( InputIt& it, Distance n, input_iterator_tag ) {
-        if(n) {
+        if(n > 0) {
             while(n--)
                 ++it;
         }
@@ -535,10 +535,10 @@ namespace jr_std {
 
     template< class InputIt, class Distance >
     void _advance( InputIt& it, Distance n, bidectional_iterator_tag ) {
-        if(n) {
+        if(n > 0) {
             while(n--)
                 ++it;
-        } else {
+        } else if(n < 0) {
             while(n++)
                 --it;
         }

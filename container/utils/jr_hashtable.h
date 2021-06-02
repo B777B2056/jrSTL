@@ -2,9 +2,9 @@
 #define JR_HASHTABLE_H
 
 #include <cstddef>
+#include <utility>
 #include <functional>
 #include "../../container/sequence/jr_vector.h"
-#include "../../container/utils/jr_utility.h"
 #include "se_iterators.h"
 
 namespace jr_std {
@@ -116,15 +116,15 @@ public:
         }
     }
     // 查找目标键
-    pair<const int, hnode *> find(const T& target) {
+    std::pair<const int, hnode *> find(const T& target) {
         int hash_index = Hash(target);
         // 起始位置没有元素，或索引超出范围，说明该键值不存在，返回-1
         if((hash_index >= table.size()) || !table[hash_index]->hasElem)
-            return pair<const int, hnode *>(-1, nullptr);
+            return std::pair<const int, hnode *>(-1, nullptr);
         hnode *m = table[hash_index];
         while(m && !KeyEqual(m->data, target))
             m = m->next;
-        return pair<const int, hnode *>(hash_index, m);
+        return std::pair<const int, hnode *>(hash_index, m);
     }
     // 元素计数器
     size_t count(const T& k) {
@@ -142,7 +142,7 @@ public:
         return cnt;
     }
     // 插入新元素
-    pair<const int, hnode *> insert(const T& a) {
+    std::pair<const int, hnode *> insert(const T& a) {
         // 若不允许键值重复且该键值已存在，则什么都不做；否则，挂在哈希值对应索引的链表的头部
         auto t = find(a);
         if(!isMulti && t.second)
@@ -163,11 +163,11 @@ public:
             n->next = table[hash_index]->next;
             table[hash_index]->next = n;
             table[hash_index]->hasElem = n->hasElem = true;
-            return pair<const int, hnode *>(hash_index, n);
+            return std::pair<const int, hnode *>(hash_index, n);
         }
     }
 
-    pair<const int, hnode *> insert(T&& a) {
+    std::pair<const int, hnode *> insert(T&& a) {
         auto t = find(a);
         if(!isMulti && t.second)
             return t;
@@ -187,7 +187,7 @@ public:
             n->next = table[hash_index]->next;
             table[hash_index]->next = n;
             table[hash_index]->hasElem = n->hasElem = true;
-            return pair<const int, hnode *>(hash_index, n);
+            return std::pair<const int, hnode *>(hash_index, n);
         }
     }
     

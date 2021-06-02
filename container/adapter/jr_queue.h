@@ -59,9 +59,15 @@ namespace jr_std {
 
         ~queue() {}
 
-        queue& operator=( const queue& other ) { c = other.c; }
+        queue& operator=( const queue& other ) {
+            c = other.c;
+            return *this;
+        }
 
-        queue& operator=( queue&& other ) { c = static_cast<Container&&>(other.c); }
+        queue& operator=( queue&& other ) {
+            c = static_cast<Container&&>(other.c);
+            return *this;
+        }
 
         reference front() { return c.front(); }
 
@@ -92,14 +98,19 @@ namespace jr_std {
         // 友元声明
         template< class U, class Cont >
         friend bool operator==( const queue<U, Cont>& lhs, const queue<U, Cont>& rhs );
+
         template< class U, class Cont >
         friend bool operator!=( const queue<U, Cont>& lhs, const queue<U, Cont>& rhs );
+
         template< class U, class Cont >
         friend bool operator<=( const queue<U, Cont>& lhs, const queue<U, Cont>& rhs );
+
         template< class U, class Cont >
         friend bool operator>=( const queue<U, Cont>& lhs, const queue<U, Cont>& rhs );
+
         template< class U, class Cont >
         friend bool operator<( const queue<U, Cont>& lhs, const queue<U, Cont>& rhs );
+
         template< class U, class Cont >
         friend bool operator>( const queue<U, Cont>& lhs, const queue<U, Cont>& rhs );
 

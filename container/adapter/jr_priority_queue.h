@@ -105,11 +105,13 @@ namespace jr_std {
             priority_queue& operator=( const priority_queue& other ) {
                 c = other.c;
                 comp = other.comp;
+                return *this;
             }
 
             priority_queue& operator=( priority_queue&& other ) {
                 c = static_cast<Container&&>(other.c);
                 comp = static_cast<Compare&&>(other.comp);
+                return *this;
             }
 
             bool empty() const { return c.empty(); }

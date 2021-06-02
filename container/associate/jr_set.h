@@ -2,10 +2,10 @@
 #define JR_SET_H
 
 #include <cstddef>
+#include <utility>
 #include "../../functional/jr_functional.h"
 #include "../../container/utils/se_iterators.h"
 #include "../../container/utils/jr_tree.h"
-#include "../../container/utils/jr_utility.h"
 
 namespace jr_std {
     template<class Key, class Compare, class Allocator, bool isMultiSet >
@@ -30,7 +30,7 @@ namespace jr_std {
 
         protected:
             typedef _tree_node<Key> tnode;
-            typedef _Balance_BST<Key, isMultiSet, Compare, typename Allocator::template rebind<tnode>::other> tree;
+            typedef _AVL_Tree<Key, isMultiSet, Compare, typename Allocator::template rebind<tnode>::other> tree;
             tree t;
             Compare comp;
             size_type _size;
@@ -83,8 +83,9 @@ namespace jr_std {
                        const Compare& comp = Compare(),
                        const Allocator& alloc = Allocator() )
                 : _set_base(comp, alloc) {
-                for(auto it = init.begin(); it != init.end(); ++it)
+                for(auto it = init.begin(); it != init.end(); ++it) {
                     insert(*it);
+                }
             }
 
             virtual ~_set_base()  = default;
@@ -107,7 +108,9 @@ namespace jr_std {
                 return *this;
             }
 
-            allocator_type get_allocator() const noexcept { return _alloc_data; }
+            allocator_type get_allocator() const noexcept {
+                return _alloc_data;
+            }
 
             // 迭代器
             iterator begin() noexcept {
@@ -134,17 +137,29 @@ namespace jr_std {
                 return iterator(t.get_header(), t.get_header());
             }
             
-            reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+            reverse_iterator rbegin() noexcept {
+                return reverse_iterator(end());
+            }
             
-            const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+            const_reverse_iterator rbegin() const noexcept {
+                return const_reverse_iterator(end());
+            }
             
-            const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
+            const_reverse_iterator crbegin() const noexcept {
+                return const_reverse_iterator(end());
+            }
             
-            reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+            reverse_iterator rend() noexcept {
+                return reverse_iterator(begin());
+            }
             
-            const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+            const_reverse_iterator rend() const noexcept {
+                return const_reverse_iterator(begin());
+            }
             
-            const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
+            const_reverse_iterator crend() const noexcept {
+                return const_reverse_iterator(begin());
+            }
 
             // 容量
             bool empty() const noexcept { return _size == 0; }
@@ -152,49 +167,42 @@ namespace jr_std {
             size_type max_size() const noexcept { return UINT_MAX; }
 
             // 修改器
+        protected:
             template<class... Args>
-            pair<iterator, bool> emplace(Args&&... args) {
+            std::pair<iterator, bool> emplace(Args&&... args) {
                 value_type *a;
                 a = _alloc_data.allocate(1);
                 _alloc_data.construct(a, static_cast<Args&&>(args)...);
                 bool isInsert = t.insert(*a);
-                if(isInsert) ++_size;
-                return pair<iterator, bool>(find(*a), isInsert);
+                if(isInsert)
+                    ++_size;
+                return std::pair<iterator, bool>(find(*a), isInsert);
             }
 
+        public:
             template<class... Args>
             iterator emplace_hint(const_iterator hint, Args&&... args) {
                 value_type *a;
                 a = _alloc_data.allocate(1);
                 _alloc_data.construct(a, static_cast<Args&&>(args)...);
                 bool isInsert = t.insert_hint(*a, hint._node);
-                if(isInsert) ++_size;
+                if(isInsert)
+                    ++_size;
                 return find(*a);
-            }
-
-            pair<iterator,bool> insert(const value_type& x) {
-                bool isInsert = t.insert(x);
-                if(isInsert) ++_size;
-                return pair<iterator, bool>(find(x), isInsert);
-            }
-
-            pair<iterator,bool> insert(value_type&& x) {
-                auto m = static_cast<value_type&&>(x);
-                bool isInsert = t.insert(m);
-                if(isInsert) ++_size;
-                return pair<iterator, bool>(find(x), isInsert);
             }
 
             iterator insert(const_iterator hint, const value_type& x) {
                 bool isInsert = t.insert_hint(x, hint._node);
-                if(isInsert) ++_size;
+                if(isInsert)
+                    ++_size;
                 return find(x);
             }
 
             iterator insert(const_iterator hint, value_type&& x) {
                 auto m = static_cast<value_type&&>(x);
                 bool isInsert = t.insert_hint(m, hint._node);
-                if(isInsert) ++_size;
+                if(isInsert)
+                    ++_size;
                 return find(m);
             }
 
@@ -212,32 +220,60 @@ namespace jr_std {
                 }
             }
 
-            iterator erase(iterator position) {
-                iterator result = position;
-                ++result;
-                value_type va = position._node->data;
-                erase(va);
+        protected:
+            std::pair<iterator,bool> insert(const value_type& x) {
+                bool isInsert = t.insert(x);
+                if(isInsert)
+                    ++_size;
+                return std::pair<iterator, bool>(find(x), isInsert);
+            }
+
+            std::pair<iterator,bool> insert(value_type&& x) {
+                auto m = static_cast<value_type&&>(x);
+                bool isInsert = t.insert(m);
+                if(isInsert)
+                    ++_size;
+                return std::pair<iterator, bool>(find(x), isInsert);
+            }
+
+        public:
+            iterator erase(const_iterator position) {
+                difference_type dis = jr_std::distance(cbegin(), position);
+                t.erase(*position);
+                --_size;
+                iterator result = begin();
+                jr_std::advance(result, dis);
                 return result;
             }
 
-            void erase(const key_type& va) {
-                while(find(va) != end()) {
-                    t.erase(va);
+            size_type erase(const key_type& va) {
+                size_type cnt = 0;
+                key_type tmp(va);
+                while(find(tmp) != end()) {
+                    t.erase(tmp);
                     --_size;
+                    ++cnt;
                 }
+                return cnt;
             }
 
             iterator erase(const_iterator first, const_iterator last) {
-                iterator result = iterator(last._node, last._header);
+                difference_type dis = jr_std::distance(cbegin(), first);
                 while(first != last) {
-                    erase(iterator(first._node, first._header));
-                    ++first;
+                    value_type t = *last;
+                    difference_type d = jr_std::distance(cbegin(), last);
+                    first = erase(first);
+                    last = cbegin();
+                    jr_std::advance(last, d - 1);
                 }
-                return result;
+                iterator ret = begin();
+                jr_std::advance(ret, dis);
+                return ret;
             }
 
             void swap(_set_base& other) {
-                if(this == &other)  return;
+                if(this == &other)
+                    return;
                 {
                     int t = _size;
                     _size = other._size;
@@ -261,24 +297,32 @@ namespace jr_std {
             }
 
             // 观察器
-            key_compare key_comp() const { return comp; }
+            key_compare key_comp() const {
+                return comp;
+            }
 
-            value_compare value_comp() const { return comp; }
+            value_compare value_comp() const {
+                return comp;
+            }
 
             // set 操作
-            iterator find(const key_type& x) { return iterator(t.search(x), t.get_header()); }
+            iterator find(const key_type& x) {
+                return iterator(t.search(x), t.get_header());
+            }
 
-            const_iterator find(const key_type& x) const { return const_iterator(t.search(x), t.get_header()); }
+            const_iterator find(const key_type& x) const {
+                return const_iterator(t.search(x), t.get_header());
+            }
 
-            size_type count(const key_type& x) const {
-                tnode *s = t.search(x);
-                return  s == t._header ? 0 : s->cnt;
+            size_type count(const key_type& x) {
+                return t.count(x);
             }
 
             iterator lower_bound(const key_type& x) {
-                tnode *min_elem = t.get_min();
-                if(comp(x, min_elem->data))
+                if(comp(x, t.get_min()->data))
                     return begin();
+                if(comp(t.get_max()->data, x))
+                    return end();
                 iterator it = begin();
                 while(comp(*it, x) && (it != end()))
                     ++it;
@@ -288,9 +332,10 @@ namespace jr_std {
             }
 
             const_iterator lower_bound(const key_type& x) const {
-                tnode *min_elem = t.get_min();
-                if(comp(x, min_elem->data))
+                if(comp(x, t.get_min()->data))
                     return cbegin();
+                if(comp(t.get_max()->data, x))
+                    return cend();
                 const_iterator it = begin();
                 while(comp(*it, x) && (it != end()))
                     ++it;
@@ -300,8 +345,9 @@ namespace jr_std {
             }
 
             iterator upper_bound(const key_type& x) {
-                tnode *max_elem = t.get_max();
-                if(!comp(x, max_elem->data))
+                if(comp(x, t.get_min()->data))
+                    return begin();
+                if(comp(t.get_max()->data, x))
                     return end();
                 iterator it = begin();
                 while(!comp(x, *it) && (it != end()))
@@ -310,8 +356,9 @@ namespace jr_std {
             }
 
             const_iterator upper_bound(const key_type& x) const {
-                tnode *max_elem = t.get_max();
-                if(!comp(x, max_elem->data))
+                if(comp(x, t.get_min()->data))
+                    return cbegin();
+                if(comp(t.get_max()->data, x))
                     return cend();
                 const_iterator it = begin();
                 while(!comp(x, *it) && (it != end()))
@@ -319,12 +366,12 @@ namespace jr_std {
                 return it;
             }
 
-            pair<iterator, iterator> equal_range(const key_type& x) {
-                return pair<iterator, iterator>(lower_bound(x), upper_bound(x));
+            std::pair<iterator, iterator> equal_range(const key_type& x) {
+                return std::pair<iterator, iterator>(lower_bound(x), upper_bound(x));
             }
 
-            pair<const_iterator, const_iterator> equal_range(const key_type& x) const {
-                return pair<iterator, iterator>(lower_bound(x), upper_bound(x));
+            std::pair<const_iterator, const_iterator> equal_range(const key_type& x) const {
+                return std::pair<iterator, iterator>(lower_bound(x), upper_bound(x));
             }
     };
 
@@ -336,13 +383,15 @@ namespace jr_std {
             typedef _set_base<Key, Compare, Allocator, false> _base;
 
         public:
+            using _base::insert;
             // 委托构造（继承父类）
             set() {}
 
             explicit set(const Allocator& a) : _base(a)
             {}
 
-            explicit set(const Compare& c, const Allocator& a = Allocator())
+            explicit set(const Compare& c,
+                         const Allocator& a = Allocator())
                 : _base(c, a)
             {}
 
@@ -366,6 +415,20 @@ namespace jr_std {
                  const Allocator& alloc = Allocator() )
                 : _base(init, comp, alloc)
             {}
+
+            template< class... Args >
+            std::pair<typename _base::iterator, bool>
+            emplace( Args&&... args )
+            { return _base::emplace(static_cast<Args&&>(args)...); }
+
+            std::pair<typename _base::iterator, bool>
+            insert( const typename _base::value_type& value )
+            { return _base::insert(value); }
+
+            std::pair<typename _base::iterator, bool>
+            insert( typename _base::value_type&& value )
+            { return _base::insert(static_cast<typename _base::value_type&&>(value)); }
+
     };
 
     template<class Key, class Compare = jr_std::less<Key>,
@@ -375,6 +438,7 @@ namespace jr_std {
             typedef _set_base<Key, Compare, Allocator, true> _base;
 
         public:
+            using _base::insert;
             // 构造（继承父类）
             multiset() {}
 
@@ -407,17 +471,17 @@ namespace jr_std {
             {}
             // 特化操作
             template< class... Args >
-            typename _base::iterator emplace( Args&&... args )
+            typename _base::iterator
+            emplace( Args&&... args )
             { return _base::emplace(static_cast<Args&&>(args)...).first; }
 
-            typename _base::iterator insert( const typename _base::value_type& value )
+            typename _base::iterator
+            insert( const typename _base::value_type& value )
             { return _base::insert(value).first; }
 
-            typename _base::iterator insert( typename _base::value_type&& value )
+            typename _base::iterator
+            insert( typename _base::value_type&& value )
             { return _base::insert(static_cast<typename _base::value_type&&>(value)).first; }
-
-            void insert( std::initializer_list<typename _base::value_type> ilist )
-            { _base::insert(ilist); }
     };
 
     // 交换

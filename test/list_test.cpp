@@ -484,8 +484,8 @@ TEST(testCase, list_iterator_sub_test) {
     auto rit = des.begin();
     std::advance(it, 12);
     jr_std::advance(rit, 12);
-    std::advance(it, 5);
-    jr_std::advance(rit, 5);
+    std::advance(it, -5);
+    jr_std::advance(rit, -5);
     EXPECT_EQ(*it, *rit);
 }
 

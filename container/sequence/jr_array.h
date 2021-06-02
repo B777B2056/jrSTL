@@ -1,7 +1,9 @@
 #ifndef JR_ARRAY_H
 #define JR_ARRAY_H
 
+#include <assert.h>
 #include <cstddef>
+#include "../utils/se_iterators.h"
 
 /* array为聚合类类型（C++ Prime 7.5.5）;
  * 没有显式的构造/复制/销毁;
@@ -21,6 +23,8 @@ namespace jr_std {
     typedef const T* const_pointer;
     typedef T* iterator;
     typedef const T* const_iterator;
+    typedef jr_std::reverse_iterator<iterator> reverse_iterator;
+    typedef jr_std::reverse_iterator<const_iterator> const_reverse_iterator	;
     value_type _base_array[N];
     // 聚合类型无显式的构造/复制/销毁
     void fill(const T& u) {
@@ -29,7 +33,8 @@ namespace jr_std {
     }
 
     void swap(array& x) noexcept {
-        if(this == &x)    return;
+        if(this == &x)
+            return;
         for(size_type i = 0; i < N; i++) {
             value_type tmp = (*this)[i];
             (*this)[i] = x[i];
@@ -38,37 +43,115 @@ namespace jr_std {
     }
 
     // 迭代器
-    iterator begin() noexcept { return _base_array; }
-    const_iterator begin() const noexcept { return _base_array; }
-    iterator end() noexcept { return _base_array+N; }
-    const_iterator end() const noexcept { return _base_array+N; }
-    const_iterator cbegin() const noexcept { return _base_array; }
-    const_iterator cend() const noexcept { return _base_array+N; }
+    iterator begin() noexcept {
+        return _base_array;
+    }
+
+    const_iterator begin() const noexcept {
+        return _base_array;
+    }
+
+    iterator end() noexcept {
+        return _base_array+N;
+    }
+
+    const_iterator end() const noexcept {
+        return _base_array+N;
+    }
+
+    const_iterator cbegin() const noexcept {
+        return _base_array;
+    }
+
+    const_iterator cend() const noexcept {
+        return _base_array+N;
+    }
+
+    reverse_iterator rbegin() noexcept {
+        return reverse_iterator(end());
+    }
+
+    const_reverse_iterator rbegin() const noexcept {
+        return const_reverse_iterator(end());
+    }
+
+    const_reverse_iterator crbegin() const noexcept {
+        return const_reverse_iterator(end());
+    }
+
+    reverse_iterator rend() noexcept {
+        return reverse_iterator(begin());
+    }
+
+    const_reverse_iterator rend() const noexcept {
+        return const_reverse_iterator(begin());
+    }
+
+    const_reverse_iterator crend() const noexcept {
+        return const_reverse_iterator(begin());
+    }
 
     // 容量
-    bool empty() const noexcept { return N==0; }
-    size_type size() const noexcept { return N; }
-    size_type max_size() const noexcept { return N; }
+    bool empty() const noexcept {
+        return N==0;
+    }
+
+    size_type size() const noexcept {
+        return N;
+    }
+
+    size_type max_size() const noexcept {
+        return N;
+    }
 
     // 元素访问
-    reference operator[](size_type n) { return _base_array[n]; }
-    const_reference operator[](size_type n) const { return _base_array[n]; }
-    reference at(size_type n) { return _base_array[n]; }
-    const_reference at(size_type n) const { return _base_array[n]; }
-    reference front() { return _base_array[0]; }
-    const_reference front() const { return _base_array[0]; }
-    reference back() { return _base_array[N-1]; }
-    const_reference back() const { return _base_array[N-1]; }
+    reference operator[](size_type n) {
+        return _base_array[n];
+    }
 
-    T *data() noexcept { return _base_array; }
-    const T *data() const noexcept { return _base_array; }
+    const_reference operator[](size_type n) const {
+        return _base_array[n];
+    }
+
+    reference at(size_type n) {
+        return _base_array[n];
+    }
+
+    const_reference at(size_type n) const {
+        return _base_array[n];
+    }
+
+    reference front() {
+        return _base_array[0];
+    }
+
+    const_reference front() const {
+        return _base_array[0];
+    }
+
+    reference back() {
+        return _base_array[N-1];
+    }
+
+    const_reference back() const {
+        return _base_array[N-1];
+    }
+
+    T *data() noexcept {
+        return _base_array;
+    }
+
+    const T *data() const noexcept {
+        return _base_array;
+    }
   };
 
   // 同大小的两array才可交换
   template< class T, std::size_t N >
   void swap( jr_std::array<T,N>& lhs,
-             jr_std::array<T,N>& rhs )
-  { lhs.swap(rhs); }
+             jr_std::array<T,N>& rhs ) {
+      lhs.swap(rhs);
+  }
 
   template< class T, std::size_t N >
   bool operator==( const jr_std::array<T,N>& lhs,
@@ -120,26 +203,27 @@ namespace jr_std {
 
   template< size_t I, class T, size_t N >
   T& get( jr_std::array<T,N>& a ) noexcept {
+      static_assert (I >= 0 && I < N, "Index out of range");
       return a[I];
   }
 
   template< size_t I, class T, size_t N >
   const T& get( const jr_std::array<T,N>& a ) noexcept {
+      static_assert (I >= 0 && I < N, "Index out of range");
       return a[I];
   }
 
   template< std::size_t I, class T, std::size_t N >
   T&& get( jr_std::array<T,N>&& a ) noexcept {
+      static_assert (I >= 0 && I < N, "Index out of range");
       return a[I];
   }
 
   template< std::size_t I, class T, std::size_t N >
   const T&& get( const jr_std::array<T,N>&& a ) noexcept {
+      static_assert (I >= 0 && I < N, "Index out of range");
       return a[I];
   }
-
-//  template<class T, class... U>
-//    array(T, U...) -> array<T, 1 + sizeof...(U)>;
 }
 
 #endif // JR_ARRAY_H

@@ -492,7 +492,7 @@ template<class T, class Allocator = jr_std::allocator<T> >
             // 当期链表长度 >= sz
             _forward_node<T> *m = t->next, *p = nullptr;
             t->next = _tail;
-            while(m != _tail) {
+            while(m && m != _tail) {
                 p = m->next;
                 _alloc.destroy(&(m->data));
                 _alloc_node.deallocate(m, 1);

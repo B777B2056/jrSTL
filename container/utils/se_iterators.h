@@ -345,7 +345,7 @@ namespace jr_std {
             if(_node->right) {
                 // 若当前节点存在右子树，则下一位置为右子树最小值
                 _node = _node->right;
-                 while(_node->left)
+                 while(_node && _node->left)
                      _node = _node->left;
             } else {
                 // 若当前节点不存在右子树，
@@ -361,7 +361,7 @@ namespace jr_std {
                    //（即找到让当前刚刚小于父亲的父节点），
                    // 让当前节点指向父亲
                    //（若当前节点为根节点则父亲为空，说明原来的位置已是最后元素，置节点为空）
-                   while(f && (_node == f->right)) {
+                   while(f && (f != _header) && (_node == f->right)) {
                        _node = f;
                        f = f->parent;
                    }
@@ -383,10 +383,9 @@ namespace jr_std {
         iterator& operator--() {
             if(_node->left) {
                 _node = _node->left;
-                 while(_node->right)
+                 while(_node && _node->right)
                      _node = _node->right;
-            }
-            else {
+            } else {
                tnode *f = _node->parent;
                if(f == _header) {
                    _node = nullptr;
