@@ -247,16 +247,16 @@ TEST(testCase, multiset_emplace_hint_test) {
 TEST(testCase, multiset_erase_test) {
     size_t cnt;
     int var;
-    get_random_size_var(MAX_SIZE, cnt, var, 20);
+    get_random_size_var(15, cnt, var, 10);
     jr_std::multiset<int> des;
     std::multiset<int> src;
     for(size_t i = 0; i < cnt; i++) {
-        src.insert(var);
-        des.insert(var);
-        src.insert(var);
-        des.insert(var);
-        src.insert(var);
-        des.insert(var);
+        src.insert(i);
+        des.insert(i);
+        src.insert(i);
+        des.insert(i);
+        src.insert(i);
+        des.insert(i);
         --var;
     }
     // 单位置erase
@@ -273,27 +273,27 @@ TEST(testCase, multiset_erase_test) {
         EXPECT_EQ(*it, *dit);
     // 范围erase
     i = src.begin();
-    j = des.cbegin();
+    j = des.begin();
     std::advance(i, 2);
     jr_std::advance(j, 2);
     auto i0 = src.begin();
-    auto j0 = des.cbegin();
+    auto j0 = des.begin();
     std::advance(i0, 6);
     jr_std::advance(j0, 6);
     EXPECT_EQ(*(src.erase(i, i0)),
               *(des.erase(j, j0)));
     ASSERT_EQ(src.size(), des.size());
     it = src.begin();
-    dit = des.cbegin();
+    dit = des.begin();
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
     // 边界测试
     i0 = src.begin();
-    j0 = des.cbegin();
+    j0 = des.begin();
     std::advance(i0, 6);
     jr_std::advance(j0, 6);
     EXPECT_EQ(*(src.erase(src.begin(), i0)),
-              *(des.erase(des.cbegin(), j0)));
+              *(des.erase(des.begin(), j0)));
     ASSERT_EQ(src.size(), des.size());
     it = src.begin();
     dit = des.begin();

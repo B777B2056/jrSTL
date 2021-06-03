@@ -285,7 +285,10 @@ namespace jr_std {
 
             iterator erase(const_iterator position) {
                 difference_type dis = jr_std::distance(cbegin(), position);
-                t.erase(*position);
+                if(isMultiMap)
+                    t.erase(*position, position._node);
+                else
+                    t.erase(*position);
                 --_size;
                 iterator result = begin();
                 jr_std::advance(result, dis);
@@ -295,12 +298,9 @@ namespace jr_std {
             iterator erase(const_iterator first, const_iterator last) {
                 difference_type dis = jr_std::distance(cbegin(), first);
                 while(first != last) {
-                    value_type t = *last;
-                    difference_type d = jr_std::distance(cbegin(), last);
                     iterator it = erase(first);
-                    first = last = cbegin();
+                    first = cbegin();
                     jr_std::advance(first, jr_std::distance(begin(), it));
-                    jr_std::advance(last, d - 1);
                 }
                 iterator ret = begin();
                 jr_std::advance(ret, dis);

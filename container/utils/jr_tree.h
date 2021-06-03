@@ -5,8 +5,11 @@
 #include "../../memory/jr_allocator.h"
 #include "jr_nodes.h"
 
+#define _DEBUG
+#include <iostream>
+
 namespace jr_std {
-    // 平衡二叉搜索树（现为AVL树而非红黑树）
+    // 平衡二叉搜索树（AVL树）
     template<class T,
              bool isMulti,
              class Compare,
@@ -114,6 +117,59 @@ namespace jr_std {
             }
         }
 
+        // 交换两个节点
+        void _swap_node(tnode* a, tnode* b) {
+            if(!a || !b)
+                return;
+            tnode *a_parent = a->parent;
+            tnode *b_parent = b->parent;
+            tnode *a_left = a->left;
+            tnode *a_right = a->right;
+            tnode *b_left = b->left;
+            tnode *b_right = b->right;
+            if(a_parent->left == a)
+                a_parent->left = b;
+            else
+                a_parent->right = b;
+            if(b_parent->left == b)
+                b_parent->left = a;
+            else
+                b_parent->right = a;
+            if(a_parent == _header) {
+                a_parent->left = b;
+                a_parent->right = b;
+                _root = b;
+            }
+            if(b_parent == a) {
+                if(b == a->left) {
+                    b->left = a;
+                    b->right = a_right;
+                } else {
+                    b->left = a_left;
+                    b->right = a;
+                }
+                a->left = b_left;
+                a->right = b_right;
+                a->parent = b;
+                b->parent = a_parent;
+            } else {
+                a->left = b_left;
+                a->right = b_right;
+                b->left = a_left;
+                b->right = a_right;
+                a->parent = b_parent;
+                b->parent = a_parent;
+            }
+            if(a->left)
+                a->left->parent = a;
+            if(a->right)
+                a->right->parent = a;
+            if(b->left)
+                b->left->parent = b;
+            if(b->right)
+                b->right->parent = b;
+        }
+
         // 插入节点的递归实现
         tnode *_insert_helper(tnode *&r, const T& value, bool& flag) {
             tnode *ret = nullptr;
@@ -127,7 +183,6 @@ namespace jr_std {
             } else if(comp(value, r->data)) {
                 // 若插入位置在左子树，则先递归向左子树插入
                 ret = _insert_helper(r->left, value, flag);
-
             } else {
                 if (comp(r->data, value) || isMulti) {
                     // 若插入位置在右子树，则先递归向右子树插入
@@ -185,43 +240,49 @@ namespace jr_std {
         }
 
         // 删除节点的递归实现
-        void _erase_helper(tnode *&r, const T& key) {
+        void _erase_helper(tnode*& r, const T& key,
+                           tnode *hint = nullptr) {
             /*普通BST删除操作*/
             if(!r)
                 return;
             if(comp(key, r->data)) {
-                _erase_helper(r->left, key);
+                _erase_helper(r->left, key, hint);
             } else if(comp(r->data, key)) {
-                _erase_helper(r->right, key);
+                _erase_helper(r->right, key, hint);
             } else {
-                if(!r->left && !r->right) {
-                    // 待删除节点为叶节点, 直接删除
-                    _alloc_data.destroy(&(r->data));
-                    _alloc_node.deallocate(r, 1);
-                    r = nullptr;
-                } else if(r->left && !r->right) {
-                    // 待删除节点只有左子树, 返回左子树根节点, 删除目标节点
-                    tnode *rleft = r->left;
-                    rleft->parent = r->parent;
-                    _alloc_data.destroy(&(r->data));
-                    _alloc_node.deallocate(r, 1);
-                    r = rleft;
-                } else if(!r->left && r->right) {
-                    // 待删除节点只有右子树, 返回右子树根节点, 删除目标节点
-                    tnode *rright = r->right;
-                    rright->parent = r->parent;
-                    _alloc_data.destroy(&(r->data));
-                    _alloc_node.deallocate(r, 1);
-                    r = rright;
+                if(hint && (r != hint)) {
+                    _erase_helper(r->left, key, hint);
+                    _erase_helper(r->right, key, hint);
                 } else {
-                    // 待删除节点有左右子树,
-                    // 将右子树最小节点的值覆盖当前节点的值，然后递归删除右子树最小节点:
-                    tnode *right_min = r->right;
-                    while(right_min->left)
-                        right_min = right_min->left;
-                    _alloc_data.destroy(&(r->data));
-                    _alloc_data.construct(&(r->data), right_min->data);
-                    _erase_helper(r->right, right_min->data);
+                    if(!r->left && !r->right) {
+                        // 待删除节点为叶节点, 直接删除
+                        _alloc_data.destroy(&(r->data));
+                        _alloc_node.deallocate(r, 1);
+                        r = nullptr;
+                    } else if(r->left && !r->right) {
+                        // 待删除节点只有左子树, 返回左子树根节点, 删除目标节点
+                        tnode *rleft = r->left;
+                        rleft->parent = r->parent;
+                        _alloc_data.destroy(&(r->data));
+                        _alloc_node.deallocate(r, 1);
+                        r = rleft;
+                    } else if(!r->left && r->right) {
+                        // 待删除节点只有右子树, 返回右子树根节点, 删除目标节点
+                        tnode *rright = r->right;
+                        rright->parent = r->parent;
+                        _alloc_data.destroy(&(r->data));
+                        _alloc_node.deallocate(r, 1);
+                        r = rright;
+                    } else {
+                        // 待删除节点有左右子树,
+                        // 将右子树最小节点的值覆盖当前节点的值，然后递归删除右子树最小节点:
+                        tnode *right_min = r->right;
+                        while(right_min->left)
+                            right_min = right_min->left;
+                        _swap_node(r, right_min);
+                        r = right_min;
+                        _erase_helper(r->right, key, hint);
+                    }
                 }
             }
             // 调整平衡
@@ -380,9 +441,14 @@ namespace jr_std {
                                   flag);
         }
 
-        // 删除值与value相等的节点
+        // 删除值与value相等的节点,主要用于无重复键值
         void erase(const T& key) {
             _erase_helper(_root, key);
+        }
+
+        // 删除值与value相等且地址与给定地址相同的节点,主要用于重复键值
+        void erase(const T& key, tnode *hint) {
+            _erase_helper(_root, key, hint);
         }
 
         // 删除所有元素
@@ -395,9 +461,9 @@ namespace jr_std {
         // 先序遍历方便debug
         void _pre_order(tnode *n) {
             if(!n) return;
-            std::cout << "data = " << n->data.first << " " << n->data.second;
+            std::cout << "data = " << n->data << " ";
             if(n->parent)
-                std::cout << ", parent = " << n->parent->data.first;
+                std::cout << ", parent = " << n->parent->data;
             std::cout << std::endl;
             _pre_order(n->left);
             _pre_order(n->right);
