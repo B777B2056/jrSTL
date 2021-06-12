@@ -430,7 +430,8 @@ template<class T, class Allocator = jr_std::allocator<T> >
     }
 
     iterator erase_after(const_iterator position) {
-        if(position == cbegin())    return begin();
+        if(position == cbegin())
+            return begin();
         const_iterator addtwo = position;
         jr_std::advance(addtwo, 2);
         return erase_after(position, addtwo);

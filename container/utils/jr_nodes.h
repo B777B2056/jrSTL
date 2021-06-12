@@ -32,15 +32,6 @@ namespace jr_std {
               parent(nullptr)
         {}
     };
-
-    // 哈希表桶节点定义
-    template<class U>
-    struct _hashtable_node{
-         U data;
-         bool hasElem;
-         _hashtable_node *next;
-         _hashtable_node() : hasElem(false), next(nullptr) {}
-    };
 }
 
 #endif // JR_NODES_H

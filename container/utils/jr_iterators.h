@@ -385,46 +385,61 @@ namespace jr_std {
         typedef ptrdiff_t difference_type;
         typedef forward_iterator_tag iterator_category;
         // 自己特殊定义
-        typedef _hashtable_node<U> hnode;
         typedef _hashtable<U, Hash, KeyEqual, Allocator, isMulti> table;
-        size_type offset;
+        typedef _forward_list_iterator<U, const U&, const U*> hnode;
+        size_type index;
         const table *tab;
-        hnode *cur;
+        hnode cur;
+
         // construct iterator
-        _hashtable_iterator(hnode *n, const table *t, size_type o)
-            : offset(o), tab(t), cur(n)
+        _hashtable_iterator(table *t, size_type o, hnode n)
+            : tab(t), index(o), cur(n)
+        {}
+
+        _hashtable_iterator(const table *t, size_type o, hnode n)
+            : tab(t), index(o), cur(n)
         {}
 
         ~_hashtable_iterator() = default;
+
         // overloading ==, !=, *, ->, ++
-        bool operator==(const _hashtable_iterator& x) const { return cur == x.cur; }
+        bool operator==(const _hashtable_iterator& x) const {
+            return cur == x.cur;
+        }
 
-        bool operator!=(const _hashtable_iterator& x) const { return !(*this == x); }
+        bool operator!=(const _hashtable_iterator& x) const {
+            return !(*this == x);
+        }
 
-        reference operator*() const { return cur->data; }
+        reference operator*() const {
+            return const_cast<reference>(*cur);
+        }
 
-        pointer operator->() const { return &(operator*()); }
+        pointer operator->() const {
+            return &operator*();
+        }
+
         // front postion ++
         _hashtable_iterator& operator++() {
+            ++cur;
             // 桶内无内容，则跳至下一个桶
-            if(!cur->next) {
-                ++offset;
-                while(offset < tab->table.size() - 1) {
-                    if(tab->table[offset] && tab->table[offset]->hasElem){
-                        cur = tab->table[offset]->next;
+            if(cur == tab->table[index].cend()) {
+                ++index;
+                while(index < tab->table.size() - 1) {
+                    if(!tab->table[index].empty()){
+                        cur = tab->table[index].cbegin();
                         break;
                     }
-                    ++offset;
+                    ++index;
                 }
-                if(offset == tab->table.size() - 1) {
-                    cur = tab->table.back();
+                // 到达end迭代器
+                if(index == tab->table.size() - 1) {
+                    cur = tab->table[index].cend();
                 }
-            } else{
-                // 桶内还有内容，则跳至下一内容
-                cur = cur->next;
             }
             return *this;
         }
+
         // post position ++
         _hashtable_iterator operator++(int) {
             _hashtable_iterator tmp(*this);
@@ -433,4 +448,5 @@ namespace jr_std {
         }
     };
 }
+
 #endif // ITERATORS_H

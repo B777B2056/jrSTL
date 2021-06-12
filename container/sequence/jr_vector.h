@@ -481,6 +481,8 @@ namespace jr_std {
             iterator ret = pos;
             while(pos != end()) {
                 _alloc.destroy(&(*pos));
+                if((pos + 1) == end())
+                    break;
                 _alloc.construct(&(*pos), *(pos + 1));
                 ++pos;
             }
