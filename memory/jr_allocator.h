@@ -77,7 +77,7 @@ namespace jr_std {
          * ATTENTION: "&&" 's goal is to get the Rvalue reference for Args  .
          */
         template<class U, class... Args>
-        void construct(U *p, Args&&... args){
+        void construct(U *p, Args&&... args) const {
             new(static_cast<void *>(p)) U(static_cast<Args&&>(args)...);
         }
         /* free the instance's member's memory

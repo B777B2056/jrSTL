@@ -20,5 +20,8 @@ target_sources(${PROJECT_NAME} PUBLIC
                                       "test/hash_multiset.cpp"
                                       "test/hash_map_test.cpp"
                                       "test/hash_multimap_test.cpp"
+                                      "test/unique_ptr_test.cpp"
+                                      "test/shared_ptr_test.cpp"
+                                      "test/weak_ptr_test.cpp"
                                         )
 target_link_libraries(${PROJECT_NAME} gtest gtest_main)
