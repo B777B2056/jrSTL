@@ -2,6 +2,7 @@
 #define JR_SMART_PTR_H
 
 #include <cstddef>
+#include <cstdarg>
 #include <utility>
 #include <fstream>
 #include <type_traits>
@@ -10,41 +11,29 @@
 namespace jr_std {
 template< class T >
 struct default_delete {
-    private:
-        void check_type(std::true_type) {}
+    constexpr default_delete() noexcept = default;
 
-    public:
-        constexpr default_delete() noexcept = default;
+    template<class U>
+    default_delete( const default_delete<U>& ) noexcept {}
 
-        template<class U>
-        default_delete( const default_delete<U>& ) noexcept {
-            check_type(std::is_convertible<U, T>());
-        }
-
-        void operator()(T* ptr) const {
-            delete ptr;
-            ptr = nullptr;
-        }
+    void operator()(T* ptr) const {
+        delete ptr;
+        ptr = nullptr;
+    }
 };
 
 template< class T >
 struct default_delete<T[]> {
-    private:
-        void check_type(std::true_type) {}
+    constexpr default_delete() noexcept = default;
 
-    public:
-        constexpr default_delete() noexcept = default;
+    template<class U>
+    default_delete( const default_delete<U[]>& ) noexcept {}
 
-        template<class U>
-        default_delete( const default_delete<U[]>& ) noexcept {
-            check_type(std::is_convertible<U, T>());
-        }
-
-        template <class U>
-        void operator()(U* ptr) const {
-            delete []static_cast<T*>(ptr);
-            ptr = nullptr;
-        }
+    template <class U>
+    void operator()(U* ptr) const {
+        delete []static_cast<T*>(ptr);
+        ptr = nullptr;
+    }
 };
 
 /*==============unique ptr==============*/
@@ -121,7 +110,7 @@ public:
             _delete_fun = std::move(r._delete_fun);
             r._source = nullptr;
         }
-        return  *this;
+        return *this;
     }
 
     template< class U, class E >
@@ -468,24 +457,7 @@ struct _shared_deleter
     }
 };
 
-struct _shared_alloc_base {
-    virtual void* alloc_fun() = 0;
-    virtual ~_shared_alloc_base() {}
-};
-
-template< class Y, class Alloc >
-struct _shared_alloc
-        : public _shared_alloc_base {
-    Alloc _a;
-
-    _shared_alloc(Alloc a) : _a(a) {}
-
-    virtual void* alloc_fun() {
-        return _a.allocate(1);
-    }
-};
-
-// shared_ptr控制块(存放引用计数，删除器与分配器)
+// shared_ptr计数器
 struct _shared_count {
     int _strong_count, _weak_count;
 
@@ -495,130 +467,123 @@ struct _shared_count {
     {}
 
     // 获取强引用计数
-    inline int use_count() const {
+    int use_count() const {
         return _strong_count;
     }
 
     // 获取弱引用计数
-    inline int weak_count() const {
+    int weak_count() const {
         return _weak_count;
     }
 
     // 改变引用计数
-    inline void add_strong_cnt() {
+    void add_strong_cnt() {
         ++_strong_count;
     }
 
-    inline void add_weak_cnt() {
+    void add_weak_cnt() {
         ++_weak_count;
     }
 
-    inline void decrease_strong_cnt() {
+    void decrease_strong_cnt() {
         --_strong_count;
     }
 
-    inline void decrease_weak_cnt() {
+    void decrease_weak_cnt() {
         --_weak_count;
-    }
-
-    inline void set_strong_cnt_0() {
-        _strong_count = 0;
-    }
-
-    inline void set_weak_cnt_0() {
-        _weak_count = 0;
     }
 };
 
+// shared_ptr控制块(存放引用计数，删除器与分配器)
+struct _control_block_base {
+
+    virtual ~_control_block_base() {}
+
+    // 获取强引用计数
+    virtual int use_count() const = 0;
+
+    // 获取弱引用计数
+    virtual int weak_count() const = 0;
+
+    // 改变引用计数
+    virtual void add_strong_cnt() = 0;
+
+    virtual void add_weak_cnt() = 0;
+
+    virtual void decrease_strong_cnt() = 0;
+
+    virtual void decrease_weak_cnt() = 0;
+
+    // 删除器操作
+    virtual void delete_fun(void *ptr) = 0;
+};
+
 template< class T >
-struct _control_block {
+struct _control_block
+        : public _control_block_base {
+
         _shared_count *_cnt;
         _shared_deleter_base *_deleter;
-        _shared_alloc_base *_alloc;
 
         _control_block()
             : _cnt(new _shared_count()),
-              _deleter(new _shared_deleter<T, jr_std::default_delete<T> >(jr_std::default_delete<T>())),
-              _alloc(new _shared_alloc<T, jr_std::allocator<T> >(jr_std::allocator<T>()))
+              _deleter(new _shared_deleter<T, jr_std::default_delete<T> >(jr_std::default_delete<T>()))
         {}
 
         _control_block(_shared_count *cnt)
             : _cnt(cnt),
-              _deleter(new _shared_deleter<T, jr_std::default_delete<T> >(jr_std::default_delete<T>())),
-              _alloc(new _shared_alloc<T, jr_std::allocator<T> >(jr_std::allocator<T>()))
-        {}
-
-        template< class Y >
-        _control_block(const _control_block<Y>* r)
-            : _cnt(r->_cnt),
-              _deleter(new _shared_deleter<T, jr_std::default_delete<T> >(jr_std::default_delete<T>())),
-              _alloc(new _shared_alloc<T, jr_std::allocator<T> >(jr_std::allocator<T>()))
+              _deleter(new _shared_deleter<T, jr_std::default_delete<T> >(jr_std::default_delete<T>()))
         {}
 
         template< class Deleter>
         _control_block(Deleter d, int)
             : _cnt(new _shared_count()),
-              _deleter(new _shared_deleter< T, Deleter >(d)),
-              _alloc(new _shared_alloc<T, jr_std::allocator<T> >(jr_std::allocator<T>()))
+              _deleter(new _shared_deleter< T, Deleter >(d))
         {}
 
         template< class Deleter, class Alloc >
-        _control_block(Deleter d, Alloc alloc)
+        _control_block(Deleter d, Alloc)
             : _cnt(new _shared_count()),
-              _deleter(new _shared_deleter< T, Deleter >(d)),
-              _alloc(new _shared_alloc<T, Alloc>(alloc))
+              _deleter(new _shared_deleter< T, Deleter >(d))
         {}
 
         ~_control_block() {
-            delete _cnt;
-            delete _deleter;
-            delete _alloc;
+            if(_cnt)
+                delete _cnt;
+            if(_deleter)
+                delete _deleter;
         }
 
         // 获取强引用计数
-        inline int use_count() const {
+        virtual int use_count() const {
             return _cnt->use_count();
         }
 
         // 获取弱引用计数
-        inline int weak_count() const {
+        virtual int weak_count() const {
             return _cnt->use_count();
         }
 
         // 改变引用计数
-        inline void add_strong_cnt() {
+        virtual void add_strong_cnt() {
             _cnt->add_strong_cnt();
         }
 
-        inline void add_weak_cnt() {
+        virtual void add_weak_cnt() {
             _cnt->add_weak_cnt();
         }
 
-        inline void decrease_strong_cnt() {
+        virtual void decrease_strong_cnt() {
             _cnt->decrease_strong_cnt();
         }
 
-        inline void decrease_weak_cnt() {
+        virtual void decrease_weak_cnt() {
             _cnt->decrease_weak_cnt();
         }
 
-        inline void set_strong_cnt_0() {
-            _cnt->set_strong_cnt_0();
-        }
-
-        inline void set_weak_cnt_0() {
-            _cnt->set_weak_cnt_0();
-        }
-
         // 删除器操作
-        void delete_fun(void *ptr) {
+        virtual void delete_fun(void *ptr) {
             _deleter->delete_fun(ptr);
-        }
-
-        // 分配器操作
-        template< class... Args >
-        void alloc_fun(T *ptr, Args&&... args) {
-            ptr = static_cast<T*>(_alloc->alloc_fun());
         }
 };
 
@@ -640,7 +605,7 @@ class shared_ptr {
 
     private:
         element_type *_ptr;
-        _control_block<element_type> *_cb;
+        _control_block_base *_cb;
 
     public:
         constexpr shared_ptr() noexcept
@@ -692,7 +657,7 @@ class shared_ptr {
         shared_ptr( const shared_ptr<Y>& r,
                     element_type* ptr ) noexcept
             : _ptr(ptr),
-              _cb(new _control_block<element_type>(r._cb)) {
+              _cb(r._cb) {
             _cb->add_strong_cnt();
         }
 
@@ -705,7 +670,7 @@ class shared_ptr {
         template< class Y >
         shared_ptr( const shared_ptr<Y>& r ) noexcept
             : _ptr(static_cast<element_type*>(r.get())),
-              _cb(new _control_block<element_type>(r._cb)) {
+              _cb(r._cb) {
             _cb->add_strong_cnt();
         }
 
@@ -719,7 +684,7 @@ class shared_ptr {
         template< class Y >
         shared_ptr( shared_ptr<Y>&& r ) noexcept
             : _ptr(static_cast<element_type*>(r.get())),
-              _cb(new _control_block<element_type>(r._cb)) {
+              _cb(r._cb) {
             r._ptr = nullptr;
             r._cb = new _control_block<Y>();
         }
@@ -727,7 +692,7 @@ class shared_ptr {
         template< class Y >
         explicit shared_ptr( const jr_std::weak_ptr<Y>& r )
             : _ptr(static_cast<element_type*>(r._ptr)),
-              _cb(new _control_block<element_type>(r._cnt)) {
+              _cb(r._cb) {
             _cb->add_strong_cnt();
         }
 
@@ -745,10 +710,6 @@ class shared_ptr {
                     if(get())
                         _cb->delete_fun(get());
                     _ptr = nullptr;
-//                    if(!_cb->weak_count()) {
-//                        delete _cb;
-//                        _cb = nullptr;
-//                    }
                 }
             }
         }
@@ -776,7 +737,7 @@ class shared_ptr {
                     if(get())
                         _cb->delete_fun(get());
                 }
-                _cb = new _control_block<element_type>(r._cb);
+                _cb = r._cb;
                 _cb->add_strong_cnt();
             }
             return *this;
@@ -806,7 +767,7 @@ class shared_ptr {
                     if(get())
                         _cb->delete_fun(get());
                 }
-                _cb = new _control_block<element_type>(r._cb);
+                _cb = r._cb;
                 r._ptr = nullptr;
                 r._cb = new _control_block<Y>();
             }
@@ -1093,114 +1054,119 @@ public:
     typedef T element_type;
 
 private:
-    _shared_count *_cnt;
+    _control_block_base *_cb;
     element_type *_ptr;
 
 public:
     constexpr weak_ptr() noexcept
-        : _cnt(nullptr),
+        : _cb(nullptr),
           _ptr(nullptr)
     {}
 
     weak_ptr( const weak_ptr& r ) noexcept
-        : _cnt(r._cnt),
+        : _cb(r._cb),
           _ptr(r._ptr) {
-        if(_cnt)
-            _cnt->add_weak_cnt();
+        if(_cb)
+            _cb->add_weak_cnt();
     }
 
     template< class Y >
     weak_ptr( const weak_ptr<Y>& r ) noexcept
-        : _cnt(r._cnt),
+        : _cb(r._cb),
           _ptr(static_cast<element_type*>(r._ptr)) {
-        if(_cnt)
-            _cnt->add_weak_cnt();
+        if(_cb)
+            _cb->add_weak_cnt();
     }
 
     template< class Y >
     weak_ptr( const shared_ptr<Y>& r ) noexcept
-        : _cnt(r._cb->_cnt),
+        : _cb(r._cb),
           _ptr(r._ptr) {
-        if(_cnt)
-            _cnt->add_weak_cnt();
+        if(_cb)
+            _cb->add_weak_cnt();
     }
 
     weak_ptr( weak_ptr&& r ) noexcept
-        : _cnt(r._cnt),
+        : _cb(r._cb),
           _ptr(r._ptr) {
-        r._cnt = nullptr;
+        r._cb = nullptr;
         r._ptr = nullptr;
     }
 
     template< class Y >
     weak_ptr( weak_ptr<Y>&& r ) noexcept
-        : _cnt(r._cnt),
+        : _cb(r._cb),
           _ptr(static_cast<element_type*>(r._ptr)) {
-        r._cnt = nullptr;
+        r._cb = nullptr;
         r._ptr = nullptr;
     }
 
-    ~weak_ptr() = default;
+    ~weak_ptr() {
+        if(_cb && !_cb->weak_count()) {
+            delete _cb;
+            _cb = nullptr;
+        }
+    }
 
     weak_ptr& operator=( const weak_ptr& r ) noexcept {
         if(this != &r) {
-            _cnt = r._cnt;
+            _cb = r._cb;
             _ptr = r._ptr;
-            if(_cnt)
-                _cnt->add_weak_cnt();
+            if(_cb)
+                _cb->add_weak_cnt();
         }
         return *this;
     }
 
     template< class Y >
     weak_ptr& operator=( const weak_ptr<Y>& r ) noexcept {
-        _cnt = r._cnt;
+        _cb = r._cb;
         _ptr = static_cast<element_type*>(r._ptr);
-        if(_cnt)
-            _cnt->add_weak_cnt();
+        if(_cb)
+            _cb->add_weak_cnt();
         return *this;
     }
 
     template< class Y >
     weak_ptr& operator=( const shared_ptr<Y>& r ) noexcept {
-        _cnt = r._cb->_cnt;
+        _cb = r._cb;
         _ptr = r._ptr;
-        if(_cnt)
-            _cnt->add_weak_cnt();
+        if(_cb)
+            _cb->add_weak_cnt();
         return *this;
     }
 
     template< class Y >
     weak_ptr& operator=( weak_ptr<Y>&& r ) noexcept {
-        _cnt = r._cnt;
+        _cb = r._cb;
         _ptr = static_cast<element_type*>(r._ptr);
-        r._cnt = nullptr;
+        r._cb = nullptr;
         r._ptr = nullptr;
         return *this;
     }
 
     weak_ptr& operator=( weak_ptr&& r ) noexcept {
         if(this != &r) {
-            _cnt = r._cnt;
+            _cb = r._cb;
             _ptr = r._ptr;
-            r._cnt = nullptr;
+            r._cb = nullptr;
             r._ptr = nullptr;
         }
         return *this;
     }
 
     void reset() noexcept {
-        if(_cnt)
-            _cnt->decrease_weak_cnt();
-        _cnt = nullptr;
+        if(_cb)
+            _cb->decrease_weak_cnt();
+        _cb = nullptr;
         _ptr = nullptr;
     }
 
     void swap( weak_ptr& r ) noexcept {
         {
-            int *wt = _cnt;
-            _cnt = r._cnt;
-            r._cnt = wt;
+            int *wt = _cb;
+            _cb = r._cb;
+            r._cb = wt;
         }
 
         {
@@ -1211,7 +1177,7 @@ public:
     }
 
     long use_count() const noexcept {
-        return _cnt->use_count();
+        return _cb->use_count();
     }
 
     bool expired() const noexcept {
@@ -1225,12 +1191,12 @@ public:
 
     template< class Y >
     bool owner_before( const weak_ptr<Y>& other) const noexcept {
-            return _cnt < other._cnt;
+            return _cb < other._cb;
     }
 
     template< class Y >
     bool owner_before( const shared_ptr<Y>& other) const noexcept {
-        return _cnt < other._cb->_cnt;
+        return _cb < other._cb->_cb;
     }
 };
 
