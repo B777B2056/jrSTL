@@ -6,8 +6,8 @@
 #include "../../memory/jr_allocator.h"
 #include "../utils/jr_iterators.h"
 
-namespace jr_std {
-template<class T, class Allocator = jr_std::allocator<T> >
+namespace panzer {
+template<class T, class Allocator = panzer::allocator<T> >
   class forward_list {
   public:
     // 类型
@@ -405,7 +405,7 @@ template<class T, class Allocator = jr_std::allocator<T> >
             ++pos;
         }
         iterator it = before_begin();
-        jr_std::advance(it, jr_std::distance(cbefore_begin(), pos));
+        panzer::advance(it, panzer::distance(cbefore_begin(), pos));
         return it;
     }
 
@@ -433,7 +433,7 @@ template<class T, class Allocator = jr_std::allocator<T> >
         if(position == cbegin())
             return begin();
         const_iterator addtwo = position;
-        jr_std::advance(addtwo, 2);
+        panzer::advance(addtwo, 2);
         return erase_after(position, addtwo);
     }
 
@@ -682,16 +682,16 @@ template<class T, class Allocator = jr_std::allocator<T> >
 
   // 交换
   template< class T, class Alloc >
-  void swap( jr_std::forward_list<T,Alloc>& lhs,
-             jr_std::forward_list<T,Alloc>& rhs ) {
+  void swap( panzer::forward_list<T,Alloc>& lhs,
+             panzer::forward_list<T,Alloc>& rhs ) {
       lhs.swap(rhs);
   }
 
   // 比较
   template< class T, class Alloc >
-  bool operator==( const jr_std::forward_list<T,Alloc>& lhs,
-                   const jr_std::forward_list<T,Alloc>& rhs ) {
-      typename jr_std::forward_list<T,Alloc>::const_iterator lit, rit;
+  bool operator==( const panzer::forward_list<T,Alloc>& lhs,
+                   const panzer::forward_list<T,Alloc>& rhs ) {
+      typename panzer::forward_list<T,Alloc>::const_iterator lit, rit;
       lit = lhs.begin();
       rit = rhs.begin();
       while(lit != lhs.end()) {
@@ -704,14 +704,14 @@ template<class T, class Allocator = jr_std::allocator<T> >
   }
 
   template< class T, class Alloc >
-  bool operator!=( const jr_std::forward_list<T,Alloc>& lhs,
-                   const jr_std::forward_list<T,Alloc>& rhs ) {
+  bool operator!=( const panzer::forward_list<T,Alloc>& lhs,
+                   const panzer::forward_list<T,Alloc>& rhs ) {
       return !(lhs == rhs);
   }
 
   template< class T, class Alloc >
-  bool operator<( const jr_std::forward_list<T,Alloc>& lhs,
-                  const jr_std::forward_list<T,Alloc>& rhs ) {
+  bool operator<( const panzer::forward_list<T,Alloc>& lhs,
+                  const panzer::forward_list<T,Alloc>& rhs ) {
       auto lit = lhs.begin();
       auto rit = rhs.begin();
       while(lit != lhs.end()) {
@@ -724,8 +724,8 @@ template<class T, class Allocator = jr_std::allocator<T> >
   }
 
   template< class T, class Alloc >
-  bool operator>( const jr_std::forward_list<T,Alloc>& lhs,
-                  const jr_std::forward_list<T,Alloc>& rhs ) {
+  bool operator>( const panzer::forward_list<T,Alloc>& lhs,
+                  const panzer::forward_list<T,Alloc>& rhs ) {
       auto lit = lhs.begin();
       auto rit = rhs.begin();
       while(rit != rhs.end()) {
@@ -738,14 +738,14 @@ template<class T, class Allocator = jr_std::allocator<T> >
   }
 
   template< class T, class Alloc >
-  bool operator<=( const jr_std::forward_list<T,Alloc>& lhs,
-                   const jr_std::forward_list<T,Alloc>& rhs ) {
+  bool operator<=( const panzer::forward_list<T,Alloc>& lhs,
+                   const panzer::forward_list<T,Alloc>& rhs ) {
       return !(lhs > rhs);
   }
 
   template< class T, class Alloc >
-  bool operator>=( const jr_std::forward_list<T,Alloc>& lhs,
-                   const jr_std::forward_list<T,Alloc>& rhs ) {
+  bool operator>=( const panzer::forward_list<T,Alloc>& lhs,
+                   const panzer::forward_list<T,Alloc>& rhs ) {
       return !(lhs < rhs);
   }
 }

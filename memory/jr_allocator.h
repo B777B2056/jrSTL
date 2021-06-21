@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <climits>
 
-namespace jr_std {
+namespace panzer {
     template<class T>
     class allocator{
     public:
@@ -78,7 +78,7 @@ namespace jr_std {
          */
         template<class U, class... Args>
         void construct(U *p, Args&&... args) const {
-            new(static_cast<void *>(p)) U(static_cast<Args&&>(args)...);
+            new(static_cast<void *>(p)) U(std::forward<Args>(args)...);
         }
         /* free the instance's member's memory
          * @param: p the pointer of instance

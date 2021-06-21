@@ -7,7 +7,7 @@
 #include "../../container/utils/jr_iterators.h"
 #include "../../container/utils/jr_tree.h"
 
-namespace jr_std {
+namespace panzer {
     template<class Key, class Compare, class Allocator, bool isMultiSet >
     class _set_base {
         public:
@@ -25,8 +25,8 @@ namespace jr_std {
             typedef ptrdiff_t difference_type;
             typedef _balance_bst_iterator<Key, const Key&, const Key*> iterator;
             typedef _balance_bst_iterator<Key, const Key&, const Key*> const_iterator;
-            typedef jr_std::reverse_iterator<const_iterator> const_reverse_iterator;
-            typedef jr_std::reverse_iterator<iterator> reverse_iterator;
+            typedef panzer::reverse_iterator<const_iterator> const_reverse_iterator;
+            typedef panzer::reverse_iterator<iterator> reverse_iterator;
 
         protected:
             typedef _tree_node<Key> tnode;
@@ -261,14 +261,14 @@ namespace jr_std {
 
         public:
             iterator erase(const_iterator position) {
-                difference_type dis = jr_std::distance(cbegin(), position);
+                difference_type dis = panzer::distance(cbegin(), position);
                 if(isMultiSet)
                     t.erase(*position, position._node);
                 else
                     t.erase(*position);
                 --_size;
                 iterator result = begin();
-                jr_std::advance(result, dis);
+                panzer::advance(result, dis);
                 return result;
             }
 
@@ -284,11 +284,11 @@ namespace jr_std {
             }
 
             iterator erase(const_iterator first, const_iterator last) {
-                difference_type dis = jr_std::distance(cbegin(), first);
+                difference_type dis = panzer::distance(cbegin(), first);
                 while(first != last)
                     first = erase(first);
                 iterator ret = begin();
-                jr_std::advance(ret, dis);
+                panzer::advance(ret, dis);
                 return ret;
             }
 
@@ -399,8 +399,8 @@ namespace jr_std {
     };
 
 
-    template<class Key, class Compare = jr_std::less<Key>,
-             class Allocator = jr_std::allocator<Key> >
+    template<class Key, class Compare = panzer::less<Key>,
+             class Allocator = panzer::allocator<Key> >
     class set : public _set_base<Key, Compare, Allocator, false> {
         private:
             typedef _set_base<Key, Compare, Allocator, false> _base;
@@ -454,8 +454,8 @@ namespace jr_std {
 
     };
 
-    template<class Key, class Compare = jr_std::less<Key>,
-             class Allocator = jr_std::allocator<Key>>
+    template<class Key, class Compare = panzer::less<Key>,
+             class Allocator = panzer::allocator<Key>>
     class multiset : public _set_base<Key, Compare, Allocator, true> {
         private:
             typedef _set_base<Key, Compare, Allocator, true> _base;

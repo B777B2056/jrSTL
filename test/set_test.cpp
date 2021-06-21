@@ -16,14 +16,14 @@ TEST(testCase,set_iterator_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 1);
-    jr_std::deque<int> src;
+    panzer::deque<int> src;
     for(size_t i = 0; i < cnt; i++) {
         int t = var;
         src.push_back(t);
         --var;
     }
     // 迭代器范围构造函数
-    jr_std::set<int> des(src.begin(), src.end());
+    panzer::set<int> des(src.begin(), src.end());
     std::sort(src.begin(), src.end());
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
@@ -37,7 +37,7 @@ TEST(testCase,set_copy_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(50, cnt, var);
-    jr_std::set<int> src;
+    panzer::set<int> src;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         src.insert(t);
@@ -45,7 +45,7 @@ TEST(testCase,set_copy_ctor_test) {
         --var;
     }
     // 拷贝构造函数
-    jr_std::set<int> des(src);
+    panzer::set<int> des(src);
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     auto dit = des.begin();
@@ -58,7 +58,7 @@ TEST(testCase,set_move_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::set<int> src;
+    panzer::set<int> src;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         src.insert(t);
@@ -66,14 +66,14 @@ TEST(testCase,set_move_ctor_test) {
         --var;
     }
     // 移动构造函数
-    jr_std::set<int> des(std::move(src));
+    panzer::set<int> des(std::move(src));
     ASSERT_EQ(src.empty(), true);
 }
 
 // 初始化列表构造函数测试
 TEST(testCase,set_initializer_list_ctor_test) {
     std::set<int> src{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
-    jr_std::set<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    panzer::set<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     auto dit = des.begin();
@@ -86,8 +86,8 @@ TEST(testCase, set_operator_copy_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::set<int> src{var, var, var};
-    jr_std::set<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    panzer::set<int> src{var, var, var};
+    panzer::set<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     des = src;
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
@@ -101,8 +101,8 @@ TEST(testCase, set_operator_move_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::set<int> src{var, var, var};
-    jr_std::set<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    panzer::set<int> src{var, var, var};
+    panzer::set<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     des = std::move(src);
     ASSERT_EQ(src.empty(), true);
 }
@@ -112,7 +112,7 @@ TEST(testCase, set_clear_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::set<int> des;
+    panzer::set<int> des;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         des.insert(t);
@@ -126,7 +126,7 @@ TEST(testCase, set_clear_test) {
 // insert测试
 TEST(testCase, set_insert_test) {
     std::set<int> src;
-    jr_std::set<int> des;
+    panzer::set<int> des;
     // 拷贝insert
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         auto s = src.insert(n);
@@ -168,7 +168,7 @@ TEST(testCase, set_insert_test) {
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
     // 迭代器insert
-    jr_std::set<int> tmp{1,2,3,4,5,1,2,3,4,5};
+    panzer::set<int> tmp{1,2,3,4,5,1,2,3,4,5};
     std::set<int> tmp0{1,2,3,4,5,1,2,3,4,5};
     src.insert(tmp0.begin(), tmp0.end());
     des.insert(tmp.begin(), tmp.end());
@@ -182,12 +182,12 @@ TEST(testCase, set_insert_test) {
 // insert hint测试
 TEST(testCase, set_insert_hint_test) {
     std::set<int> src{1,2,3,4,8,9};
-    jr_std::set<int> des{1,2,3,4,8,9};
+    panzer::set<int> des{1,2,3,4,8,9};
     // insert hint
     auto s_pos = src.begin();
     auto d_pos = des.begin();
     std::advance(s_pos, 4);
-    jr_std::advance(d_pos, 4);
+    panzer::advance(d_pos, 4);
     auto s = src.insert(s_pos, 5);
     auto d = des.insert(d_pos, 5);
     if(s == src.end())
@@ -204,7 +204,7 @@ TEST(testCase, set_insert_hint_test) {
 // emplace测试
 TEST(testCase, set_emplace_test) {
     std::set<int> src;
-    jr_std::set<int> des;
+    panzer::set<int> des;
     // emplace
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         auto s = src.emplace(n);
@@ -226,12 +226,12 @@ TEST(testCase, set_emplace_test) {
 // emplace hint测试
 TEST(testCase, set_emplace_hint_test) {
     std::set<int> src{1,2,3,4,8,9};
-    jr_std::set<int> des{1,2,3,4,8,9};
+    panzer::set<int> des{1,2,3,4,8,9};
     // insert hint
     auto s_pos = src.begin();
     auto d_pos = des.begin();
     std::advance(s_pos, 4);
-    jr_std::advance(d_pos, 4);
+    panzer::advance(d_pos, 4);
     auto s = src.emplace_hint(s_pos, 5);
     auto d = des.emplace_hint(d_pos, 5);
     if(s == src.end())
@@ -250,7 +250,7 @@ TEST(testCase, set_erase_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 20);
-    jr_std::set<int> des;
+    panzer::set<int> des;
     std::set<int> src;
     for(size_t i = 0; i < cnt; i++) {
         src.insert(var);
@@ -263,7 +263,7 @@ TEST(testCase, set_erase_test) {
     auto i = src.begin();
     auto j = des.cbegin();
     std::advance(i, 2);
-    jr_std::advance(j, 2);
+    panzer::advance(j, 2);
     EXPECT_EQ(*(src.erase(i)),
               *(des.erase(j)));
     ASSERT_EQ(src.size(), des.size());
@@ -275,11 +275,11 @@ TEST(testCase, set_erase_test) {
     i = src.begin();
     j = des.cbegin();
     std::advance(i, 2);
-    jr_std::advance(j, 2);
+    panzer::advance(j, 2);
     auto i0 = src.begin();
     auto j0 = des.cbegin();
     std::advance(i0, 6);
-    jr_std::advance(j0, 6);
+    panzer::advance(j0, 6);
     EXPECT_EQ(*(src.erase(i, i0)),
               *(des.erase(j, j0)));
     ASSERT_EQ(src.size(), des.size());
@@ -291,7 +291,7 @@ TEST(testCase, set_erase_test) {
     i0 = src.begin();
     j0 = des.cbegin();
     std::advance(i0, 6);
-    jr_std::advance(j0, 6);
+    panzer::advance(j0, 6);
     EXPECT_EQ(*(src.erase(src.begin(), i0)),
               *(des.erase(des.cbegin(), j0)));
     ASSERT_EQ(src.size(), des.size());
@@ -302,7 +302,7 @@ TEST(testCase, set_erase_test) {
     i = src.begin();
     j = des.cbegin();
     std::advance(i, 2);
-    jr_std::advance(j, 2);
+    panzer::advance(j, 2);
     src.erase(i, src.end());
     des.erase(j, des.cend());
     ASSERT_EQ(src.size(), des.size());
@@ -321,8 +321,8 @@ TEST(testCase, set_swap_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::set<int> src;
-    jr_std::set<int> des;
+    panzer::set<int> src;
+    panzer::set<int> des;
     for(size_t i = 0; i < cnt; i++) {
         src.insert(var + 1);
         des.insert(var - 1);
@@ -330,7 +330,7 @@ TEST(testCase, set_swap_test) {
         des.insert(var - 1);
         --var;
     }
-    jr_std::set<int> tmp = src;
+    panzer::set<int> tmp = src;
     src.swap(des);
     ASSERT_EQ(tmp.size(), des.size());
     auto it = tmp.begin();
@@ -351,7 +351,7 @@ TEST(testCase, set_reverse_index_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::set<int> src;
-    jr_std::set<int> des;
+    panzer::set<int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
@@ -374,7 +374,7 @@ TEST(testCase, set_iterator_sub_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 20);
     std::set<int> src;
-    jr_std::set<int> des;
+    panzer::set<int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
@@ -385,9 +385,9 @@ TEST(testCase, set_iterator_sub_test) {
     auto it = src.begin();
     auto rit = des.begin();
     std::advance(it, 12);
-    jr_std::advance(rit, 12);
+    panzer::advance(rit, 12);
     std::advance(it, -5);
-    jr_std::advance(rit, -5);
+    panzer::advance(rit, -5);
     EXPECT_EQ(*it, *rit);
 }
 
@@ -397,7 +397,7 @@ TEST(testCase, set_count) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::set<int> src;
-    jr_std::set<int> des;
+    panzer::set<int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
@@ -417,7 +417,7 @@ TEST(testCase, set_find) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::set<int> src;
-    jr_std::set<int> des;
+    panzer::set<int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
@@ -440,7 +440,7 @@ TEST(testCase, set_range) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::set<int> src;
-    jr_std::set<int> des;
+    panzer::set<int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
@@ -451,7 +451,7 @@ TEST(testCase, set_range) {
     size_t v;
     get_random_size_var(MAX_SIZE, v, var);
     auto p1 = src.equal_range(static_cast<int>(v));
-    std::pair<jr_std::set<int>::iterator, jr_std::set<int>::iterator>
+    std::pair<panzer::set<int>::iterator, panzer::set<int>::iterator>
     p2 = des.equal_range(static_cast<int>(v));
     if(p1.first == src.end())
         EXPECT_EQ(p2.first == des.end(), true);

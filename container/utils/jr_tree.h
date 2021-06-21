@@ -5,10 +5,7 @@
 #include "../../memory/jr_allocator.h"
 #include "jr_nodes.h"
 
-#define _DEBUG
-#include <iostream>
-
-namespace jr_std {
+namespace panzer {
     // 平衡二叉搜索树（AVL树）
     template<class T,
              bool isMulti,
@@ -457,24 +454,6 @@ namespace jr_std {
             _root = nullptr;
             _header->left = _root;
         }
-#ifdef _DEBUG
-        // 先序遍历方便debug
-        void _pre_order(tnode *n) {
-            if(!n) return;
-            std::cout << "data = " << n->data << " ";
-            if(n->parent)
-                std::cout << ", parent = " << n->parent->data;
-            std::cout << std::endl;
-            _pre_order(n->left);
-            _pre_order(n->right);
-        }
-
-        void print_tree() {
-            std::cout << "Tree:\n";
-            _pre_order(_root);
-            std::cout << std::endl;
-        }
-#endif
     };
 }
 

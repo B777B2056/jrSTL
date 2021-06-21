@@ -7,7 +7,7 @@
 #include "../../iterator/jr_iterator.h"
 #include "../../memory/jr_allocator.h"
 
-namespace jr_std {
+namespace panzer {
     template<class U, class Ref, class Ptr>
     struct _forward_list_iterator {
         typedef U value_type;

@@ -2,8 +2,9 @@
 #define JR_ITERATOR_H
 
 #include <cstddef>
+#include <utility>
 
-namespace jr_std {
+namespace panzer {
     /*Tags of different type iterator_category, for function overload*/
     struct input_iterator_tag {};
     struct output_iterator_tag {};
@@ -59,7 +60,7 @@ namespace jr_std {
     /*Reverse Iterator Adapter*/
     template< class Iter >
     class reverse_iterator
-            : public iterator< typename jr_std::iterator_traits<Iter>::iterator_category,
+            : public iterator< typename panzer::iterator_traits<Iter>::iterator_category,
                                typename iterator_traits<Iter>::value_type,
                                typename iterator_traits<Iter>::difference_type,
                                typename iterator_traits<Iter>::pointer,
@@ -69,7 +70,7 @@ namespace jr_std {
 
       private:
         Iter current;
-        typedef iterator< typename jr_std::iterator_traits<Iter>::iterator_category,
+        typedef iterator< typename panzer::iterator_traits<Iter>::iterator_category,
                           typename iterator_traits<Iter>::value_type,
                           typename iterator_traits<Iter>::difference_type,
                           typename iterator_traits<Iter>::pointer,
@@ -413,7 +414,7 @@ namespace jr_std {
             }
 
             back_insert_iterator<Container>& operator=( typename Container::value_type&& value ) {
-                cont->push_back(static_cast<typename Container::value_type&&>(value));
+                cont->push_back(std::move(value));
                 return *this;
             }
 

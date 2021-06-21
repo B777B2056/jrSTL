@@ -6,7 +6,7 @@
 #include <bits/invoke.h>
 #include <type_traits>
 
-namespace jr_std {
+namespace panzer {
     /*函数包装器*/
     // 存储任意类型函数对象
     template< class >

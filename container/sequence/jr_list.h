@@ -7,7 +7,7 @@
 #include "../../memory/jr_allocator.h"
 #include "../utils/jr_iterators.h"
 
-namespace jr_std {
+namespace panzer {
     template<class T, class Allocator = allocator<T> >
     class list {
     public:
@@ -22,8 +22,8 @@ namespace jr_std {
         typedef Allocator allocator_type;
         typedef _list_iterator<T, T&, T*> iterator;
         typedef _list_iterator<T, const T&, const T*> const_iterator;
-        typedef jr_std::reverse_iterator<const_iterator> const_reverse_iterator;
-        typedef jr_std::reverse_iterator<iterator> reverse_iterator;
+        typedef panzer::reverse_iterator<const_iterator> const_reverse_iterator;
+        typedef panzer::reverse_iterator<iterator> reverse_iterator;
 
     private:
         Allocator _alloc;
@@ -163,10 +163,10 @@ namespace jr_std {
         }
 
         iterator _insert(const_iterator position, size_t n, const T& x, std::true_type) {
-            difference_type dis = jr_std::distance(cbegin(), position);
+            difference_type dis = panzer::distance(cbegin(), position);
             if(!n) {
                 iterator it = begin();
-                jr_std::advance(it, dis);
+                panzer::advance(it, dis);
                 return it;
             }
             _size += n;
@@ -181,16 +181,16 @@ namespace jr_std {
                 n2 = n2->next;
             }
             iterator it = begin();
-            jr_std::advance(it, dis);
+            panzer::advance(it, dis);
             return it;
         }
 
         template<class InputIt>
         iterator _insert(const_iterator position, InputIt first, InputIt last, std::false_type) {
-            difference_type dis = jr_std::distance(cbegin(), position);
+            difference_type dis = panzer::distance(cbegin(), position);
             if(first == last) {
                 iterator it = begin();
-                jr_std::advance(it, dis);
+                panzer::advance(it, dis);
                 return it;
             }
             difference_type n = distance(first, last);
@@ -207,7 +207,7 @@ namespace jr_std {
                 ++first;
             }
             iterator it = begin();
-            jr_std::advance(it, dis);
+            panzer::advance(it, dis);
             return it;
         }
 
@@ -547,7 +547,7 @@ namespace jr_std {
 
         template<class... Args>
         iterator emplace(const_iterator position, Args&&... args) {
-            difference_type dis = jr_std::distance(cbegin(), position);
+            difference_type dis = panzer::distance(cbegin(), position);
             _node<T> *n1 = position._cur_node;
             _node<T> *n2 = position._cur_node->prev;
             _node<T> *n = _create_node();
@@ -559,7 +559,7 @@ namespace jr_std {
             --position;
             ++_size;
             iterator it = begin();
-            jr_std::advance(it, dis);
+            panzer::advance(it, dis);
             return it;
         }
 
@@ -572,7 +572,7 @@ namespace jr_std {
         }
 
         iterator insert(const_iterator position, T&& x) {
-            difference_type dis = jr_std::distance(cbegin(), position);
+            difference_type dis = panzer::distance(cbegin(), position);
             _node<T> *n1 = position._cur_node;
             _node<T> *n2 = position._cur_node->prev;
             _node<T> *node = _create_node(static_cast<T&&>(x));
@@ -583,16 +583,16 @@ namespace jr_std {
             --position;
             ++_size;
             iterator it = begin();
-            jr_std::advance(it, dis);
+            panzer::advance(it, dis);
             return it;
         }
 
         iterator insert( const_iterator pos, std::initializer_list<T> ilist ) {
-            difference_type dis = jr_std::distance(cbegin(), pos);
+            difference_type dis = panzer::distance(cbegin(), pos);
             for(auto it = ilist.begin(); it != ilist.end(); ++it)
                 insert(pos, *it);
             iterator it = begin();
-            jr_std::advance(it, dis);
+            panzer::advance(it, dis);
             return it;
         }
 
@@ -861,13 +861,13 @@ namespace jr_std {
     }
 
     template< class T, class Alloc >
-    bool operator!=( const jr_std::list<T,Alloc>& lhs,
-                     const jr_std::list<T,Alloc>& rhs )
+    bool operator!=( const panzer::list<T,Alloc>& lhs,
+                     const panzer::list<T,Alloc>& rhs )
     { return !(lhs == rhs); }
 
     template< class T, class Alloc >
-    bool operator<( const jr_std::list<T,Alloc>& lhs,
-                    const jr_std::list<T,Alloc>& rhs ) {
+    bool operator<( const panzer::list<T,Alloc>& lhs,
+                    const panzer::list<T,Alloc>& rhs ) {
         size_t lsz = lhs.size(), rsz = rhs.size();
         if(lsz < rsz)
             return true;
@@ -885,8 +885,8 @@ namespace jr_std {
     }
 
     template< class T, class Alloc >
-    bool operator>( const jr_std::list<T,Alloc>& lhs,
-                    const jr_std::list<T,Alloc>& rhs ) {
+    bool operator>( const panzer::list<T,Alloc>& lhs,
+                    const panzer::list<T,Alloc>& rhs ) {
         size_t lsz = lhs.size(), rsz = rhs.size();
         if(lsz < rsz)
             return false;
@@ -904,13 +904,13 @@ namespace jr_std {
     }
 
     template< class T, class Alloc >
-    bool operator<=( const jr_std::list<T,Alloc>& lhs,
-                     const jr_std::list<T,Alloc>& rhs )
+    bool operator<=( const panzer::list<T,Alloc>& lhs,
+                     const panzer::list<T,Alloc>& rhs )
     { return !(lhs > rhs); }
 
     template< class T, class Alloc >
-    bool operator>=( const jr_std::list<T,Alloc>& lhs,
-                     const jr_std::list<T,Alloc>& rhs )
+    bool operator>=( const panzer::list<T,Alloc>& lhs,
+                     const panzer::list<T,Alloc>& rhs )
     { return !(lhs < rhs); }
 }
 

@@ -6,7 +6,7 @@
 #include "../../memory/jr_allocator.h"
 #include "../utils/jr_iterators.h"
 
-namespace jr_std {
+namespace panzer {
     template<class T, class Allocator = allocator<T>, size_t BufSize = 8>
     class deque {
         public:
@@ -21,8 +21,8 @@ namespace jr_std {
             typedef const T* const_pointer;
             typedef _deque_iterator<T, T&, T*, BufSize> iterator;
             typedef _deque_iterator<T, const T&, const T*, BufSize> const_iterator;
-            typedef jr_std::reverse_iterator<const_iterator> const_reverse_iterator;
-            typedef jr_std::reverse_iterator<iterator> reverse_iterator;
+            typedef panzer::reverse_iterator<const_iterator> const_reverse_iterator;
+            typedef panzer::reverse_iterator<iterator> reverse_iterator;
 
         protected:
             // 管理不同连续存储区的map定义
@@ -136,10 +136,10 @@ namespace jr_std {
                              const T& value, std::true_type) {
                 size_type osz = size();
                 if(osz + count > BufSize * _map_size) {
-                    difference_type pdis = jr_std::distance(cbegin(), pos);
+                    difference_type pdis = panzer::distance(cbegin(), pos);
                     _move_map(osz + count);
                     pos = cbegin();
-                    jr_std::advance(pos, pdis);
+                    panzer::advance(pos, pdis);
                 }
                 iterator i_pos = _move_elements_forward_n(pos,
                                                           static_cast<difference_type>(count));
@@ -531,14 +531,14 @@ namespace jr_std {
     };
 
     template< class T, class Alloc >
-    void swap( jr_std::deque<T,Alloc>& lhs,
-               jr_std::deque<T,Alloc>& rhs ) {
+    void swap( panzer::deque<T,Alloc>& lhs,
+               panzer::deque<T,Alloc>& rhs ) {
         lhs.swap(rhs);
     }
 
     template< class T, class Alloc >
-    bool operator==( const jr_std::deque<T,Alloc>& lhs,
-                     const jr_std::deque<T,Alloc>& rhs ) {
+    bool operator==( const panzer::deque<T,Alloc>& lhs,
+                     const panzer::deque<T,Alloc>& rhs ) {
         size_t lsz = lhs.size(), rsz = rhs.size();
         if(lsz != rsz)
             return false;
@@ -550,14 +550,14 @@ namespace jr_std {
     }
 
     template< class T, class Alloc >
-    bool operator!=( const jr_std::deque<T,Alloc>& lhs,
-                     const jr_std::deque<T,Alloc>& rhs ) {
+    bool operator!=( const panzer::deque<T,Alloc>& lhs,
+                     const panzer::deque<T,Alloc>& rhs ) {
         return !(lhs == rhs);
     }
 
     template< class T, class Alloc >
-    bool operator<( const jr_std::deque<T,Alloc>& lhs,
-                    const jr_std::deque<T,Alloc>& rhs ) {
+    bool operator<( const panzer::deque<T,Alloc>& lhs,
+                    const panzer::deque<T,Alloc>& rhs ) {
         size_t lsz = lhs.size(), rsz = rhs.size();
         if(lsz < rsz)
             return true;
@@ -571,8 +571,8 @@ namespace jr_std {
     }
 
     template< class T, class Alloc >
-    bool operator>( const jr_std::deque<T,Alloc>& lhs,
-                    const jr_std::deque<T,Alloc>& rhs ) {
+    bool operator>( const panzer::deque<T,Alloc>& lhs,
+                    const panzer::deque<T,Alloc>& rhs ) {
         size_t lsz = lhs.size(), rsz = rhs.size();
         if(lsz < rsz)
             return false;
@@ -586,14 +586,14 @@ namespace jr_std {
     }
 
     template< class T, class Alloc >
-    bool operator<=( const jr_std::deque<T,Alloc>& lhs,
-                     const jr_std::deque<T,Alloc>& rhs ) {
+    bool operator<=( const panzer::deque<T,Alloc>& lhs,
+                     const panzer::deque<T,Alloc>& rhs ) {
         return !(lhs > rhs);
     }
 
     template< class T, class Alloc >
-    bool operator>=( const jr_std::deque<T,Alloc>& lhs,
-                     const jr_std::deque<T,Alloc>& rhs ) {
+    bool operator>=( const panzer::deque<T,Alloc>& lhs,
+                     const panzer::deque<T,Alloc>& rhs ) {
         return !(lhs < rhs);
     }
 }

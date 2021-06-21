@@ -15,7 +15,7 @@ TEST(testCase,queue_mem_fn_test){
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::queue<int> src;
-    jr_std::queue<int> des;
+    panzer::queue<int> des;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(i);
         des.push(i);
@@ -36,11 +36,11 @@ TEST(testCase,queue_copy_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::queue<int> src;
+    panzer::queue<int> src;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(i);
     }
-    jr_std::queue<int> des(src);
+    panzer::queue<int> des(src);
     ASSERT_EQ(src.size(), des.size());
     while(!des.empty()) {
         EXPECT_EQ(src.front(), des.front());
@@ -54,11 +54,11 @@ TEST(testCase,queue_move_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::queue<int> src;
+    panzer::queue<int> src;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(var);
     }
-    jr_std::queue<int> des(std::move(src));
+    panzer::queue<int> des(std::move(src));
     ASSERT_EQ(src.empty(), true);
     while(!des.empty()) {
         EXPECT_EQ(var, des.front());
@@ -71,8 +71,8 @@ TEST(testCase,queue_copy_operator_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::queue<int> src;
-    jr_std::queue<int> des;
+    panzer::queue<int> src;
+    panzer::queue<int> des;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(i + 1);
         des.push(i - 1);
@@ -91,8 +91,8 @@ TEST(testCase,queue_move_operator_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::queue<int> src;
-    jr_std::queue<int> des;
+    panzer::queue<int> src;
+    panzer::queue<int> des;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(var - 1);
         des.push(var + 1);
@@ -110,13 +110,13 @@ TEST(testCase, queue_swap_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::queue<int> src;
-    jr_std::queue<int> des;
+    panzer::queue<int> src;
+    panzer::queue<int> des;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(i + 1);
         des.push(i - 1);
     }
-    jr_std::queue<int> tmp = src, tmp0 = des;
+    panzer::queue<int> tmp = src, tmp0 = des;
     src.swap(des);
     ASSERT_EQ(tmp.size(), des.size());
     while(!des.empty()) {

@@ -7,7 +7,7 @@
 std::string ob = "", ob0 = "";
 
 std::weak_ptr<int> gw;
-jr_std::weak_ptr<int> gw_j;
+panzer::weak_ptr<int> gw_j;
 
 void observe()
 {
@@ -41,7 +41,7 @@ TEST(testCase, weak_ptr_fun_test)
     observe();
 
     {
-        auto sp_j = jr_std::make_shared<int>(42);
+        auto sp_j = panzer::make_shared<int>(42);
         gw_j = sp_j;
         observe_j();
     }
@@ -95,7 +95,7 @@ TEST(testCase, weak_ptr_circle_ref_test) {
             circle0 += "A::~A()";
         }
 
-        jr_std::shared_ptr<B_j> b;
+        panzer::shared_ptr<B_j> b;
     };
 
     class B_j {
@@ -108,15 +108,15 @@ TEST(testCase, weak_ptr_circle_ref_test) {
             circle0 += "B::~B()";
         }
 
-        jr_std::weak_ptr<A_j> a;
+        panzer::weak_ptr<A_j> a;
     };
 
     std::shared_ptr<A> x(new A);
     x->b = std::shared_ptr<B>(new B);
     x->b->a = x;
 
-    jr_std::shared_ptr<A_j> x_j(new A_j);
-    x_j->b = jr_std::shared_ptr<B_j>(new B_j);
+    panzer::shared_ptr<A_j> x_j(new A_j);
+    x_j->b = panzer::shared_ptr<B_j>(new B_j);
     x_j->b->a = x_j;
 
     ASSERT_EQ(circle, circle0);

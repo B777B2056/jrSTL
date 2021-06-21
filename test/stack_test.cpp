@@ -15,7 +15,7 @@ TEST(testCase,stack_mem_fn_test){
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::stack<int> src;
-    jr_std::stack<int> des;
+    panzer::stack<int> des;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(i);
         des.push(i);
@@ -35,11 +35,11 @@ TEST(testCase,stack_copy_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::stack<int> src;
+    panzer::stack<int> src;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(i);
     }
-    jr_std::stack<int> des(src);
+    panzer::stack<int> des(src);
     ASSERT_EQ(src.size(), des.size());
     while(!des.empty()) {
         EXPECT_EQ(src.top(), des.top());
@@ -53,11 +53,11 @@ TEST(testCase,stack_move_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::stack<int> src;
+    panzer::stack<int> src;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(var);
     }
-    jr_std::stack<int> des(std::move(src));
+    panzer::stack<int> des(std::move(src));
     ASSERT_EQ(src.empty(), true);
     while(!des.empty()) {
         EXPECT_EQ(var, des.top());
@@ -70,8 +70,8 @@ TEST(testCase,stack_copy_operator_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::stack<int> src;
-    jr_std::stack<int> des;
+    panzer::stack<int> src;
+    panzer::stack<int> des;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(i + 1);
         des.push(i - 1);
@@ -90,8 +90,8 @@ TEST(testCase,stack_move_operator_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::stack<int> src;
-    jr_std::stack<int> des;
+    panzer::stack<int> src;
+    panzer::stack<int> des;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(var - 1);
         des.push(var + 1);
@@ -109,13 +109,13 @@ TEST(testCase, stack_swap_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::stack<int> src;
-    jr_std::stack<int> des;
+    panzer::stack<int> src;
+    panzer::stack<int> des;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(i + 1);
         des.push(i - 1);
     }
-    jr_std::stack<int> tmp = src, tmp0 = des;
+    panzer::stack<int> tmp = src, tmp0 = des;
     src.swap(des);
     ASSERT_EQ(tmp.size(), des.size());
     while(!des.empty()) {

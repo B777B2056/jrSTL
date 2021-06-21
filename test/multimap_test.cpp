@@ -23,7 +23,7 @@ TEST(testCase,multimap_iterator_ctor_test) {
         --var;
     }
     // 迭代器范围构造函数
-    jr_std::multimap<int, int> des(src.begin(), src.end());
+    panzer::multimap<int, int> des(src.begin(), src.end());
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     auto dit = des.begin();
@@ -36,7 +36,7 @@ TEST(testCase,multimap_copy_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(50, cnt, var);
-    jr_std::multimap<int, int> src;
+    panzer::multimap<int, int> src;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         src.insert(std::make_pair(t, i));
@@ -44,7 +44,7 @@ TEST(testCase,multimap_copy_ctor_test) {
         --var;
     }
     // 拷贝构造函数
-    jr_std::multimap<int, int> des(src);
+    panzer::multimap<int, int> des(src);
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     auto dit = des.begin();
@@ -57,7 +57,7 @@ TEST(testCase,multimap_move_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::multimap<int, int> src;
+    panzer::multimap<int, int> src;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         src.insert(std::make_pair(t, i));
@@ -65,14 +65,14 @@ TEST(testCase,multimap_move_ctor_test) {
         --var;
     }
     // 移动构造函数
-    jr_std::multimap<int, int> des(std::move(src));
+    panzer::multimap<int, int> des(std::move(src));
     ASSERT_EQ(src.empty(), true);
 }
 
 // 初始化列表构造函数测试
 TEST(testCase,multimap_initializer_list_ctor_test) {
     std::multimap<int, int> src{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
-    jr_std::multimap<int, int> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
+    panzer::multimap<int, int> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     auto dit = des.begin();
@@ -85,8 +85,8 @@ TEST(testCase, multimap_operator_copy_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::multimap<int,int> src{{var, 0}, {var, 1}, {var, 2}};
-    jr_std::multimap<int,int> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
+    panzer::multimap<int,int> src{{var, 0}, {var, 1}, {var, 2}};
+    panzer::multimap<int,int> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     des = src;
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
@@ -100,8 +100,8 @@ TEST(testCase, multimap_operator_move_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::multimap<int,int> src{{var, 0}, {var, 1}, {var, 2}};
-    jr_std::multimap<int,int> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
+    panzer::multimap<int,int> src{{var, 0}, {var, 1}, {var, 2}};
+    panzer::multimap<int,int> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     des = std::move(src);
     ASSERT_EQ(src.empty(), true);
 }
@@ -111,7 +111,7 @@ TEST(testCase, multimap_clear_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::multimap<int,int> des;
+    panzer::multimap<int,int> des;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         des.insert(std::make_pair(t, i));
@@ -125,7 +125,7 @@ TEST(testCase, multimap_clear_test) {
 // insert测试
 TEST(testCase, multimap_insert_test) {
     std::multimap<int,int> src;
-    jr_std::multimap<int,int> des;
+    panzer::multimap<int,int> des;
     std::pair<const int, int> m[] = {{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     // 拷贝insert
     for(std::pair<const int, int> n : m) {
@@ -165,7 +165,7 @@ TEST(testCase, multimap_insert_test) {
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
     // 迭代器insert
-    jr_std::map<int,int> tmp{{6,0},{7,1},{8,2},{9,3},{15,4},{21,5},{12,6},{33,7},{24,8},{75,9}};
+    panzer::map<int,int> tmp{{6,0},{7,1},{8,2},{9,3},{15,4},{21,5},{12,6},{33,7},{24,8},{75,9}};
     std::map<int,int> tmp0{{6,0},{7,1},{8,2},{9,3},{15,4},{21,5},{12,6},{33,7},{24,8},{75,9}};
     src.insert(tmp0.begin(), tmp0.end());
     des.insert(tmp.begin(), tmp.end());
@@ -179,12 +179,12 @@ TEST(testCase, multimap_insert_test) {
 // insert hint测试
 TEST(testCase, multimap_insert_hint_test) {
     std::multimap<int,int> src{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
-    jr_std::multimap<int,int> des{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
+    panzer::multimap<int,int> des{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
     // insert hint
     auto s_pos = src.begin();
     auto d_pos = des.cbegin();
     std::advance(s_pos, 4);
-    jr_std::advance(d_pos, 4);
+    panzer::advance(d_pos, 4);
     auto s = src.insert(s_pos, std::make_pair(5,3));
     auto d = des.insert(d_pos, std::make_pair(5,3));
     if(s == src.end())
@@ -201,7 +201,7 @@ TEST(testCase, multimap_insert_hint_test) {
 // emplace测试
 TEST(testCase, multiap_emplace_test) {
     std::multimap<int,int> src;
-    jr_std::multimap<int,int> des;
+    panzer::multimap<int,int> des;
     // emplace
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         auto s = src.emplace(n, n);
@@ -222,12 +222,12 @@ TEST(testCase, multiap_emplace_test) {
 // emplace hint测试
 TEST(testCase, multimap_emplace_hint_test) {
     std::multimap<int,int> src{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
-    jr_std::multimap<int,int> des{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
+    panzer::multimap<int,int> des{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
     // insert hint
     auto s_pos = src.begin();
     auto d_pos = des.cbegin();
     std::advance(s_pos, 4);
-    jr_std::advance(d_pos, 4);
+    panzer::advance(d_pos, 4);
     auto s = src.emplace_hint(s_pos, 5, 10);
     auto d = des.emplace_hint(d_pos, 5, 10);
     if(s == src.end())
@@ -246,7 +246,7 @@ TEST(testCase, multimap_erase_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 20);
-    jr_std::multimap<int,int> des;
+    panzer::multimap<int,int> des;
     std::multimap<int,int> src;
     for(size_t i = 0; i < cnt; i++) {
         src.insert(std::make_pair(var,i));
@@ -259,7 +259,7 @@ TEST(testCase, multimap_erase_test) {
     auto i = src.begin();
     auto j = des.cbegin();
     std::advance(i, 2);
-    jr_std::advance(j, 2);
+    panzer::advance(j, 2);
     EXPECT_EQ(*(src.erase(i)),
               *(des.erase(j)));
     ASSERT_EQ(src.size(), des.size());
@@ -271,11 +271,11 @@ TEST(testCase, multimap_erase_test) {
     i = src.begin();
     j = des.cbegin();
     std::advance(i, 2);
-    jr_std::advance(j, 2);
+    panzer::advance(j, 2);
     auto i0 = src.begin();
     auto j0 = des.cbegin();
     std::advance(i0, 6);
-    jr_std::advance(j0, 6);
+    panzer::advance(j0, 6);
     EXPECT_EQ(*(src.erase(i, i0)),
               *(des.erase(j, j0)));
     ASSERT_EQ(src.size(), des.size());
@@ -287,7 +287,7 @@ TEST(testCase, multimap_erase_test) {
     i0 = src.begin();
     j0 = des.cbegin();
     std::advance(i0, 6);
-    jr_std::advance(j0, 6);
+    panzer::advance(j0, 6);
     EXPECT_EQ(*(src.erase(src.begin(), i0)),
               *(des.erase(des.cbegin(), j0)));
     ASSERT_EQ(src.size(), des.size());
@@ -298,7 +298,7 @@ TEST(testCase, multimap_erase_test) {
     i = src.begin();
     j = des.cbegin();
     std::advance(i, 2);
-    jr_std::advance(j, 2);
+    panzer::advance(j, 2);
     src.erase(i, src.end());
     des.erase(j, des.cend());
     ASSERT_EQ(src.size(), des.size());
@@ -317,8 +317,8 @@ TEST(testCase, multimap_swap_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::multimap<int,int> src;
-    jr_std::multimap<int,int> des;
+    panzer::multimap<int,int> src;
+    panzer::multimap<int,int> des;
     for(size_t i = 0; i < cnt; i++) {
         src.insert(std::make_pair(var + 1, i));
         des.insert(std::make_pair(var - 1, i));
@@ -326,7 +326,7 @@ TEST(testCase, multimap_swap_test) {
         des.insert(std::make_pair(var - 1, i));
         --var;
     }
-    jr_std::multimap<int,int> tmp = src;
+    panzer::multimap<int,int> tmp = src;
     src.swap(des);
     ASSERT_EQ(tmp.size(), des.size());
     auto it = tmp.begin();
@@ -347,7 +347,7 @@ TEST(testCase, multimap_reverse_index_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::multimap<int,int> src;
-    jr_std::multimap<int,int> des;
+    panzer::multimap<int,int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(std::make_pair(i, i));
         des.insert(std::make_pair(i, i));
@@ -370,7 +370,7 @@ TEST(testCase, multimap_iterator_sub_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 20);
     std::multimap<int,int> src;
-    jr_std::multimap<int,int> des;
+    panzer::multimap<int,int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(std::make_pair(i, i));
         des.insert(std::make_pair(i, i));
@@ -381,9 +381,9 @@ TEST(testCase, multimap_iterator_sub_test) {
     auto it = src.begin();
     auto rit = des.begin();
     std::advance(it, 12);
-    jr_std::advance(rit, 12);
+    panzer::advance(rit, 12);
     std::advance(it, -5);
-    jr_std::advance(rit, -5);
+    panzer::advance(rit, -5);
     EXPECT_EQ(*it, *rit);
 }
 
@@ -393,7 +393,7 @@ TEST(testCase, multimap_count) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::multimap<int,int> src;
-    jr_std::multimap<int,int> des;
+    panzer::multimap<int,int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(std::make_pair(i, i));
         des.insert(std::make_pair(i, i));
@@ -415,7 +415,7 @@ TEST(testCase, multimap_find) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::multimap<int,int> src;
-    jr_std::multimap<int,int> des;
+    panzer::multimap<int,int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(std::make_pair(i, i));
         des.insert(std::make_pair(i, i));
@@ -438,7 +438,7 @@ TEST(testCase, multimap_range) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::multimap<int,int> src;
-    jr_std::multimap<int,int> des;
+    panzer::multimap<int,int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(std::make_pair(i, i));
         des.insert(std::make_pair(i, i));

@@ -23,14 +23,14 @@ TEST(testCase,unordered_map_iterator_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 1);
-    jr_std::map<int, int> src;
+    panzer::map<int, int> src;
     for(size_t i = 0; i < cnt; i++) {
         int t = var;
         src.insert(std::make_pair(t, i));
         --var;
     }
     // 迭代器范围构造函数
-    jr_std::unordered_map<int, int, int_hash> des(src.begin(), src.end());
+    panzer::unordered_map<int, int, int_hash> des(src.begin(), src.end());
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     for(; it != src.end(); ++it) {
@@ -50,7 +50,7 @@ TEST(testCase,unordered_map_copy_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::unordered_map<int, int, int_hash> src;
+    panzer::unordered_map<int, int, int_hash> src;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         src.insert(std::make_pair(t, i));
@@ -58,7 +58,7 @@ TEST(testCase,unordered_map_copy_ctor_test) {
         --var;
     }
     // 拷贝构造函数
-    jr_std::unordered_map<int, int, int_hash> des(src);
+    panzer::unordered_map<int, int, int_hash> des(src);
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     auto dit = des.begin();
@@ -71,7 +71,7 @@ TEST(testCase,unordered_map_move_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::unordered_map<int, int, int_hash> src;
+    panzer::unordered_map<int, int, int_hash> src;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         src.insert(std::make_pair(t, i));
@@ -79,14 +79,14 @@ TEST(testCase,unordered_map_move_ctor_test) {
         --var;
     }
     // 移动构造函数
-    jr_std::unordered_map<int, int, int_hash> des(std::move(src));
+    panzer::unordered_map<int, int, int_hash> des(std::move(src));
     ASSERT_EQ(src.empty(), true);
 }
 
 // 初始化列表构造函数测试
 TEST(testCase,unordered_map_initializer_list_ctor_test) {
     std::unordered_map<int, int, int_hash> src{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
-    jr_std::unordered_map<int, int, int_hash> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
+    panzer::unordered_map<int, int, int_hash> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     for(; it != src.end(); ++it) {
@@ -106,8 +106,8 @@ TEST(testCase, unordered_map_operator_copy_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::unordered_map<int, int, int_hash> src{{var, 0}, {var+1, 1}, {var+2,2}};
-    jr_std::unordered_map<int, int, int_hash> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
+    panzer::unordered_map<int, int, int_hash> src{{var, 0}, {var+1, 1}, {var+2,2}};
+    panzer::unordered_map<int, int, int_hash> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     des = src;
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
@@ -121,8 +121,8 @@ TEST(testCase, unordered_map_operator_move_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::unordered_map<int, int, int_hash> src{{var, 0}, {var, 1}, {var, 2}};
-    jr_std::unordered_map<int, int, int_hash> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
+    panzer::unordered_map<int, int, int_hash> src{{var, 0}, {var, 1}, {var, 2}};
+    panzer::unordered_map<int, int, int_hash> des{{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     des = std::move(src);
     ASSERT_EQ(src.empty(), true);
 }
@@ -132,7 +132,7 @@ TEST(testCase, unordered_map_clear_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::unordered_map<int, int, int_hash> des;
+    panzer::unordered_map<int, int, int_hash> des;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         des.insert(std::make_pair(t, i));
@@ -146,7 +146,7 @@ TEST(testCase, unordered_map_clear_test) {
 // insert测试
 TEST(testCase, unordered_map_insert_test) {
     std::unordered_map<int, int, int_hash> src;
-    jr_std::unordered_map<int, int, int_hash> des;
+    panzer::unordered_map<int, int, int_hash> des;
     std::pair<const int, int> m[] = {{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     // 拷贝insert
     for(auto n : m) {
@@ -210,7 +210,7 @@ TEST(testCase, unordered_map_insert_test) {
         EXPECT_EQ(a, true);
     }
     // 迭代器insert
-    jr_std::unordered_map<int, int, int_hash> tmp{{1,0},{2,1},{3,2},{4,3},{5,4},{1,5},{2,6},{3,7},{4,8},{5,9}};
+    panzer::unordered_map<int, int, int_hash> tmp{{1,0},{2,1},{3,2},{4,3},{5,4},{1,5},{2,6},{3,7},{4,8},{5,9}};
     std::unordered_map<int, int, int_hash> tmp0{{1,0},{2,1},{3,2},{4,3},{5,4},{1,5},{2,6},{3,7},{4,8},{5,9}};
     src.insert(tmp0.begin(), tmp0.end());
     des.insert(tmp.begin(), tmp.end());
@@ -231,12 +231,12 @@ TEST(testCase, unordered_map_insert_test) {
 // insert hint测试
 TEST(testCase, unordered_map_insert_hint_test) {
     std::unordered_map<int, int, int_hash> src{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
-    jr_std::unordered_map<int, int, int_hash> des{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
+    panzer::unordered_map<int, int, int_hash> des{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
     // insert hint
     auto s_pos = src.begin();
     auto d_pos = des.begin();
     std::advance(s_pos, 4);
-    jr_std::advance(d_pos, 4);
+    panzer::advance(d_pos, 4);
     auto s = src.insert(s_pos, {5, 5});
     auto d = des.insert(d_pos, {5, 5});
     if(s == src.end())
@@ -260,7 +260,7 @@ TEST(testCase, unordered_map_insert_hint_test) {
 // emplace测试
 TEST(testCase, unordered_map_emplace_test) {
     std::unordered_map<int, int, int_hash> src;
-    jr_std::unordered_map<int, int, int_hash> des;
+    panzer::unordered_map<int, int, int_hash> des;
      std::pair<const int, int> m[] = {{32, 0},{53423,1},{4245,2},{25,3},{234,4},{25,5},{45,6},{2,7},{235,8},{23,9},{24,10},{6,11},{47,12},{6,13},{5224,14},{2,15}};
     // emplace
     for(auto n : m) {
@@ -290,12 +290,12 @@ TEST(testCase, unordered_map_emplace_test) {
 // emplace hint测试
 TEST(testCase, unordered_map_emplace_hint_test) {
     std::unordered_map<int, int, int_hash> src{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
-    jr_std::unordered_map<int, int, int_hash> des{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
+    panzer::unordered_map<int, int, int_hash> des{{1,0},{2,1},{3,2},{4,3},{8,4},{9,5}};
     // insert hint
     auto s_pos = src.begin();
     auto d_pos = des.begin();
     std::advance(s_pos, 4);
-    jr_std::advance(d_pos, 4);
+    panzer::advance(d_pos, 4);
     auto s = src.emplace_hint(s_pos, 5, 5);
     auto d = des.emplace_hint(d_pos, 5, 5);
     if(s == src.end())
@@ -321,7 +321,7 @@ TEST(testCase, unordered_map_erase_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 100);
-    jr_std::unordered_map<int, int, int_hash> des;
+    panzer::unordered_map<int, int, int_hash> des;
     for(size_t i = 0; i < cnt; i++) {
         des.insert({i, i});
         des.insert({i, i});
@@ -333,17 +333,17 @@ TEST(testCase, unordered_map_erase_test) {
     // 单位置erase
     auto i = des.cbegin();
     auto j = des.cbegin();
-    jr_std::advance(i, 3);
-    jr_std::advance(j, 2);
+    panzer::advance(i, 3);
+    panzer::advance(j, 2);
     EXPECT_EQ(*i, *(des.erase(j)));
     ASSERT_EQ(--cnt, des.size());
     // 范围erase
     i = des.cbegin();
     j = des.cbegin();
-    jr_std::advance(j, 2);
+    panzer::advance(j, 2);
     auto j0 = des.cbegin();
-    jr_std::advance(j0, 6);
-    jr_std::advance(i, 6);
+    panzer::advance(j0, 6);
+    panzer::advance(i, 6);
     EXPECT_EQ(*i, *(des.erase(j, j0)));
     ASSERT_EQ((cnt -= 4), des.size());
 }
@@ -353,8 +353,8 @@ TEST(testCase, unordered_map_swap_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::unordered_map<int, int, int_hash> src;
-    jr_std::unordered_map<int, int, int_hash> des;
+    panzer::unordered_map<int, int, int_hash> src;
+    panzer::unordered_map<int, int, int_hash> des;
     for(size_t i = 0; i < cnt; i++) {
         src.insert({var + 1, i});
         des.insert({var - 1, i});
@@ -362,7 +362,7 @@ TEST(testCase, unordered_map_swap_test) {
         des.insert({var - 1, i});
         --var;
     }
-    jr_std::unordered_map<int, int, int_hash> tmp = src;
+    panzer::unordered_map<int, int, int_hash> tmp = src;
     src.swap(des);
     ASSERT_EQ(tmp.size(), des.size());
     auto it = tmp.begin();
@@ -383,7 +383,7 @@ TEST(testCase, unordered_map_count) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::unordered_map<int, int, int_hash> src;
-    jr_std::unordered_map<int, int, int_hash> des;
+    panzer::unordered_map<int, int, int_hash> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert({i, i});
         des.insert({i, i});
@@ -403,7 +403,7 @@ TEST(testCase, unordered_map_find) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::unordered_map<int, int, int_hash> src;
-    jr_std::unordered_map<int, int, int_hash> des;
+    panzer::unordered_map<int, int, int_hash> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert({i, i});
         des.insert({i, i});
@@ -425,7 +425,7 @@ TEST(testCase, unordered_map_range) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    jr_std::unordered_map<int, int, int_hash> des;
+    panzer::unordered_map<int, int, int_hash> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         des.insert({i, i});
         des.insert({i, i});

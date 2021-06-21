@@ -17,11 +17,12 @@ target_sources(${PROJECT_NAME} PUBLIC
                                       "test/map_test.cpp"
                                       "test/multimap_test.cpp"
                                       "test/hashset_test.cpp"
-                                      "test/hash_multiset.cpp"
+                                      "test/hash_multiset_test.cpp"
                                       "test/hash_map_test.cpp"
                                       "test/hash_multimap_test.cpp"
                                       "test/unique_ptr_test.cpp"
                                       "test/shared_ptr_test.cpp"
                                       "test/weak_ptr_test.cpp"
+                                      "test/algorithm_test.cpp"
                                         )
 target_link_libraries(${PROJECT_NAME} gtest gtest_main)
