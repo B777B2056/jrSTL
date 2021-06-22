@@ -5,12 +5,14 @@
 #include <cstddef>
 #include <utility>
 #include <type_traits>
+#include "jr_algo_buffer.h"
 #include "../container/utils/jr_heap.h"
 
 namespace panzer {
     /*不修改序列的操作*/
     template< class InputIt, class UnaryPredicate >
-    bool all_of( InputIt first, InputIt last, UnaryPredicate p ) {
+    bool all_of( InputIt first, InputIt last,
+                 UnaryPredicate p ) {
         while(first != last) {
             if(!p(*first))
                 return false;
@@ -20,7 +22,8 @@ namespace panzer {
     }
 
     template< class InputIt, class UnaryPredicate >
-    bool any_of( InputIt first, InputIt last, UnaryPredicate p ) {
+    bool any_of( InputIt first, InputIt last,
+                 UnaryPredicate p ) {
         while(first != last) {
             if(p(*first))
                 return true;
@@ -30,7 +33,8 @@ namespace panzer {
     }
 
     template< class InputIt, class UnaryPredicate >
-    bool none_of( InputIt first, InputIt last, UnaryPredicate p ) {
+    bool none_of( InputIt first, InputIt last,
+                  UnaryPredicate p ) {
         while(first != last) {
             if(p(*first))
                 return false;
@@ -40,12 +44,13 @@ namespace panzer {
     }
 
     template< class InputIt, class UnaryFunction >
-    UnaryFunction for_each( InputIt first, InputIt last, UnaryFunction f ) {
+    UnaryFunction for_each( InputIt first, InputIt last,
+                            UnaryFunction f ) {
         while(first != last) {
             f(*first);
             ++first;
         }
-        return static_cast<UnaryFunction&&>(f);
+        return std::forward<UnaryFunction>(f);
     }
 
     template< class InputIt, class UnaryPredicate >
@@ -115,29 +120,168 @@ namespace panzer {
                                ->bool { return value == a; });
     }
 
-    template< class ForwardIt1, class ForwardIt2, class BinaryPredicate >
-    ForwardIt1 find_end( ForwardIt1 first, ForwardIt1 last,
-                         ForwardIt2 s_first, ForwardIt2 s_last, BinaryPredicate p ) {
+    template< class ForwardIt1,
+              class ForwardIt2,
+              class BinaryPredicate >
+    ForwardIt1 _search_without_buffer( ForwardIt1 first, ForwardIt1 last,
+                                       ForwardIt2 s_first, ForwardIt2 s_last,
+                                       BinaryPredicate p ) {
         if(s_first == s_last)
             return last;
-        auto rfirst = panzer::reverse_iterator<ForwardIt1>(last);
-        auto rlast = panzer::reverse_iterator<ForwardIt1>(first);
-        auto rs_first = panzer::reverse_iterator<ForwardIt2>(s_last);
-        auto rs_last = panzer::reverse_iterator<ForwardIt2>(s_first);
-        while(rfirst != rlast) {
-            if(p(*rfirst, *rs_first)) {
-                auto tmp2 = rs_first;
-                while((rfirst != rlast) && (tmp2 != rs_last) && p(*rfirst, *tmp2)) {
-                    ++rfirst;
+        while(first != last) {
+            if(p(*first, *s_first)) {
+                ForwardIt1 tmp1 = first;
+                ForwardIt2 tmp2 = s_first;
+                while((tmp1 != last) && (tmp2 != s_last) && p(*tmp1, *tmp2)) {
+                    ++tmp1;
                     ++tmp2;
                 }
-                if(tmp2 == rs_last)
+                if(tmp2 == s_last)
                     break;
-            } else{
-                ++rfirst;
+            }
+            ++first;
+        }
+        return first;
+    }
+
+    // KMP模式匹配
+    template< class ForwardIt1,
+              class ForwardIt2,
+              class T,
+              class BinaryPredicate >
+    ForwardIt1 _search_with_buffer( ForwardIt1 first, ForwardIt1 last,
+                                    ForwardIt2 s_first, ForwardIt2 s_last,
+                                    panzer::_buffer<T>& next,
+                                    BinaryPredicate p ) {
+        if(s_first == s_last)
+            return last;
+        int n = panzer::distance(first, last);
+        int m = static_cast<int>(next.length());
+        if(n < m)
+            return last;
+        ForwardIt1 result = first;
+        // 求出next数组
+        next[0] = -1;
+        int i, j = 1;
+        while(j < m) {
+            i = next[j - 1];
+            ForwardIt2 s_it_l = s_first;
+            ForwardIt2 s_it_r = s_first;
+            panzer::advance(s_it_l, i + 1);
+            panzer::advance(s_it_r, j);
+            while((i >= 0) && !p(*s_it_l, *s_it_r)) {
+                i = next[i];
+                s_it_l = s_first;
+                panzer::advance(s_it_l, i + 1);
+            }
+            if(p(*s_it_l, *s_it_r)) {
+                next[j] = i + 1;
+            } else {
+                next[j] = -1;
+            }
+            ++j;
+        }
+        // KMP算法主体
+        i = j = 0;
+        while(i < n && j < m) {
+            ForwardIt1 it = first;
+            ForwardIt2 s_it = s_first;
+            panzer::advance(it, i);
+            panzer::advance(s_it, j);
+            if(p(*it, *s_it)) {
+                ++i;
+                ++j;
+            } else if(j > 0) {
+                j = next[j - 1] + 1;
+            } else {
+                ++i;
             }
         }
-        return rfirst == rlast ? last : rfirst.base();
+        if(j == m) {
+            panzer::advance(result, i - m);
+        } else {
+            result = last;
+        }
+        return result;
+    }
+
+    template< class ForwardIt1,
+              class ForwardIt2,
+              class BinaryPredicate >
+    ForwardIt1 search( ForwardIt1 first, ForwardIt1 last,
+                       ForwardIt2 s_first, ForwardIt2 s_last,
+                       BinaryPredicate p ) {
+        size_t len = panzer::distance(s_first, s_last);
+        panzer::_buffer<int> buf(len);
+        return buf.is_valid() ? _search_with_buffer(first, last, s_first, s_last, buf, p)
+                              : _search_without_buffer(first, last, s_first, s_last, p);
+    }
+
+    template< class ForwardIt1, class ForwardIt2 >
+    ForwardIt1 search( ForwardIt1 first, ForwardIt1 last,
+                       ForwardIt2 s_first, ForwardIt2 s_last ) {
+        typedef typename panzer::iterator_traits<ForwardIt1>::value_type type1;
+        typedef typename panzer::iterator_traits<ForwardIt2>::value_type type2;
+        return panzer::search(first, last, s_first, s_last,
+                              [](const type1& a, const type2& b)
+                              ->bool { return a == b; });
+    }
+
+    template< class ForwardIt1,
+              class ForwardIt2,
+              class BinaryPredicate >
+    ForwardIt1 _find_end( ForwardIt1 first, ForwardIt1 last,
+                          ForwardIt2 s_first, ForwardIt2 s_last,
+                          BinaryPredicate p,
+                          input_iterator_tag,
+                          input_iterator_tag) {
+        if(s_first == s_last)
+            return last;
+        ForwardIt1 result = last;
+        while(first != last) {
+            ForwardIt1 it = panzer::search(first, last, s_first, s_last, p);
+            if(it != last) {
+                result = first = it;
+                panzer::advance(first, panzer::distance(s_first, s_last));
+            } else {
+                break;
+            }
+        }
+        return result;
+    }
+
+    template< class BidIt1,
+              class BidIt2,
+              class BinaryPredicate >
+    BidIt1 _find_end( BidIt1 first, BidIt1 last,
+                         BidIt2 s_first, BidIt2 s_last,
+                         BinaryPredicate p,
+                         bidectional_iterator_tag,
+                         bidectional_iterator_tag ) {
+        if(s_first == s_last)
+            return last;
+        auto rfirst = panzer::reverse_iterator<BidIt1>(last);
+        auto rlast = panzer::reverse_iterator<BidIt1>(first);
+        auto rs_first = panzer::reverse_iterator<BidIt2>(s_last);
+        auto rs_last = panzer::reverse_iterator<BidIt2>(s_first);
+        auto result = panzer::search(rfirst, rlast, rs_first, rs_last, p);
+        if(result == rlast)
+            return last;
+        else {
+            panzer::advance(result, panzer::distance(s_first, s_last));
+            return result.base();
+        }
+    }
+
+    template< class ForwardIt1,
+              class ForwardIt2,
+              class BinaryPredicate >
+    ForwardIt1 find_end( ForwardIt1 first, ForwardIt1 last,
+                         ForwardIt2 s_first, ForwardIt2 s_last,
+                         BinaryPredicate p ) {
+        return panzer::_find_end(first, last, s_first, s_last, p,
+                                 typename panzer::iterator_traits<ForwardIt1>::iterator_category(),
+                                 typename panzer::iterator_traits<ForwardIt2>::iterator_category());
     }
 
     template< class ForwardIt1, class ForwardIt2 >
@@ -173,37 +317,6 @@ namespace panzer {
         return panzer::find_first_of(first, last, s_first, s_last,
                                      [](const type1& a, const type2& b)
                                      ->bool { return a == b; });
-    }
-
-    template< class ForwardIt1, class ForwardIt2, class BinaryPredicate >
-    ForwardIt1 search( ForwardIt1 first, ForwardIt1 last,
-                       ForwardIt2 s_first, ForwardIt2 s_last, BinaryPredicate p ) {
-        if(s_first == s_last)
-            return first;
-        while(first != last) {
-            if(p(*first, *s_first)) {
-                ForwardIt1 tmp1 = first;
-                ForwardIt2 tmp2 = s_first;
-                while((tmp1 != last) && (tmp2 != s_last) && p(*tmp1, *tmp2)) {
-                    ++tmp1;
-                    ++tmp2;
-                }
-                if(tmp2 == s_last)
-                    break;
-            }
-            ++first;
-        }
-        return first;
-    }
-
-    template< class ForwardIt1, class ForwardIt2 >
-    ForwardIt1 search( ForwardIt1 first, ForwardIt1 last,
-                       ForwardIt2 s_first, ForwardIt2 s_last ) {
-        typedef typename panzer::iterator_traits<ForwardIt1>::value_type type1;
-        typedef typename panzer::iterator_traits<ForwardIt2>::value_type type2;
-        return panzer::search(first, last, s_first, s_last,
-                              [](const type1& a, const type2& b)
-                              ->bool { return a == b; });
     }
 
     template< class ForwardIt, class Size, class T, class BinaryPredicate >
@@ -1217,27 +1330,29 @@ namespace panzer {
     }
 
     // 稳定划分（！！！）
-    template< class BidirIt, class RandomIt, class UnaryPredicate >
+    template< class BidirIt,
+              class T,
+              class UnaryPredicate >
     BidirIt _stable_partition_with_buffer( BidirIt first, BidirIt last,
-                                           RandomIt buffer,
+                                           panzer::_buffer<T>& buffer,
                                            UnaryPredicate p ) {
         BidirIt it, ret;
-        RandomIt bit = buffer;
+        int i = 0, len = buffer.length();
         for(it = first; it != last; ++it) {
             if(p(*it)) {
-                *buffer = *it;
+                buffer[i] = *it;
                 ret = it;
-                ++buffer;
+                ++i;
             }
         }
         for(it = first; it != last; ++it) {
             if(!p(*it)) {
-                *buffer = *it;
-                ++buffer;
+                buffer[i] = *it;
+                ++i;
             }
         }
-        for(; bit != buffer; ++bit) {
-            *first = *bit;
+        for(i = 0; i < len; ++i) {
+            *first = buffer[i];
             if(p(*first))
                 ret = first;
             ++first;
@@ -1245,10 +1360,10 @@ namespace panzer {
         return ++ret;
     }
 
-    // TODO: 不使用jr_std::partition_point
     template< class BidirIt, class UnaryPredicate >
-    BidirIt _stable_partition_without_buffer( BidirIt first, BidirIt last,
-                                             UnaryPredicate p ) {
+    BidirIt _stable_partition_without_buffer( BidirIt first,
+                                              BidirIt last,
+                                              UnaryPredicate p ) {
         BidirIt ret = first;
         while(first != last) {
             if(!p(*first)) {
@@ -1265,15 +1380,11 @@ namespace panzer {
     template< class BidirIt, class UnaryPredicate >
     BidirIt stable_partition( BidirIt first, BidirIt last, UnaryPredicate p ) {
         typedef typename iterator_traits<BidirIt>::value_type type;
-        typename iterator_traits<BidirIt>::difference_type len;
-        len = panzer::distance(first, last);
-        type *buffer = nullptr;
-        buffer = new type[len];
-        if(buffer) {
+        size_t len = panzer::distance(first, last);
+        panzer::_buffer<type> buffer(len);
+        if(buffer.is_valid()) {
             // 内存充足，可分配缓冲区
-            auto ret = panzer::_stable_partition_with_buffer(first, last, buffer, p);
-            delete []buffer;
-            return ret;
+            return panzer::_stable_partition_with_buffer(first, last, buffer, p);
         } else {
             // 内存不足，不可分配缓冲区
             return panzer::_stable_partition_without_buffer(first, last, p);

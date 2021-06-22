@@ -54,6 +54,7 @@ TEST(testCase, find) {
 }
 
 TEST(testCase, find_end) {
+    // bid迭代器
     panzer::vector<int> v{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4};
     panzer::vector<int>::iterator result;
     panzer::vector<int> t1{1, 2, 3};
@@ -62,6 +63,15 @@ TEST(testCase, find_end) {
     panzer::vector<int> t2{4, 5, 6};
     result = panzer::find_end(v.begin(), v.end(), t2.begin(), t2.end());
     ASSERT_EQ(result, v.end());
+    // forward迭代器
+    panzer::forward_list<int> v0{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4};
+    panzer::forward_list<int>::iterator result0;
+    panzer::forward_list<int> t10{1, 2, 3};
+    result0 = panzer::find_end(v0.begin(), v0.end(), t10.begin(), t10.end());
+    ASSERT_EQ(panzer::distance(v0.begin(), result0), 8);
+    panzer::forward_list<int> t20{4, 5, 6};
+    result0 = panzer::find_end(v0.begin(), v0.end(), t20.begin(), t20.end());
+    ASSERT_EQ(result0, v0.end());
 }
 
 TEST(testCase, find_first_of) {
@@ -72,20 +82,23 @@ TEST(testCase, find_first_of) {
 }
 
 template<typename Container>
-bool in_quote(const Container& cont, const std::string& s, int f)
+bool in_quote(const Container& cont, const Container& s)
 {
-    return f ? panzer::search(cont.begin(), cont.end(), s.begin(), s.end()) != cont.end()
-            : std::search(cont.begin(), cont.end(), s.begin(), s.end()) != cont.end();
+    return panzer::search(cont.begin(), cont.end(), s.begin(), s.end()) != cont.end();
 }
 
 TEST(testCase, search) {
     std::string str = "why waste time learning, when ignorance is instantaneous?";
-    ASSERT_EQ(in_quote(str, "learning", 0), in_quote(str, "learning", 1));
-    ASSERT_EQ(in_quote(str, "lemming", 0), in_quote(str, "lemming", 1));
-
-    std::vector<char> vec(str.begin(), str.end());
-    ASSERT_EQ(in_quote(vec, "learning", 0), in_quote(vec, "learning", 1));
-    ASSERT_EQ(in_quote(vec, "lemming", 0), in_quote(vec, "lemming", 1));
+    std::string s1 = "learning", s2 = "lemming";
+    panzer::vector<char> vec, d1, d2;
+    for(auto i = str.begin(); i != str.end(); ++i)
+        vec.push_back(*i);
+    for(auto i = s1.begin(); i != s1.end(); ++i)
+        d1.push_back(*i);
+    for(auto i = s2.begin(); i != s2.end(); ++i)
+        d2.push_back(*i);
+    ASSERT_EQ(true, in_quote(vec, d1));
+    ASSERT_EQ(false, in_quote(vec, d2));
 }
 
 template <class Container, class Size, class T>
