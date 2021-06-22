@@ -82,7 +82,7 @@ TEST(testCase, find_first_of) {
 }
 
 template<typename Container>
-bool in_quote(const Container& cont, const Container& s)
+bool in_quote(const Container& cont, const std::string& s)
 {
     return panzer::search(cont.begin(), cont.end(), s.begin(), s.end()) != cont.end();
 }
@@ -90,15 +90,11 @@ bool in_quote(const Container& cont, const Container& s)
 TEST(testCase, search) {
     std::string str = "why waste time learning, when ignorance is instantaneous?";
     std::string s1 = "learning", s2 = "lemming";
-    panzer::vector<char> vec, d1, d2;
+    panzer::vector<char> vec;
     for(auto i = str.begin(); i != str.end(); ++i)
         vec.push_back(*i);
-    for(auto i = s1.begin(); i != s1.end(); ++i)
-        d1.push_back(*i);
-    for(auto i = s2.begin(); i != s2.end(); ++i)
-        d2.push_back(*i);
-    ASSERT_EQ(true, in_quote(vec, d1));
-    ASSERT_EQ(false, in_quote(vec, d2));
+    ASSERT_EQ(true, in_quote(vec, s1));
+    ASSERT_EQ(false, in_quote(vec, s2));
 }
 
 template <class Container, class Size, class T>

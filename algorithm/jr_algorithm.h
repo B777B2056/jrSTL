@@ -256,8 +256,8 @@ namespace panzer {
     BidIt1 _find_end( BidIt1 first, BidIt1 last,
                          BidIt2 s_first, BidIt2 s_last,
                          BinaryPredicate p,
-                         bidectional_iterator_tag,
-                         bidectional_iterator_tag ) {
+                         bidirectional_iterator_tag,
+                         bidirectional_iterator_tag ) {
         if(s_first == s_last)
             return last;
         auto rfirst = panzer::reverse_iterator<BidIt1>(last);
@@ -800,7 +800,7 @@ namespace panzer {
     }
 
     template< class ForwardIt >
-    ForwardIt _rotate( ForwardIt first, ForwardIt n_first, ForwardIt last, bidectional_iterator_tag ) {
+    ForwardIt _rotate( ForwardIt first, ForwardIt n_first, ForwardIt last, bidirectional_iterator_tag ) {
         if(first != n_first) {
             panzer::reverse(first, n_first);
             panzer::reverse(n_first, last);

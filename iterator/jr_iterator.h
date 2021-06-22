@@ -3,14 +3,25 @@
 
 #include <cstddef>
 #include <utility>
+#include <iterator>
+
+#define USE_STD_TRAITS
 
 namespace panzer {
+#ifndef USE_STD_TRAITS
     /*Tags of different type iterator_category, for function overload*/
     struct input_iterator_tag {};
     struct output_iterator_tag {};
     struct forward_iterator_tag : public input_iterator_tag {};
-    struct bidectional_iterator_tag : public forward_iterator_tag {};
-    struct random_access_iterator_tag : public bidectional_iterator_tag {};
+    struct bidirectional_iterator_tag : public forward_iterator_tag {};
+    struct random_access_iterator_tag : public bidirectional_iterator_tag {};
+#endif
+    /*Tags of different type iterator_category, for function overload*/
+    typedef std::input_iterator_tag input_iterator_tag;
+    typedef std::output_iterator_tag output_iterator_tag;
+    typedef std::forward_iterator_tag forward_iterator_tag;
+    typedef std::bidirectional_iterator_tag bidirectional_iterator_tag;
+    typedef std::random_access_iterator_tag random_access_iterator_tag;
 
     /*A base class, convenient for other classes to inherit*/
     template<
@@ -26,6 +37,7 @@ namespace panzer {
         typedef Pointer pointer;
         typedef Reference reference;
     };
+
 
     /*Traits(General version)*/
     template< class T >
@@ -535,7 +547,7 @@ namespace panzer {
     }
 
     template< class InputIt, class Distance >
-    void _advance( InputIt& it, Distance n, bidectional_iterator_tag ) {
+    void _advance( InputIt& it, Distance n, bidirectional_iterator_tag ) {
         if(n > 0) {
             while(n--)
                 ++it;

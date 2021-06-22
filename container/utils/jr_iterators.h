@@ -45,7 +45,7 @@ namespace panzer {
         typedef Ptr pointer;
         typedef Ref reference;
         typedef ptrdiff_t difference_type;
-        typedef bidectional_iterator_tag iterator_category;
+        typedef bidirectional_iterator_tag iterator_category;
         // point to current node
         _node<U> *_cur_node;
         // construct iterator
@@ -286,7 +286,7 @@ namespace panzer {
         typedef Ptr pointer;
         typedef Ref reference;
         typedef ptrdiff_t difference_type;
-        typedef bidectional_iterator_tag iterator_category;
+        typedef bidirectional_iterator_tag iterator_category;
         // 自己的特殊定义
         typedef _balance_bst_iterator iterator;
         typedef _tree_node<U> tnode;
