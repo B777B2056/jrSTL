@@ -83,5 +83,4 @@ functional头文件大部分功能（缺function和bind），以及三个智能�
 2.allocator内存池实现  
   之前实现过，但后来发现的bug暂无法解决，于是现暂用malloc/free代替  
 # 未来的工作  
-有空的话就继续完善一下测试文件，然后把内存池实现了，以后系统学了元编程再把functional剩下的内容整了哈哈哈  
-10 directories, 47 files
+有空的话就继续完善一下测试文件，然后把内存池实现了，以后系统学了元编程再把functional剩下的内容整了哈哈哈    
