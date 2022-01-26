@@ -1,14 +1,24 @@
-# MINI-STL概览  
-本项目遵循C++11标准，实现了C++11标准库中的所有容器与容器适配器，algorithm头文件中所有泛型算法，迭代器相关内容（迭代器原语，迭代器特性萃取机），空间配置器框架，
-functional头文件大部分功能（缺function和bind），以及三个智能指针（unique/shared/weak ptr）；采用Google gtest测试框架，以函数为单元进行了单元测试。
-# 文件目录结构与文件说明  
-.  
+# jrSTL
+本项目的目的是学习C++11标准下的STL容器库、算法库和智能指针库，其实现了：  
+1. 所有容器与容器适配器；
+2. algorithm头文件中所有泛型算法；
+3. 迭代器相关内容（迭代器原语，迭代器特性萃取机）；
+4. 无状态的简易空间配置器（封装了new/delete）；
+5. 智能指针库（unique/shared/weak_ptr）。  
+ 
+## 0 特点
+1. 采用AVL平衡二叉树而非红黑树作为set/map的底层存储结构；       
+2. 在关联容器中，使用一个基类来统一xxx/multixxx共有的操作，一个bool类型模板参数来控制是否保留相同的键值，有效降低了重复代码率；     
+3. search算法中，若分配缓存成功，则采用KMP算法进行模式匹配；    
+4. sort算法中，若递归深度小于阈值且剩余元素个数大于阈值，则采用快速排序算法；若递归深度大于阈值则采用归并排序；若剩余元素个数较少则采用插入排序；  
+5. 可在jr_iterator.h文件中通过USE_STD_TRAITS宏定义来控制该库是否支持std的迭代器原语tag。
+
+## 1 文件目录结构与文件说明    
 ├── algorithm  
 │   ├── jr_algo_buffer.h  采用RAII方式管理资源的、在algorithm中存在的缓存数据段       
 │   ├── jr_algorithm.h  算法库，包含了除未初始化内存操作外的所有C++11中的算法  
 │   └── jr_numeric.h  数值库的一部分，包含一些简单的数值算法  
 ├── CMakeLists.txt  
-├── CMakeLists.txt.user  
 ├── container  
 │   ├── adapter  容器适配器  
 │   │   ├── jr_priority_queue.h  优先队列（二叉堆）    
@@ -59,41 +69,141 @@ functional头文件大部分功能（缺function和bind），以及三个智能�
     ├── stack_test.cpp  
     ├── unique_ptr_test.cpp  
     ├── vector_test.cpp  
-    └── weak_ptr_test.cpp  
-# 具体实现中的一些特点  
-1.采用AVL平衡二叉树而非红黑树作为set/map的底层存储结构；   
-  
-2.为了保证删除某个迭代器后不影响其余迭代器，在AVL树中的删除操作中，并非简单交换待删除的节点的值与其右子树最小节点的值，而是将二者节点进行交换；    
-  
-3.在set/multiset中，使用一个基类来统一二者共有的操作，一个bool类型模板参数来控制是否保留相同的键值（其余所有关联容器中均如此），有效降低了重复代码率；   
-  
-4.unordered容器（哈希容器）中，采用桶方法解决哈希冲突，目前每个桶内为单向链表，但若想转换为查找性能更好的AVL树仅需改动少数几处即可；  
-  
-5.search算法中，若分配缓存成功，则采用KMP算法进行模式匹配；    
-  
-6.sort算法中，若递归深度小于阈值且剩余元素个数大于阈值，则采用快速排序算法；若递归深度大于阈值则采用归并排序；若剩余元素个数较少则采用插入排序；  
-  
-7.在shared_ptr智能指针中，Alloc参数并不起作用（我认为这个用于分配控制块的空间配置器比较鸡肋，于是没有实现...）；    
-  
-8.可在jr_iterator.h文件中通过USE_STD_TRAITS宏定义来控制该库是否支持std的迭代器原语tag。    
-  
-# 安装与使用
-## 安装
-通过cmake编译为动态库即可使用
-  
-## 使用
-1.使用全局命名空间定义  
-在你的代码最前面加上```using namespace panzer;```  
-  
-2.使用限定符  
-在你想使用该库的每个地方都使用panzer进行限定；例如```panzer::vector<int> v;``` 
-  
-# 未完成的内容
-1.functional头文件  
-  function，bind  
-    
-2.allocator内存池实现  
-  之前实现过，但后来发现的bug暂无法解决，于是现暂用malloc/free代替  
-    
-# 未来的工作  
-有空的话就继续完善一下测试文件，然后把内存池实现了，以后系统学了元编程再把functional剩下的内容整了哈哈哈    
+    └── weak_ptr_test.cpp     
+
+## 2 迭代器
+1. 输入迭代器——Input iterator  
+只读迭代器，**只能用于读取数据，不可写入数据**。
+2. 输出迭代器——Output iterator  
+只写迭代器，**只能写入数据，不可读取数据**。
+3. 前向迭代器——Forward iterator  
+可读可写，**只能执行++操作**。  
+4. 双向迭代器——Bidirectional iterator  
+可读可写，**可执行++与--操作**。
+5. 随机迭代器——Random iterator  
+可读可写，**可以与原始指针一样进行算术运算，比如+=，-=等**。
+
+## 3 容器库
+### 3.1 顺序容器
+### 3.1.1 array
+
+### 3.1.2 vector
+
+### 3.1.3 forward_list
+
+### 3.1.4 list
+
+### 3.1.5 deque
+
+### 3.2 关联容器
+### 3.2.1 set/multiset
+
+### 3.2.2 map/multimap
+
+### 3.2.3 unordered_set/unordered_multiset
+
+### 3.2.4 unordered_map/unordered_multimap
+
+### 3.3 容器适配器
+### 3.3.1 stack
+
+### 3.3.2 queue
+
+### 3.3.3 priority_queue
+
+## 4 算法库
+### 4.1 堆
+### 4.1.1 push_heap
+
+### 4.1.2 pop_heap
+
+### 4.1.3 sort_heap
+
+### 4.1.4 make_heap
+
+### 4.2 排列组合
+### 4.2.1 next_permutation
+
+### 4.2.2 prev_permutation
+
+### 4.3 其他
+### 4.3.1 copy
+
+### 4.3.2 sort
+
+### 4.3.3 rotate
+
+## 5 智能指针
+### 5.1 unique_ptr
+这个没什么好说的，相当于原始指针的RAII封装；**unique_ptr禁止有copy行为**。
+### 5.2 shared_ptr
+### 5.2.1 shared_ptr内部结构
+![shared_ptr内部结构](pic/shared_ptr_stru.png)  
+上述结构将带来如下的特点：    
+1. std::shared_ptr的尺寸是原生指针的两倍（因为内含两个指针）；  
+2. 控制块的内存必须动态分配；  
+3. 为保证线程安全，**引用计数的递增和递减必须是原子操作**；  
+4. 当同一个原生指针构造多个std::shared时，将导致多个控制块被创建，也会初始化多个引用计数，将导致内存泄漏和未定义行为。  
+5. 由于自定义删除器和分配器并未存储在std::shared_ptr内部，因此**自定义删除器和分配器不会改变std::shared_ptr的尺寸**，而std::unique_ptr则相反。
+### 5.2.2 自定义删除器存储于控制块内的实现原理
+采用类型擦除技术（可通过继承实现），将自定义删除器存储于控制块内。
+### 5.2.3 std::make_shared
+1. 异常安全   
+2. **相比于调用std::shared_ptr构造函数和new表达式，其效率更高**：std::shared_ptr<T>(new T())进行两次内存分配，一次是new，一次是给控制块分配内存；而std::make_shared<T>()**只进行一次内存分配**，其将被控制的指针所指向的对象与控制块一次性一起分配到一片连续内存中，即将对象T和控制块一起分配到一块内存中。
+### 5.3 weak_ptr
+### 5.3.1 用途
+辅助std::shared_ptr，主要用于：  
+1. 检测std::shared_ptr所管理的对象是否空悬；  
+2. 打破**循环引用**。
+### 5.3.2 循环引用
+两个类互相持有指向对方的std::shared_ptr，则二者类对象指针也有std::shared_ptr管理时，将造成循环引用。  
+![循环引用](pic/weak_ptr.png)    
+```c++
+struct B;
+
+struct A {
+ std::shared_ptr<B> _b;
+};
+
+struct B {
+ std::shared_ptr<A> _a;
+};
+ 
+int main() {
+  // 使用智能指针管理类对象指针
+  std::shared_ptr<A> a = std::make_shared<A>();
+  std::shared_ptr<B> b = std::make_shared<B>();
+  // 将类A成员_b指向类B对象
+  a->_b = b;
+  // 将类B成员_a指向类A对象
+  b->_a = a;
+  // 产生循环引用，指针a和指针b指向的对象均无法由std::shared_ptr析构。
+  return 0;
+}
+```
+### 5.3.3 利用weak_ptr打破循环引用
+将5.3.2中类A、B中的成员智能指针中的一个声明为std::weak_ptr即可；原理是weak_ptr只改变弱引用计数，不会改变与shared_ptr释放资源有关的强引用计数，打破了循环。  
+注：**std::shared_ptr在强引用计数为0时释放其所管理的资源，但在弱引用计数为0时才释放控制块**。
+```c++
+struct B;
+
+struct A {
+  std::weak_ptr<B> _b;    // weak_ptr
+};
+
+struct B {
+ std::shared_ptr<A> _a;
+};
+ 
+int main() {
+  // 使用智能指针管理类对象指针
+  std::shared_ptr<A> a = std::make_shared<A>();
+  std::shared_ptr<B> b = std::make_shared<B>();
+  // 将类A成员_b指向类B对象
+  a->_b = b;
+  // 将类B成员_a指向类A对象
+  b->_a = a;
+  // 产生循环引用，但仍可正确释放资源
+  return 0;
+}
+```
