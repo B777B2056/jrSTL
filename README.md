@@ -104,17 +104,17 @@ unordered_xxx**支持forward_iterator**，它们内部均**采用哈希表实现
 
 ### 4.1.4 make_heap
 
-### 4.2 排列组合
-### 4.2.1 next_permutation
-
-### 4.2.2 prev_permutation
-
-### 4.3 其他
-### 4.3.1 copy
-
-### 4.3.2 sort
-
-### 4.3.3 rotate
+### 4.2 其他
+### 4.2.1 copy
+**源区间与目的区间不可以重合**。
+![](pic/copy.png)
+### 4.2.2 sort
+![](pic/sort.png)
+### 4.2.3 rotate
+前向迭代器  
+![](pic/rotate1.png)  
+双向迭代器与随机迭代器    
+![](pic/rotate2.png)
 
 ## 5 智能指针（C++11）
 ### 5.1 unique_ptr
