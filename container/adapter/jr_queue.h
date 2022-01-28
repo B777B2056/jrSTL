@@ -3,8 +3,8 @@
 
 #include "../sequence/jr_deque.h"
 
-namespace panzer {
-    template< class T, class Container = panzer::deque<T> >
+namespace jrSTL {
+    template< class T, class Container = jrSTL::deque<T> >
     class queue {
     protected:
         Container c;
@@ -93,7 +93,7 @@ namespace panzer {
         void pop() { c.pop_front(); }
 
         void swap( queue& other ) noexcept {
-            panzer::swap(c, other.c);
+            jrSTL::swap(c, other.c);
         }
         // 友元声明
         template< class U, class Cont >
@@ -117,38 +117,38 @@ namespace panzer {
     };
 
     template< class T, class Container >
-    void swap( panzer::queue<T,Container>& lhs,
-               panzer::queue<T,Container>& rhs )
+    void swap( jrSTL::queue<T,Container>& lhs,
+               jrSTL::queue<T,Container>& rhs )
     { lhs.swap(rhs); }
 
     template< class T, class Container >
-    bool operator==( const panzer::queue<T,Container>& lhs,
-                     const panzer::queue<T,Container>& rhs )
+    bool operator==( const jrSTL::queue<T,Container>& lhs,
+                     const jrSTL::queue<T,Container>& rhs )
     { return lhs.c == rhs.c; }
 
     template< class T, class Container >
-    bool operator!=( const panzer::queue<T,Container>& lhs,
-                     const panzer::queue<T,Container>& rhs )
+    bool operator!=( const jrSTL::queue<T,Container>& lhs,
+                     const jrSTL::queue<T,Container>& rhs )
     { return lhs.c != rhs.c; }
 
     template< class T, class Container >
-    bool operator<( const panzer::queue<T,Container>& lhs,
-                    const panzer::queue<T,Container>& rhs )
+    bool operator<( const jrSTL::queue<T,Container>& lhs,
+                    const jrSTL::queue<T,Container>& rhs )
     { return lhs.c < rhs.c; }
 
     template< class T, class Container >
-    bool operator<=( const panzer::queue<T,Container>& lhs,
-                     const panzer::queue<T,Container>& rhs )
+    bool operator<=( const jrSTL::queue<T,Container>& lhs,
+                     const jrSTL::queue<T,Container>& rhs )
     { return lhs.c <= rhs.c; }
 
     template< class T, class Container >
-    bool operator>( const panzer::queue<T,Container>& lhs,
-                    const panzer::queue<T,Container>& rhs )
+    bool operator>( const jrSTL::queue<T,Container>& lhs,
+                    const jrSTL::queue<T,Container>& rhs )
     { return lhs.c > rhs.c; }
 
     template< class T, class Container >
-    bool operator>=( const panzer::queue<T,Container>& lhs,
-                     const panzer::queue<T,Container>& rhs )
+    bool operator>=( const jrSTL::queue<T,Container>& lhs,
+                     const jrSTL::queue<T,Container>& rhs )
     { return lhs.c >= rhs.c; }
 }
 

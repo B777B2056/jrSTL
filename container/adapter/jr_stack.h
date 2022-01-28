@@ -3,8 +3,8 @@
 
 #include "../sequence/jr_deque.h"
 
-namespace panzer {
-    template< class T, class Container = panzer::deque<T> >
+namespace jrSTL {
+    template< class T, class Container = jrSTL::deque<T> >
     class stack {
         public:
             typedef Container container_type;
@@ -108,7 +108,7 @@ namespace panzer {
             }
 
             void swap( stack& other ) noexcept {
-                panzer::swap(c, other.c);
+                jrSTL::swap(c, other.c);
             }
 
             // 友元声明
@@ -138,44 +138,44 @@ namespace panzer {
     };
 
     template< class T, class Container >
-    void swap( panzer::stack<T,Container>& lhs,
-               panzer::stack<T,Container>& rhs ) {
+    void swap( jrSTL::stack<T,Container>& lhs,
+               jrSTL::stack<T,Container>& rhs ) {
         lhs.swap(rhs);
     }
 
     template< class T, class Container >
-    bool operator==( const panzer::stack<T,Container>& lhs,
-                     const panzer::stack<T,Container>& rhs ) {
+    bool operator==( const jrSTL::stack<T,Container>& lhs,
+                     const jrSTL::stack<T,Container>& rhs ) {
         return lhs.c == rhs.c;
     }
 
     template< class T, class Container >
-    bool operator!=( const panzer::stack<T,Container>& lhs,
-                     const panzer::stack<T,Container>& rhs ) {
+    bool operator!=( const jrSTL::stack<T,Container>& lhs,
+                     const jrSTL::stack<T,Container>& rhs ) {
         return lhs.c != rhs.c;
     }
 
     template< class T, class Container >
-    bool operator<( const panzer::stack<T,Container>& lhs,
-                     const panzer::stack<T,Container>& rhs ) {
+    bool operator<( const jrSTL::stack<T,Container>& lhs,
+                     const jrSTL::stack<T,Container>& rhs ) {
         return lhs.c < rhs.c;
     }
 
     template< class T, class Container >
-    bool operator<=( const panzer::stack<T,Container>& lhs,
-                     const panzer::stack<T,Container>& rhs ) {
+    bool operator<=( const jrSTL::stack<T,Container>& lhs,
+                     const jrSTL::stack<T,Container>& rhs ) {
         return lhs.c <= rhs.c;
     }
 
     template< class T, class Container >
-    bool operator>( const panzer::stack<T,Container>& lhs,
-                    const panzer::stack<T,Container>& rhs ) {
+    bool operator>( const jrSTL::stack<T,Container>& lhs,
+                    const jrSTL::stack<T,Container>& rhs ) {
         return lhs.c > rhs.c;
     }
 
     template< class T, class Container >
-    bool operator>=( const panzer::stack<T,Container>& lhs,
-                     const panzer::stack<T,Container>& rhs ) {
+    bool operator>=( const jrSTL::stack<T,Container>& lhs,
+                     const jrSTL::stack<T,Container>& rhs ) {
         return lhs.c >= rhs.c;
     }
 }

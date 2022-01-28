@@ -6,10 +6,10 @@
 #include "../utils/jr_heap.h"
 #include "../../functional/jr_functional.h"
 
-namespace panzer {
+namespace jrSTL {
     template<class T,
-             class Container = panzer::vector<T>,
-             class Compare = panzer::less<typename Container::value_type> >
+             class Container = jrSTL::vector<T>,
+             class Compare = jrSTL::less<typename Container::value_type> >
     class priority_queue {
         public:
             typedef typename Container::value_type value_type;
@@ -89,7 +89,7 @@ namespace panzer {
                            const Container& y)
                 : c(y), comp(x) {
                 c.insert(c.end(), first, last);
-                panzer::make_heap(c.begin(), c.end(), comp);
+                jrSTL::make_heap(c.begin(), c.end(), comp);
             }
 
             template<class InputIt>
@@ -98,7 +98,7 @@ namespace panzer {
                            Container&& y = Container())
                 : c(static_cast<Container&&>(y)), comp(x) {
                 c.insert(c.end(), first, last);
-                panzer::make_heap(c.begin(), c.end(), comp);
+                jrSTL::make_heap(c.begin(), c.end(), comp);
             }
 
             ~priority_queue() = default;
@@ -123,22 +123,22 @@ namespace panzer {
 
             void push(const value_type& x) {
                 c.push_back(x);
-                panzer::push_heap(c.begin(), c.end(), comp);
+                jrSTL::push_heap(c.begin(), c.end(), comp);
             }
 
             void push(value_type&& x) {
                 c.push_back(static_cast<value_type&&>(x));
-                panzer::push_heap(c.begin(), c.end(), comp);
+                jrSTL::push_heap(c.begin(), c.end(), comp);
             }
 
             template<class... Args>
             void emplace(Args&&... args) {
                 c.push_back(static_cast<Args&&>(args)...);
-                panzer::push_heap(c.begin(), c.end(), comp);
+                jrSTL::push_heap(c.begin(), c.end(), comp);
             }
 
             void pop() {
-                panzer::pop_heap(c.begin(), c.end(), comp);
+                jrSTL::pop_heap(c.begin(), c.end(), comp);
                 c.pop_back();
             }
 

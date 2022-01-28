@@ -23,14 +23,14 @@ TEST(testCase,unordered_set_iterator_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 1);
-    panzer::set<int> src;
+    jrSTL::set<int> src;
     for(size_t i = 0; i < cnt; i++) {
         int t = var;
         src.insert(t);
         --var;
     }
     // 迭代器范围构造函数
-    panzer::unordered_set<int, int_hash> des(src.begin(), src.end());
+    jrSTL::unordered_set<int, int_hash> des(src.begin(), src.end());
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     for(; it != src.end(); ++it) {
@@ -50,7 +50,7 @@ TEST(testCase,unordered_set_copy_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::unordered_set<int, int_hash> src;
+    jrSTL::unordered_set<int, int_hash> src;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         src.insert(t);
@@ -58,7 +58,7 @@ TEST(testCase,unordered_set_copy_ctor_test) {
         --var;
     }
     // 拷贝构造函数
-    panzer::unordered_set<int, int_hash> des(src);
+    jrSTL::unordered_set<int, int_hash> des(src);
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     auto dit = des.begin();
@@ -71,7 +71,7 @@ TEST(testCase,unordered_set_move_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::unordered_set<int, int_hash> src;
+    jrSTL::unordered_set<int, int_hash> src;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         src.insert(t);
@@ -79,14 +79,14 @@ TEST(testCase,unordered_set_move_ctor_test) {
         --var;
     }
     // 移动构造函数
-    panzer::unordered_set<int, int_hash> des(std::move(src));
+    jrSTL::unordered_set<int, int_hash> des(std::move(src));
     ASSERT_EQ(src.empty(), true);
 }
 
 // 初始化列表构造函数测试
 TEST(testCase,unordered_set_initializer_list_ctor_test) {
     std::unordered_set<int> src{2,2,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
-    panzer::unordered_set<int, int_hash> des{2,2,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::unordered_set<int, int_hash> des{2,2,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     for(; it != src.end(); ++it) {
@@ -106,8 +106,8 @@ TEST(testCase, unordered_set_operator_copy_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::unordered_set<int, int_hash> src{var, var, var};
-    panzer::unordered_set<int, int_hash> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::unordered_set<int, int_hash> src{var, var, var};
+    jrSTL::unordered_set<int, int_hash> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     des = src;
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
@@ -121,8 +121,8 @@ TEST(testCase, unordered_set_operator_move_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::unordered_set<int, int_hash> src{var, var, var};
-    panzer::unordered_set<int, int_hash> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::unordered_set<int, int_hash> src{var, var, var};
+    jrSTL::unordered_set<int, int_hash> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     des = std::move(src);
     ASSERT_EQ(src.empty(), true);
 }
@@ -132,7 +132,7 @@ TEST(testCase, unordered_set_clear_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::unordered_set<int, int_hash> des;
+    jrSTL::unordered_set<int, int_hash> des;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         des.insert(t);
@@ -146,7 +146,7 @@ TEST(testCase, unordered_set_clear_test) {
 // insert测试
 TEST(testCase, unordered_set_insert_test) {
     std::unordered_set<int, int_hash> src;
-    panzer::unordered_set<int, int_hash> des;
+    jrSTL::unordered_set<int, int_hash> des;
     // 拷贝insert
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         auto s = src.insert(n);
@@ -209,7 +209,7 @@ TEST(testCase, unordered_set_insert_test) {
         EXPECT_EQ(a, true);
     }
     // 迭代器insert
-    panzer::unordered_set<int, int_hash> tmp{1,2,3,4,5,1,2,3,4,5};
+    jrSTL::unordered_set<int, int_hash> tmp{1,2,3,4,5,1,2,3,4,5};
     std::set<int> tmp0{1,2,3,4,5,1,2,3,4,5};
     src.insert(tmp0.begin(), tmp0.end());
     des.insert(tmp.begin(), tmp.end());
@@ -230,12 +230,12 @@ TEST(testCase, unordered_set_insert_test) {
 // insert hint测试
 TEST(testCase, unordered_set_insert_hint_test) {
     std::unordered_set<int, int_hash> src{1,2,3,4,8,9};
-    panzer::unordered_set<int, int_hash> des{1,2,3,4,8,9};
+    jrSTL::unordered_set<int, int_hash> des{1,2,3,4,8,9};
     // insert hint
     auto s_pos = src.begin();
     auto d_pos = des.begin();
     std::advance(s_pos, 4);
-    panzer::advance(d_pos, 4);
+    jrSTL::advance(d_pos, 4);
     auto s = src.insert(s_pos, 5);
     auto d = des.insert(d_pos, 5);
     if(s == src.end())
@@ -259,7 +259,7 @@ TEST(testCase, unordered_set_insert_hint_test) {
 // emplace测试
 TEST(testCase, unordered_set_emplace_test) {
     std::unordered_set<int, int_hash> src;
-    panzer::unordered_set<int, int_hash> des;
+    jrSTL::unordered_set<int, int_hash> des;
     // emplace
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         auto s = src.emplace(n);
@@ -288,12 +288,12 @@ TEST(testCase, unordered_set_emplace_test) {
 // emplace hint测试
 TEST(testCase, unordered_set_emplace_hint_test) {
     std::unordered_set<int, int_hash> src{1,2,3,4,8,9};
-    panzer::unordered_set<int, int_hash> des{1,2,3,4,8,9};
+    jrSTL::unordered_set<int, int_hash> des{1,2,3,4,8,9};
     // insert hint
     auto s_pos = src.begin();
     auto d_pos = des.begin();
     std::advance(s_pos, 4);
-    panzer::advance(d_pos, 4);
+    jrSTL::advance(d_pos, 4);
     auto s = src.emplace_hint(s_pos, 5);
     auto d = des.emplace_hint(d_pos, 5);
     if(s == src.end())
@@ -319,7 +319,7 @@ TEST(testCase, unordered_set_erase_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 100);
-    panzer::unordered_set<int, int_hash> des;
+    jrSTL::unordered_set<int, int_hash> des;
     for(size_t i = 0; i < cnt; i++) {
         des.insert(i);
         des.insert(i);
@@ -331,17 +331,17 @@ TEST(testCase, unordered_set_erase_test) {
     // 单位置erase
     auto i = des.cbegin();
     auto j = des.cbegin();
-    panzer::advance(i, 3);
-    panzer::advance(j, 2);
+    jrSTL::advance(i, 3);
+    jrSTL::advance(j, 2);
     EXPECT_EQ(*i, *(des.erase(j)));
     ASSERT_EQ(--cnt, des.size());
     // 范围erase
     i = des.cbegin();
     j = des.cbegin();
-    panzer::advance(j, 2);
+    jrSTL::advance(j, 2);
     auto j0 = des.cbegin();
-    panzer::advance(j0, 6);
-    panzer::advance(i, 6);
+    jrSTL::advance(j0, 6);
+    jrSTL::advance(i, 6);
     EXPECT_EQ(*i, *(des.erase(j, j0)));
     ASSERT_EQ((cnt -= 4), des.size());
 }
@@ -351,8 +351,8 @@ TEST(testCase, unordered_set_swap_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::unordered_set<int, int_hash> src;
-    panzer::unordered_set<int, int_hash> des;
+    jrSTL::unordered_set<int, int_hash> src;
+    jrSTL::unordered_set<int, int_hash> des;
     for(size_t i = 0; i < cnt; i++) {
         src.insert(var + 1);
         des.insert(var - 1);
@@ -360,7 +360,7 @@ TEST(testCase, unordered_set_swap_test) {
         des.insert(var - 1);
         --var;
     }
-    panzer::unordered_set<int, int_hash> tmp = src;
+    jrSTL::unordered_set<int, int_hash> tmp = src;
     src.swap(des);
     ASSERT_EQ(tmp.size(), des.size());
     auto it = tmp.begin();
@@ -381,7 +381,7 @@ TEST(testCase, unordered_set_count) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::unordered_set<int, int_hash> src;
-    panzer::unordered_set<int, int_hash> des;
+    jrSTL::unordered_set<int, int_hash> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
@@ -401,7 +401,7 @@ TEST(testCase, unordered_set_find) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::unordered_set<int, int_hash> src;
-    panzer::unordered_set<int, int_hash> des;
+    jrSTL::unordered_set<int, int_hash> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
@@ -423,7 +423,7 @@ TEST(testCase, unordered_set_range) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::unordered_set<int, int_hash> des;
+    jrSTL::unordered_set<int, int_hash> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         des.insert(i);
         des.insert(i);

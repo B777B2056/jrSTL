@@ -7,7 +7,7 @@
 #include "../sequence/jr_forward_list.h"
 #include "jr_nodes.h"
 
-namespace panzer {
+namespace jrSTL {
 template<class T, class HashFun, class KeyEqualFun, class Allocator, bool isMulti>
 class _hashtable{
     template<class U, class T1, class T2, class T3, bool a>

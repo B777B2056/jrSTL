@@ -17,7 +17,7 @@ TEST(testCase,deque_assign_ctor_test){
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     // 赋值构造函数测试
-    panzer::deque<int> des(cnt, var);
+    jrSTL::deque<int> des(cnt, var);
     ASSERT_EQ(cnt, des.size());
     // 索引遍历测试
     for(size_t i = 0; i < des.size(); i++)
@@ -39,9 +39,9 @@ TEST(testCase,deque_iterator_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::deque<int> src(cnt, var);
+    jrSTL::deque<int> src(cnt, var);
     // 迭代器范围构造函数
-    panzer::deque<int> des(src.begin(), src.end());
+    jrSTL::deque<int> des(src.begin(), src.end());
     ASSERT_EQ(src.size(), des.size());
     for(size_t i = 0; i < src.size(); i++)
         EXPECT_EQ(src[i], des[i]);
@@ -52,9 +52,9 @@ TEST(testCase,deque_copy_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::deque<int> src(cnt, var);
+    jrSTL::deque<int> src(cnt, var);
     // 拷贝构造函数
-    panzer::deque<int> des(src);
+    jrSTL::deque<int> des(src);
     ASSERT_EQ(src.size(), des.size());
     for(size_t i = 0; i < src.size(); i++)
         EXPECT_EQ(src[i], des[i]);
@@ -65,9 +65,9 @@ TEST(testCase,deque_move_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::deque<int> src(cnt, var);
+    jrSTL::deque<int> src(cnt, var);
     // 移动构造函数
-    panzer::deque<int> des(std::move(src));
+    jrSTL::deque<int> des(std::move(src));
     ASSERT_EQ(src.empty(), true);
 }
 
@@ -75,7 +75,7 @@ TEST(testCase,deque_move_ctor_test) {
 TEST(testCase,deque_initializer_list_ctor_test) {
     std::deque<int> src{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     // 迭代器范围构造函数
-    panzer::deque<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::deque<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     ASSERT_EQ(src.size(), des.size());
     for(size_t i = 0; i < src.size(); i++)
         EXPECT_EQ(src[i], des[i]);
@@ -86,8 +86,8 @@ TEST(testCase, deque_operator_copy_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::deque<int> src(cnt, var);
-    panzer::deque<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::deque<int> src(cnt, var);
+    jrSTL::deque<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     des = src;
     ASSERT_EQ(src.size(), des.size());
     for(size_t i = 0; i < src.size(); i++)
@@ -99,8 +99,8 @@ TEST(testCase, deque_operator_move_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::deque<int> src(cnt, var);
-    panzer::deque<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::deque<int> src(cnt, var);
+    jrSTL::deque<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     des = std::move(src);
     EXPECT_EQ(src.empty(), true);
     ASSERT_EQ(cnt, des.size());
@@ -114,7 +114,7 @@ TEST(testCase, deque_assign_mem_fn_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::deque<int> src(10, -1);
-    panzer::deque<int> des(15, -4);
+    jrSTL::deque<int> des(15, -4);
     // 重复赋值测试
     src.assign(cnt, var);
     des.assign(cnt, var);
@@ -127,7 +127,7 @@ TEST(testCase, deque_assign_mem_fn_test) {
     for(size_t i = 0; i < des.size(); ++i)
         EXPECT_EQ(src[i], des[i]);
     // 迭代器赋值测试
-    panzer::deque<int> tmp(6, -100);
+    jrSTL::deque<int> tmp(6, -100);
     des.assign(tmp.begin(), tmp.end());
     ASSERT_EQ(tmp.size(), des.size());
     for(size_t i = 0; i < des.size(); ++i)
@@ -139,7 +139,7 @@ TEST(testCase, deque_clear_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::deque<int> des(cnt, var);
+    jrSTL::deque<int> des(cnt, var);
     des.clear();
     EXPECT_EQ(des.size(), 0);
 }
@@ -149,7 +149,7 @@ TEST(testCase, deque_resize_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::deque<int> des(cnt, var);
+    jrSTL::deque<int> des(cnt, var);
     std::deque<int> tmp(cnt, var);
     // 新size小于旧size
     des.resize(cnt / 2);
@@ -171,7 +171,7 @@ TEST(testCase, deque_resize_test) {
 // push_front测试
 TEST(testCase, deque_push_front_test) {
     std::deque<int> src;
-    panzer::deque<int> des;
+    jrSTL::deque<int> des;
     // 拷贝push
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         src.push_front(n);
@@ -193,7 +193,7 @@ TEST(testCase, deque_push_front_test) {
 // push_back测试
 TEST(testCase, deque_push_back_test) {
     std::deque<int> src;
-    panzer::deque<int> des;
+    jrSTL::deque<int> des;
     // 拷贝push
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         src.push_back(n);
@@ -215,7 +215,7 @@ TEST(testCase, deque_push_back_test) {
 // pop_front测试
 TEST(testCase, deque_pop_front_test) {
     std::deque<int> src{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
-    panzer::deque<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::deque<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     src.pop_front();
     des.pop_front();
     ASSERT_EQ(src.size(), des.size());
@@ -227,7 +227,7 @@ TEST(testCase, deque_pop_front_test) {
 // pop_back测试
 TEST(testCase, deque_pop_back_test) {
     std::deque<int> src{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
-    panzer::deque<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::deque<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     src.pop_back();
     des.pop_back();
     ASSERT_EQ(src.size(), des.size());
@@ -239,7 +239,7 @@ TEST(testCase, deque_pop_back_test) {
 // 原位构造push_front测试
 TEST(testCase, deque_emplace_front_test) {
     std::deque<int> src;
-    panzer::deque<int> des;
+    jrSTL::deque<int> des;
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         src.emplace_front(n);
         des.emplace_front(n);
@@ -252,7 +252,7 @@ TEST(testCase, deque_emplace_front_test) {
 // 原位构造push_back测试
 TEST(testCase, deque_emplace_back_test) {
     std::deque<int> src;
-    panzer::deque<int> des;
+    jrSTL::deque<int> des;
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         src.emplace_back(n);
         des.emplace_back(n);
@@ -265,7 +265,7 @@ TEST(testCase, deque_emplace_back_test) {
 //// insert测试
 TEST(testCase, deque_insert_test) {
     std::deque<int> src;
-    panzer::deque<int> des;
+    jrSTL::deque<int> des;
     // 拷贝insert
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         EXPECT_EQ(*(src.insert(src.begin(), n)),
@@ -295,7 +295,7 @@ TEST(testCase, deque_insert_test) {
     for(size_t i = 0; i < des.size(); ++i)
         EXPECT_EQ(src[i], des[i]);
     // 迭代器insert
-    panzer::deque<int> tmp({1,2,3,4,5});
+    jrSTL::deque<int> tmp({1,2,3,4,5});
     std::deque<int> tmp0({1,2,3,4,5});
     EXPECT_EQ(*(src.insert(src.begin(), tmp0.begin(), tmp0.end())),
               *(des.insert(des.cbegin(), tmp.begin(), tmp.end())));
@@ -307,7 +307,7 @@ TEST(testCase, deque_insert_test) {
 // emplace测试
 TEST(testCase, deque_emplace_test) {
     std::deque<int> src;
-    panzer::deque<int> des;
+    jrSTL::deque<int> des;
     // 拷贝emplace
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         EXPECT_EQ(*(src.emplace(src.begin(), n)),
@@ -331,7 +331,7 @@ TEST(testCase, deque_erase_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 20);
-    panzer::deque<int> des(cnt, var);
+    jrSTL::deque<int> des(cnt, var);
     std::deque<int> src(cnt, var);
     // 单位置erase
     EXPECT_EQ(*(src.erase(src.begin() + 2)),
@@ -367,9 +367,9 @@ TEST(testCase, deque_swap_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::deque<int> src(cnt, var - 1);
-    panzer::deque<int> des(cnt, var + 1);
-    panzer::deque<int> tmp = src;
+    jrSTL::deque<int> src(cnt, var - 1);
+    jrSTL::deque<int> des(cnt, var + 1);
+    jrSTL::deque<int> tmp = src;
     src.swap(des);
     ASSERT_EQ(tmp.size(), des.size());
     for(size_t i = 0; i < des.size(); ++i)
@@ -386,7 +386,7 @@ TEST(testCase, deque_reverse_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::deque<int> src;
-    panzer::deque<int> des;
+    jrSTL::deque<int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.push_back(i);
         des.push_back(i);
@@ -406,7 +406,7 @@ TEST(testCase, deque_iterator_sub_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 20);
     std::deque<int> src(cnt, var);
-    panzer::deque<int> des(cnt, var);
+    jrSTL::deque<int> des(cnt, var);
     auto it = src.begin();
     auto rit = des.begin();
     it += 12;

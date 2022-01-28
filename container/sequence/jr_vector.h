@@ -7,14 +7,14 @@
 #include "../../memory/jr_allocator.h"
 #include "../../iterator/jr_iterator.h"
 
-namespace panzer {
-    template< class T, class Allocator = panzer::allocator<T> >
+namespace jrSTL {
+    template< class T, class Allocator = jrSTL::allocator<T> >
     class vector {
     public:
         typedef T* iterator;
         typedef const T* const_iterator;
-        typedef panzer::reverse_iterator<const_iterator> const_reverse_iterator;
-        typedef panzer::reverse_iterator<iterator> reverse_iterator;
+        typedef jrSTL::reverse_iterator<const_iterator> const_reverse_iterator;
+        typedef jrSTL::reverse_iterator<iterator> reverse_iterator;
         typedef T value_type;
         typedef Allocator allocator_type;
         typedef size_t size_type;
@@ -64,7 +64,7 @@ namespace panzer {
             _tail = _head + _size;
             _end_of_storage = _head + _cap;
             for(iterator tmp = _head; tmp != _tail; ++tmp) {
-                _alloc.construct(tmp, *(panzer::next(first, tmp - _head)));
+                _alloc.construct(tmp, *(jrSTL::next(first, tmp - _head)));
             }
         }
 
@@ -517,7 +517,7 @@ namespace panzer {
                 _end_of_storage = _head + _cap;
             }
             iterator pos_mutable = begin();
-            panzer::advance(pos_mutable, dis);
+            jrSTL::advance(pos_mutable, dis);
             for(iterator tmp = _tail; tmp != pos_mutable; --tmp) {
                 _alloc.construct(&(*tmp), std::move(*(tmp - 1)));
             }
@@ -529,7 +529,7 @@ namespace panzer {
         }
 
         iterator insert( const_iterator pos, std::initializer_list<T> ilist ) {
-            difference_type len = panzer::distance(cbegin(), pos);
+            difference_type len = jrSTL::distance(cbegin(), pos);
             for(auto it = ilist.begin(); it != ilist.end(); ++it) {
                 pos = insert(pos, *it);
                 ++pos;
@@ -568,7 +568,7 @@ namespace panzer {
                 _end_of_storage = _head + _cap;
             }
             iterator pos_mutable = begin();
-            panzer::advance(pos_mutable, dis);
+            jrSTL::advance(pos_mutable, dis);
             for(iterator tmp = _tail; tmp != pos_mutable; --tmp) {
                 *tmp = *(tmp - 1);
             }
@@ -594,14 +594,14 @@ namespace panzer {
     };
 
     template< class T, class Alloc >
-    void swap( panzer::vector<T,Alloc>& lhs,
-               panzer::vector<T,Alloc>& rhs ) {
+    void swap( jrSTL::vector<T,Alloc>& lhs,
+               jrSTL::vector<T,Alloc>& rhs ) {
         lhs.swap(rhs);
     }
 
     template< class T, class Alloc >
-    bool operator==( const panzer::vector<T, Alloc>& lhs,
-                     const panzer::vector<T, Alloc>& rhs ) {
+    bool operator==( const jrSTL::vector<T, Alloc>& lhs,
+                     const jrSTL::vector<T, Alloc>& rhs ) {
         if (lhs.size() != rhs.size())
             return false;
         for(size_t i = 0; i < lhs.size(); i++) {
@@ -612,14 +612,14 @@ namespace panzer {
     }
 
     template< class T, class Alloc >
-    bool operator!=( const panzer::vector<T, Alloc>& lhs,
-                     const panzer::vector<T, Alloc>& rhs ) {
+    bool operator!=( const jrSTL::vector<T, Alloc>& lhs,
+                     const jrSTL::vector<T, Alloc>& rhs ) {
         return !(lhs == rhs);
     }
 
     template< class T, class Alloc >
-    bool operator<( const panzer::vector<T, Alloc>& lhs,
-                    const panzer::vector<T, Alloc>& rhs ) {
+    bool operator<( const jrSTL::vector<T, Alloc>& lhs,
+                    const jrSTL::vector<T, Alloc>& rhs ) {
         if (lhs.size() < rhs.size())
             return true;
         if (lhs.size() > rhs.size() || operator==(lhs, rhs))
@@ -632,8 +632,8 @@ namespace panzer {
     }
 
     template< class T, class Alloc >
-    bool operator>( const panzer::vector<T, Alloc>& lhs,
-                    const panzer::vector<T, Alloc>& rhs ) {
+    bool operator>( const jrSTL::vector<T, Alloc>& lhs,
+                    const jrSTL::vector<T, Alloc>& rhs ) {
         if (lhs.size() > rhs.size())
             return true;
         if (lhs.size() < rhs.size() || operator==(lhs, rhs))
@@ -646,14 +646,14 @@ namespace panzer {
     }
 
     template< class T, class Alloc >
-    bool operator>=( const panzer::vector<T, Alloc>& lhs,
-                     const panzer::vector<T, Alloc>& rhs ) {
+    bool operator>=( const jrSTL::vector<T, Alloc>& lhs,
+                     const jrSTL::vector<T, Alloc>& rhs ) {
         return !(lhs < rhs);
     }
 
     template< class T, class Alloc >
-    bool operator<=( const panzer::vector<T, Alloc>& lhs,
-                     const panzer::vector<T, Alloc>& rhs ) {
+    bool operator<=( const jrSTL::vector<T, Alloc>& lhs,
+                     const jrSTL::vector<T, Alloc>& rhs ) {
         return !(lhs > rhs);
     }
 

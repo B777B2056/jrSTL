@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <climits>
 
-namespace panzer {
+namespace jrSTL {
     template<class T>
     class allocator{
     public:

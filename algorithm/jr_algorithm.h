@@ -8,7 +8,7 @@
 #include "jr_algo_buffer.h"
 #include "../container/utils/jr_heap.h"
 
-namespace panzer {
+namespace jrSTL {
     /*不修改序列的操作*/
     template< class InputIt, class UnaryPredicate >
     bool all_of( InputIt first, InputIt last,
@@ -54,9 +54,9 @@ namespace panzer {
     }
 
     template< class InputIt, class UnaryPredicate >
-    typename panzer::iterator_traits<InputIt>::difference_type
+    typename jrSTL::iterator_traits<InputIt>::difference_type
     count_if( InputIt first, InputIt last, UnaryPredicate p ) {
-        typename panzer::iterator_traits<InputIt>::difference_type cnt = 0;
+        typename jrSTL::iterator_traits<InputIt>::difference_type cnt = 0;
         while(first != last) {
             if(p(*first))
                 ++cnt;
@@ -66,9 +66,9 @@ namespace panzer {
     }
 
     template< class InputIt, class T >
-    typename panzer::iterator_traits<InputIt>::difference_type
+    typename jrSTL::iterator_traits<InputIt>::difference_type
     count( InputIt first, InputIt last, const T &value )
-    { return panzer::count_if(first, last,
+    { return jrSTL::count_if(first, last,
                               [&value](const T& m)->bool { return value == m; }); }
 
     template< class InputIt1, class InputIt2, class BinaryPredicate >
@@ -86,9 +86,9 @@ namespace panzer {
     template< class InputIt1, class InputIt2 >
     std::pair<InputIt1, InputIt2>
     mismatch( InputIt1 first1, InputIt1 last1, InputIt2 first2 ) {
-        typedef typename panzer::iterator_traits<InputIt1>::value_type type1;
-        typedef typename panzer::iterator_traits<InputIt2>::value_type type2;
-        return panzer::mismatch(first1, last1, first2,
+        typedef typename jrSTL::iterator_traits<InputIt1>::value_type type1;
+        typedef typename jrSTL::iterator_traits<InputIt2>::value_type type2;
+        return jrSTL::mismatch(first1, last1, first2,
                         [](const type1& a, const type2& b)
                                 ->bool { return a == b; });
     }
@@ -115,7 +115,7 @@ namespace panzer {
 
     template< class InputIt, class T >
     InputIt find( InputIt first, InputIt last, const T& value ) {
-        return panzer::find_if(first, last,
+        return jrSTL::find_if(first, last,
                                [&value](const T& a)
                                ->bool { return value == a; });
     }
@@ -151,11 +151,11 @@ namespace panzer {
               class BinaryPredicate >
     ForwardIt1 _search_with_buffer( ForwardIt1 first, ForwardIt1 last,
                                     ForwardIt2 s_first, ForwardIt2 s_last,
-                                    panzer::_buffer<T>& next,
+                                    jrSTL::_buffer<T>& next,
                                     BinaryPredicate p ) {
         if(s_first == s_last)
             return last;
-        int n = panzer::distance(first, last);
+        int n = jrSTL::distance(first, last);
         int m = static_cast<int>(next.length());
         if(n < m)
             return last;
@@ -167,12 +167,12 @@ namespace panzer {
             i = next[j - 1];
             ForwardIt2 s_it_l = s_first;
             ForwardIt2 s_it_r = s_first;
-            panzer::advance(s_it_l, i + 1);
-            panzer::advance(s_it_r, j);
+            jrSTL::advance(s_it_l, i + 1);
+            jrSTL::advance(s_it_r, j);
             while((i >= 0) && !p(*s_it_l, *s_it_r)) {
                 i = next[i];
                 s_it_l = s_first;
-                panzer::advance(s_it_l, i + 1);
+                jrSTL::advance(s_it_l, i + 1);
             }
             if(p(*s_it_l, *s_it_r)) {
                 next[j] = i + 1;
@@ -186,8 +186,8 @@ namespace panzer {
         while(i < n && j < m) {
             ForwardIt1 it = first;
             ForwardIt2 s_it = s_first;
-            panzer::advance(it, i);
-            panzer::advance(s_it, j);
+            jrSTL::advance(it, i);
+            jrSTL::advance(s_it, j);
             if(p(*it, *s_it)) {
                 ++i;
                 ++j;
@@ -198,7 +198,7 @@ namespace panzer {
             }
         }
         if(j == m) {
-            panzer::advance(result, i - m);
+            jrSTL::advance(result, i - m);
         } else {
             result = last;
         }
@@ -211,8 +211,8 @@ namespace panzer {
     ForwardIt1 search( ForwardIt1 first, ForwardIt1 last,
                        ForwardIt2 s_first, ForwardIt2 s_last,
                        BinaryPredicate p ) {
-        size_t len = panzer::distance(s_first, s_last);
-        panzer::_buffer<int> buf(len);
+        size_t len = jrSTL::distance(s_first, s_last);
+        jrSTL::_buffer<int> buf(len);
         return buf.is_valid() ? _search_with_buffer(first, last, s_first, s_last, buf, p)
                               : _search_without_buffer(first, last, s_first, s_last, p);
     }
@@ -220,9 +220,9 @@ namespace panzer {
     template< class ForwardIt1, class ForwardIt2 >
     ForwardIt1 search( ForwardIt1 first, ForwardIt1 last,
                        ForwardIt2 s_first, ForwardIt2 s_last ) {
-        typedef typename panzer::iterator_traits<ForwardIt1>::value_type type1;
-        typedef typename panzer::iterator_traits<ForwardIt2>::value_type type2;
-        return panzer::search(first, last, s_first, s_last,
+        typedef typename jrSTL::iterator_traits<ForwardIt1>::value_type type1;
+        typedef typename jrSTL::iterator_traits<ForwardIt2>::value_type type2;
+        return jrSTL::search(first, last, s_first, s_last,
                               [](const type1& a, const type2& b)
                               ->bool { return a == b; });
     }
@@ -239,10 +239,10 @@ namespace panzer {
             return last;
         ForwardIt1 result = last;
         while(first != last) {
-            ForwardIt1 it = panzer::search(first, last, s_first, s_last, p);
+            ForwardIt1 it = jrSTL::search(first, last, s_first, s_last, p);
             if(it != last) {
                 result = first = it;
-                panzer::advance(first, panzer::distance(s_first, s_last));
+                jrSTL::advance(first, jrSTL::distance(s_first, s_last));
             } else {
                 break;
             }
@@ -260,15 +260,15 @@ namespace panzer {
                          bidirectional_iterator_tag ) {
         if(s_first == s_last)
             return last;
-        auto rfirst = panzer::reverse_iterator<BidIt1>(last);
-        auto rlast = panzer::reverse_iterator<BidIt1>(first);
-        auto rs_first = panzer::reverse_iterator<BidIt2>(s_last);
-        auto rs_last = panzer::reverse_iterator<BidIt2>(s_first);
-        auto result = panzer::search(rfirst, rlast, rs_first, rs_last, p);
+        auto rfirst = jrSTL::reverse_iterator<BidIt1>(last);
+        auto rlast = jrSTL::reverse_iterator<BidIt1>(first);
+        auto rs_first = jrSTL::reverse_iterator<BidIt2>(s_last);
+        auto rs_last = jrSTL::reverse_iterator<BidIt2>(s_first);
+        auto result = jrSTL::search(rfirst, rlast, rs_first, rs_last, p);
         if(result == rlast)
             return last;
         else {
-            panzer::advance(result, panzer::distance(s_first, s_last));
+            jrSTL::advance(result, jrSTL::distance(s_first, s_last));
             return result.base();
         }
     }
@@ -279,17 +279,17 @@ namespace panzer {
     ForwardIt1 find_end( ForwardIt1 first, ForwardIt1 last,
                          ForwardIt2 s_first, ForwardIt2 s_last,
                          BinaryPredicate p ) {
-        return panzer::_find_end(first, last, s_first, s_last, p,
-                                 typename panzer::iterator_traits<ForwardIt1>::iterator_category(),
-                                 typename panzer::iterator_traits<ForwardIt2>::iterator_category());
+        return jrSTL::_find_end(first, last, s_first, s_last, p,
+                                 typename jrSTL::iterator_traits<ForwardIt1>::iterator_category(),
+                                 typename jrSTL::iterator_traits<ForwardIt2>::iterator_category());
     }
 
     template< class ForwardIt1, class ForwardIt2 >
     ForwardIt1 find_end( ForwardIt1 first, ForwardIt1 last,
                          ForwardIt2 s_first, ForwardIt2 s_last ) {
-        typedef typename panzer::iterator_traits<ForwardIt1>::value_type type1;
-        typedef typename panzer::iterator_traits<ForwardIt2>::value_type type2;
-        return panzer::find_end(first, last, s_first, s_last,
+        typedef typename jrSTL::iterator_traits<ForwardIt1>::value_type type1;
+        typedef typename jrSTL::iterator_traits<ForwardIt2>::value_type type2;
+        return jrSTL::find_end(first, last, s_first, s_last,
                                 [](const type1& a, const type2& b)
                                 ->bool { return a == b; });
     }
@@ -297,9 +297,9 @@ namespace panzer {
     template< class InputIt, class ForwardIt, class BinaryPredicate >
     InputIt find_first_of( InputIt first, InputIt last,
                            ForwardIt s_first, ForwardIt s_last, BinaryPredicate p ) {
-        typedef typename panzer::iterator_traits<InputIt>::value_type type;
+        typedef typename jrSTL::iterator_traits<InputIt>::value_type type;
         while(first != last) {
-            if(s_last != panzer::find_if(s_first, s_last,
+            if(s_last != jrSTL::find_if(s_first, s_last,
                                          [=](type a)
                                          ->bool { return p(a, *first); })) {
                 return first;
@@ -312,9 +312,9 @@ namespace panzer {
     template< class InputIt, class ForwardIt >
     InputIt find_first_of( InputIt first, InputIt last,
                            ForwardIt s_first, ForwardIt s_last ) {
-        typedef typename panzer::iterator_traits<InputIt>::value_type type1;
-        typedef typename panzer::iterator_traits<ForwardIt>::value_type type2;
-        return panzer::find_first_of(first, last, s_first, s_last,
+        typedef typename jrSTL::iterator_traits<InputIt>::value_type type1;
+        typedef typename jrSTL::iterator_traits<ForwardIt>::value_type type2;
+        return jrSTL::find_first_of(first, last, s_first, s_last,
                                      [](const type1& a, const type2& b)
                                      ->bool { return a == b; });
     }
@@ -342,7 +342,7 @@ namespace panzer {
 
     template< class ForwardIt, class Size, class T >
     ForwardIt search_n( ForwardIt first, ForwardIt last, Size count, const T& value ) {
-        return panzer::search_n(first, last, count, value,
+        return jrSTL::search_n(first, last, count, value,
                                 [](const T& a, const T& b)
                                 ->bool { return a == b; });
     }
@@ -361,7 +361,7 @@ namespace panzer {
     template< class ForwardIt >
     ForwardIt adjacent_find( ForwardIt first, ForwardIt last ) {
         typedef typename iterator_traits<ForwardIt>::value_type type;
-        return panzer::adjacent_find(first, last,
+        return jrSTL::adjacent_find(first, last,
                                      [](const type& a, const type& b)
                                      ->bool { return a == b; });
     }
@@ -369,7 +369,7 @@ namespace panzer {
     /*修改序列的操作*/
     template< class ForwardIt1, class ForwardIt2 >
     void iter_swap( ForwardIt1 a, ForwardIt2 b ) {
-        typename panzer::iterator_traits<ForwardIt1>::value_type tmp = *a;
+        typename jrSTL::iterator_traits<ForwardIt1>::value_type tmp = *a;
         *a = *b;
         *b = tmp;
     }
@@ -377,7 +377,7 @@ namespace panzer {
     //逐个拷贝元素，循环结束条件为循环次数达到last-first次
     template< class InputIt, class OutputIt >
     OutputIt _copy_d( InputIt first, InputIt last, OutputIt d_first ) {
-        typename panzer::iterator_traits<InputIt>::difference_type distance;
+        typename jrSTL::iterator_traits<InputIt>::difference_type distance;
         for(distance = last - first; distance; --distance) {
             *d_first = *first;
             ++first;
@@ -400,15 +400,15 @@ namespace panzer {
     // 随机迭代器类型
     template< class InputIt, class OutputIt >
     OutputIt _copy( InputIt first, InputIt last, OutputIt d_first, random_access_iterator_tag ) {
-        return panzer::_copy_d(first, last, d_first);
+        return jrSTL::_copy_d(first, last, d_first);
     }
 
     // 分发器(包装成仿函数是因为函数不能特例化)
     template< class InputIt, class OutputIt >
     struct _copy_dispatch {
         OutputIt operator()( InputIt first, InputIt last, OutputIt d_first ) {
-            return panzer::_copy(first, last, d_first,
-                                 typename panzer::iterator_traits<InputIt>::iterator_category());
+            return jrSTL::_copy(first, last, d_first,
+                                 typename jrSTL::iterator_traits<InputIt>::iterator_category());
         }
     };
 
@@ -421,7 +421,7 @@ namespace panzer {
                 return d_first + (last - first);
             }
             else
-                return panzer::_copy_d(first, last, d_first);
+                return jrSTL::_copy_d(first, last, d_first);
         }
     };
 
@@ -433,14 +433,14 @@ namespace panzer {
                 return d_first + (last - first);
             }
             else
-                return panzer::_copy_d(first, last, d_first);
+                return jrSTL::_copy_d(first, last, d_first);
         }
     };
 
     // 完全泛化版本
     template< class InputIt, class OutputIt >
     OutputIt copy( InputIt first, InputIt last, OutputIt d_first ) {
-        return panzer::_copy_dispatch<InputIt, OutputIt >()(first, last, d_first);
+        return jrSTL::_copy_dispatch<InputIt, OutputIt >()(first, last, d_first);
     }
 
     // char/wchar_t具有平凡特性，可以直接操作内存，速度很快
@@ -480,8 +480,8 @@ namespace panzer {
     template< class InputIt, class OutputIt, class UnaryPredicate >
     OutputIt copy_if( InputIt first, InputIt last, OutputIt d_first,
                       UnaryPredicate pred ) {
-        return panzer::_copy_if(first, last, d_first, pred,
-                                typename panzer::iterator_traits<InputIt>::iterator_category());
+        return jrSTL::_copy_if(first, last, d_first, pred,
+                                typename jrSTL::iterator_traits<InputIt>::iterator_category());
     }
 
     template< class InputIt, class Size, class OutputIt >
@@ -496,9 +496,9 @@ namespace panzer {
 
     template< class BidirIt1, class BidirIt2 >
     BidirIt2 copy_backward( BidirIt1 first, BidirIt1 last, BidirIt2 d_last ) {
-        auto res = panzer::copy(panzer::reverse_iterator<BidirIt1>(last),
-                                panzer::reverse_iterator<BidirIt1>(first),
-                                panzer::reverse_iterator<BidirIt2>(d_last));
+        auto res = jrSTL::copy(jrSTL::reverse_iterator<BidirIt1>(last),
+                                jrSTL::reverse_iterator<BidirIt1>(first),
+                                jrSTL::reverse_iterator<BidirIt2>(d_last));
         return res.base();
     }
 
@@ -516,7 +516,7 @@ namespace panzer {
     template< class InputIt, class OutputIt >
     OutputIt _move( InputIt first, InputIt last, OutputIt d_first,
                     random_access_iterator_tag ) {
-        typename panzer::iterator_traits<InputIt>::difference_type distance;
+        typename jrSTL::iterator_traits<InputIt>::difference_type distance;
         for(distance = last - first; distance; --distance) {
             *d_first = std::move(*first);
             ++first;
@@ -527,15 +527,15 @@ namespace panzer {
 
     template< class InputIt, class OutputIt >
     OutputIt move( InputIt first, InputIt last, OutputIt d_first ) {
-        return panzer::_move(first, last, d_first,
-                     typename panzer::iterator_traits<InputIt>::iterator_category());
+        return jrSTL::_move(first, last, d_first,
+                     typename jrSTL::iterator_traits<InputIt>::iterator_category());
     }
 
     template< class BidirIt1, class BidirIt2 >
     BidirIt2 move_backward( BidirIt1 first, BidirIt1 last, BidirIt2 d_last ) {
-        auto ret = panzer::move(panzer::reverse_iterator<BidirIt1>(last),
-                                panzer::reverse_iterator<BidirIt1>(first),
-                                panzer::reverse_iterator<BidirIt2>(d_last));
+        auto ret = jrSTL::move(jrSTL::reverse_iterator<BidirIt1>(last),
+                                jrSTL::reverse_iterator<BidirIt1>(first),
+                                jrSTL::reverse_iterator<BidirIt2>(d_last));
         return ret.base();
     }
 
@@ -549,7 +549,7 @@ namespace panzer {
 
     template< class ForwardIt, class T >
     void _fill( ForwardIt first, ForwardIt last, const T& value, random_access_iterator_tag ) {
-        typename panzer::iterator_traits<ForwardIt>::difference_type distance;
+        typename jrSTL::iterator_traits<ForwardIt>::difference_type distance;
         for(distance = last - first; distance; --distance) {
             *first = value;
             ++first;
@@ -558,8 +558,8 @@ namespace panzer {
 
     template< class ForwardIt, class T >
     void fill( ForwardIt first, ForwardIt last, const T& value ) {
-        panzer::_fill(first, last, value,
-                typename panzer::iterator_traits<ForwardIt>::iterator_category());
+        jrSTL::_fill(first, last, value,
+                typename jrSTL::iterator_traits<ForwardIt>::iterator_category());
     }
 
     template< class OutputIt, class Size, class T >
@@ -581,7 +581,7 @@ namespace panzer {
 
     template< class ForwardIt, class Generator >
     void _generate( ForwardIt first, ForwardIt last, Generator g, random_access_iterator_tag ) {
-        typename panzer::iterator_traits<ForwardIt>::difference_type distance;
+        typename jrSTL::iterator_traits<ForwardIt>::difference_type distance;
         for(distance = last - first; distance; --distance) {
             *first = g();
             ++first;
@@ -590,8 +590,8 @@ namespace panzer {
 
     template< class ForwardIt, class Generator >
     void generate( ForwardIt first, ForwardIt last, Generator g ) {
-        panzer::_generate(first, last, g,
-                          typename panzer::iterator_traits<ForwardIt>::iterator_category());
+        jrSTL::_generate(first, last, g,
+                          typename jrSTL::iterator_traits<ForwardIt>::iterator_category());
     }
 
     template< class OutputIt, class Size, class Generator >
@@ -616,7 +616,7 @@ namespace panzer {
     template< class InputIt, class OutputIt, class UnaryOperation >
     OutputIt _transform( InputIt first1, InputIt last1, OutputIt d_first,
                          UnaryOperation unary_op, random_access_iterator_tag ) {
-        typename panzer::iterator_traits<InputIt>::difference_type distance;
+        typename jrSTL::iterator_traits<InputIt>::difference_type distance;
         for(distance = last1 - first1; distance; --distance) {
             *d_first = unary_op(*first1);
             ++first1;
@@ -629,7 +629,7 @@ namespace panzer {
     OutputIt transform( InputIt first1, InputIt last1, OutputIt d_first,
                         UnaryOperation unary_op ) {
         return _transform(first1, last1, d_first, unary_op,
-                          typename panzer::iterator_traits<InputIt>::iterator_category());
+                          typename jrSTL::iterator_traits<InputIt>::iterator_category());
     }
 
     template< class InputIt1, class InputIt2, class OutputIt, class BinaryOperation >
@@ -646,7 +646,7 @@ namespace panzer {
     template< class InputIt1, class InputIt2, class OutputIt, class BinaryOperation >
     OutputIt _transform( InputIt1 first1, InputIt1 last1, InputIt2 first2,
                          OutputIt d_first, BinaryOperation binary_op, random_access_iterator_tag ) {
-        typename panzer::iterator_traits<InputIt1>::difference_type distance;
+        typename jrSTL::iterator_traits<InputIt1>::difference_type distance;
         for(distance = last1 - first1; distance; --distance) {
             *d_first = binary_op(*first1, *first2);
             ++first1;
@@ -661,7 +661,7 @@ namespace panzer {
     OutputIt transform( InputIt1 first1, InputIt1 last1, InputIt2 first2,
                         OutputIt d_first, BinaryOperation binary_op ) {
         return _transform(first1, last1, first2, d_first, binary_op,
-                          typename panzer::iterator_traits<InputIt1>::iterator_category());
+                          typename jrSTL::iterator_traits<InputIt1>::iterator_category());
     }
 
     template< class InputIt, class OutputIt, class UnaryPredicate >
@@ -680,20 +680,20 @@ namespace panzer {
     template< class InputIt, class OutputIt, class T >
     OutputIt remove_copy( InputIt first, InputIt last, OutputIt d_first,
                           const T& value ) {
-        return panzer::remove_copy_if(first, last, d_first,
+        return jrSTL::remove_copy_if(first, last, d_first,
                                       [&value](const T& a)
                                       ->bool { return a == value; });
     }
 
     template< class ForwardIt, class UnaryPredicate >
     ForwardIt remove_if( ForwardIt first, ForwardIt last, UnaryPredicate p ) {
-        ForwardIt next = first = panzer::find_if(first, last, p);
-        return next == last ? last : panzer::remove_copy_if(++next, last, first, p);
+        ForwardIt next = first = jrSTL::find_if(first, last, p);
+        return next == last ? last : jrSTL::remove_copy_if(++next, last, first, p);
     }
 
     template< class ForwardIt, class T >
     ForwardIt remove( ForwardIt first, ForwardIt last, const T& value ) {
-        return panzer::remove_if(first, last,
+        return jrSTL::remove_if(first, last,
                                  [&value](const T& a)
                                  ->bool { return a == value; });
     }
@@ -752,7 +752,7 @@ namespace panzer {
             return;
         --last;
         while(first != last) {
-            typename panzer::iterator_traits<BidirIt>::value_type tmp = *first;
+            typename jrSTL::iterator_traits<BidirIt>::value_type tmp = *first;
             *first = *last;
             *last = tmp;
             ++first;
@@ -764,8 +764,8 @@ namespace panzer {
 
     template< class BidirIt, class OutputIt >
     OutputIt reverse_copy( BidirIt first, BidirIt last, OutputIt d_first ) {
-        BidirIt rfirst = panzer::reverse_iterator<BidirIt>(last);
-        BidirIt rlast = panzer::reverse_iterator<BidirIt>(first);
+        BidirIt rfirst = jrSTL::reverse_iterator<BidirIt>(last);
+        BidirIt rlast = jrSTL::reverse_iterator<BidirIt>(first);
         while(rfirst != rlast) {
             *d_first = *rfirst;
             ++rfirst;
@@ -778,7 +778,7 @@ namespace panzer {
     ForwardIt _rotate( ForwardIt first, ForwardIt n_first, ForwardIt last, input_iterator_tag ) {
         if(first != n_first){
             ForwardIt tmp_it = n_first, ret = first;
-            panzer::advance(ret, panzer::distance(n_first, last));
+            jrSTL::advance(ret, jrSTL::distance(n_first, last));
             while(tmp_it != last) {
                 while((first != n_first) && (tmp_it != last)) {
                     iter_swap(first, tmp_it);
@@ -802,18 +802,18 @@ namespace panzer {
     template< class ForwardIt >
     ForwardIt _rotate( ForwardIt first, ForwardIt n_first, ForwardIt last, bidirectional_iterator_tag ) {
         if(first != n_first) {
-            panzer::reverse(first, n_first);
-            panzer::reverse(n_first, last);
-            panzer::reverse(first, last);
+            jrSTL::reverse(first, n_first);
+            jrSTL::reverse(n_first, last);
+            jrSTL::reverse(first, last);
         }
-        panzer::advance(first, panzer::distance(n_first, last));
+        jrSTL::advance(first, jrSTL::distance(n_first, last));
         return first;
     }
 
     template< class ForwardIt >
     ForwardIt rotate( ForwardIt first, ForwardIt n_first, ForwardIt last ) {
-        return panzer::_rotate(first, n_first, last,
-                               typename panzer::iterator_traits<ForwardIt>::iterator_category());
+        return jrSTL::_rotate(first, n_first, last,
+                               typename jrSTL::iterator_traits<ForwardIt>::iterator_category());
     }
 
     template< class ForwardIt, class OutputIt >
@@ -858,7 +858,7 @@ namespace panzer {
 
     template< class ForwardIt >
     ForwardIt unique( ForwardIt first, ForwardIt last ) {
-        typedef typename panzer::iterator_traits<ForwardIt>::value_type type;
+        typedef typename jrSTL::iterator_traits<ForwardIt>::value_type type;
         return unique(first, last,
                       [](const type& a, const type& b)
                       ->bool { return a == b; });
@@ -888,7 +888,7 @@ namespace panzer {
 
     template< class InputIt, class OutputIt >
     OutputIt unique_copy( InputIt first, InputIt last, OutputIt d_first ) {
-        typedef typename panzer::iterator_traits<InputIt>::value_type type;
+        typedef typename jrSTL::iterator_traits<InputIt>::value_type type;
         return unique_copy(first, last, d_first,
                       [](const type& a, const type& b)
                            ->bool { return a == b; });
@@ -983,25 +983,25 @@ namespace panzer {
 
     template< class T, class Compare >
     std::pair<const T&,const T&> minmax( const T& a, const T& b, Compare comp )
-    { return std::pair<const T&,const T&>(panzer::min(a, b, comp),
-                                          panzer::max(a, b, comp)); }
+    { return std::pair<const T&,const T&>(jrSTL::min(a, b, comp),
+                                          jrSTL::max(a, b, comp)); }
 
     template< class T >
     std::pair<const T&,const T&> minmax( const T& a, const T& b )
-    { return std::pair<const T&,const T&>(panzer::min(a, b),
-                                          panzer::max(a, b)); }
+    { return std::pair<const T&,const T&>(jrSTL::min(a, b),
+                                          jrSTL::max(a, b)); }
 
     template< class ForwardIt, class Compare >
     std::pair<ForwardIt,ForwardIt>
     minmax_element( ForwardIt first, ForwardIt last, Compare comp )
-    { return std::pair<ForwardIt,ForwardIt>(panzer::min(first, last, comp),
-                                            panzer::max(first, last, comp)); }
+    { return std::pair<ForwardIt,ForwardIt>(jrSTL::min(first, last, comp),
+                                            jrSTL::max(first, last, comp)); }
 
     template< class ForwardIt >
     std::pair<ForwardIt,ForwardIt>
     minmax_element( ForwardIt first, ForwardIt last )
-    { return std::pair<ForwardIt,ForwardIt>(panzer::min(first, last),
-                                            panzer::max(first, last)); }
+    { return std::pair<ForwardIt,ForwardIt>(jrSTL::min(first, last),
+                                            jrSTL::max(first, last)); }
 
     /*有序序列的归并操作*/
     // 非原地归并
@@ -1059,9 +1059,9 @@ namespace panzer {
     OutputIt merge( InputIt1 first1, InputIt1 last1,
                     InputIt2 first2, InputIt2 last2,
                     OutputIt d_first ) {
-        typedef typename panzer::iterator_traits<InputIt1>::value_type type1;
-        typedef typename panzer::iterator_traits<InputIt2>::value_type type2;
-        return panzer::merge(first1, last1, first2, last2, d_first,
+        typedef typename jrSTL::iterator_traits<InputIt1>::value_type type1;
+        typedef typename jrSTL::iterator_traits<InputIt2>::value_type type2;
+        return jrSTL::merge(first1, last1, first2, last2, d_first,
                              [](const type1& a, const type2& b)
                              ->bool { return a < b; });
     }
@@ -1083,9 +1083,9 @@ namespace panzer {
                     ++middle;
                 }
                 // 将二者中间夹的部分旋转到尾端
-                panzer::rotate(first, tmp, middle);
+                jrSTL::rotate(first, tmp, middle);
                 // 缩小区间范围，跳过刚刚已完成归并的内容（即被旋转到尾部的范围）
-                panzer::advance(first, panzer::distance(tmp, middle));
+                jrSTL::advance(first, jrSTL::distance(tmp, middle));
             }
         }
     }
@@ -1093,7 +1093,7 @@ namespace panzer {
     template< class BidirIt >
     void inplace_merge( BidirIt first, BidirIt middle, BidirIt last ) {
         typedef typename iterator_traits<BidirIt>::value_type type;
-        panzer::inplace_merge(first, middle, last,
+        jrSTL::inplace_merge(first, middle, last,
                               [](const type& a, const type& b)
                               ->bool { return a < b; });
     }
@@ -1113,8 +1113,8 @@ namespace panzer {
 
     template< class InputIt1, class InputIt2 >
     bool equal( InputIt1 first1, InputIt1 last1, InputIt2 first2 ) {
-        typedef typename panzer::iterator_traits<InputIt1>::value_type type1;
-        typedef typename panzer::iterator_traits<InputIt2>::value_type type2;
+        typedef typename jrSTL::iterator_traits<InputIt1>::value_type type1;
+        typedef typename jrSTL::iterator_traits<InputIt2>::value_type type2;
         return equal(first1, last1, first2,
                      [](const type1& a, const type2& b)
                      ->bool { return a == b; });
@@ -1158,17 +1158,17 @@ namespace panzer {
     bool lexicographical_compare( InputIt1 first1, InputIt1 last1,
                                   InputIt2 first2, InputIt2 last2,
                                   Compare comp ) {
-        return panzer::_lexicographical_compare(first1, last1, first2, last2, comp,
-                                        panzer::iterator_traits<InputIt1>::iterator_category(),
-                                        panzer::iterator_traits<InputIt2>::iterator_category());
+        return jrSTL::_lexicographical_compare(first1, last1, first2, last2, comp,
+                                        jrSTL::iterator_traits<InputIt1>::iterator_category(),
+                                        jrSTL::iterator_traits<InputIt2>::iterator_category());
     }
 
     template< class InputIt1, class InputIt2 >
     bool lexicographical_compare( InputIt1 first1, InputIt1 last1,
                                   InputIt2 first2, InputIt2 last2 ) {
-        typedef typename panzer::iterator_traits<InputIt1>::value_type type1;
-        typedef typename panzer::iterator_traits<InputIt2>::value_type type2;
-        return panzer::lexicographical_compare(first1, last1, first2, last2,
+        typedef typename jrSTL::iterator_traits<InputIt1>::value_type type1;
+        typedef typename jrSTL::iterator_traits<InputIt2>::value_type type2;
+        return jrSTL::lexicographical_compare(first1, last1, first2, last2,
                                                [](const type1& a, const type2& b)
                                                ->bool { return a < b; });
     }
@@ -1178,12 +1178,12 @@ namespace panzer {
     ForwardIt lower_bound( ForwardIt first, ForwardIt last, const T& value, Compare comp ) {
         if(first == last)
             return first;
-        typedef typename panzer::iterator_traits<ForwardIt>::difference_type dis_type;
-        dis_type start = 0, end = panzer::distance(first, last);
+        typedef typename jrSTL::iterator_traits<ForwardIt>::difference_type dis_type;
+        dis_type start = 0, end = jrSTL::distance(first, last);
         while(start < end) {
             dis_type mid = start + (end - start) / 2;
             ForwardIt middle = first;
-            panzer::advance(middle, mid);
+            jrSTL::advance(middle, mid);
             if(comp(*middle, value)) {
                 start = mid + 1;
             } else {
@@ -1191,13 +1191,13 @@ namespace panzer {
 
             }
         }
-        panzer::advance(first, start);
+        jrSTL::advance(first, start);
         return first;
     }
 
     template< class ForwardIt, class T >
     ForwardIt lower_bound( ForwardIt first, ForwardIt last, const T& value ) {
-        return panzer::lower_bound(first, last, value,
+        return jrSTL::lower_bound(first, last, value,
                                    [](const T& a, const T& b)
                                    ->bool { return a < b; });
     }
@@ -1207,12 +1207,12 @@ namespace panzer {
         if(first == last || comp(value, *first))
             return first;
         ForwardIt middle, ret;
-        typedef typename panzer::iterator_traits<ForwardIt>::difference_type dis_type;
-        dis_type start = 0, end = panzer::distance(first, last);
+        typedef typename jrSTL::iterator_traits<ForwardIt>::difference_type dis_type;
+        dis_type start = 0, end = jrSTL::distance(first, last);
         while(start < end) {
             dis_type mid = start + (end - start) / 2;
             ForwardIt middle = first;
-            panzer::advance(middle, mid);
+            jrSTL::advance(middle, mid);
             if(comp(value, *middle)) {
                 end = mid;
             } else {
@@ -1226,7 +1226,7 @@ namespace panzer {
 
     template< class ForwardIt, class T >
     ForwardIt upper_bound( ForwardIt first, ForwardIt last, const T& value ) {
-        return panzer::upper_bound(first, last, value,
+        return jrSTL::upper_bound(first, last, value,
                                    [](const T& a, const T& b)
                                    ->bool { return a < b; });
     }
@@ -1236,11 +1236,11 @@ namespace panzer {
         if(first == last)
             return false;
         typedef typename iterator_traits<ForwardIt>::difference_type dis_type;
-        dis_type start = 0, end = panzer::distance(first, last) - 1;
+        dis_type start = 0, end = jrSTL::distance(first, last) - 1;
         while(start <= end) {
             dis_type mid = start + (end - start) / 2;
             ForwardIt middle = first;
-            panzer::advance(middle, mid);
+            jrSTL::advance(middle, mid);
             if(comp(*middle, value)) {
                 start = mid + 1;
             } else if(comp(value, *middle)) {
@@ -1254,7 +1254,7 @@ namespace panzer {
 
     template< class ForwardIt, class T >
     bool binary_search( ForwardIt first, ForwardIt last, const T& value ) {
-        return panzer::binary_search(first, last, value,
+        return jrSTL::binary_search(first, last, value,
                                      [](const T& a, const T& b)
                                      ->bool { return a < b; });
     }
@@ -1262,14 +1262,14 @@ namespace panzer {
     template< class ForwardIt, class T, class Compare >
     std::pair<ForwardIt,ForwardIt>
     equal_range( ForwardIt first, ForwardIt last, const T& value, Compare comp ) {
-        return std::pair<ForwardIt,ForwardIt>(panzer::lower_bound(first, last, value, comp),
-                                              panzer::upper_bound(first, last, value, comp));
+        return std::pair<ForwardIt,ForwardIt>(jrSTL::lower_bound(first, last, value, comp),
+                                              jrSTL::upper_bound(first, last, value, comp));
     }
 
     template< class ForwardIt, class T >
     std::pair<ForwardIt,ForwardIt>
     equal_range( ForwardIt first, ForwardIt last, const T& value ) {
-        return panzer::equal_range(first, last, value,
+        return jrSTL::equal_range(first, last, value,
                                    [](const T& a, const T& b)
                                    ->bool { return a < b; });
     }
@@ -1334,7 +1334,7 @@ namespace panzer {
               class T,
               class UnaryPredicate >
     BidirIt _stable_partition_with_buffer( BidirIt first, BidirIt last,
-                                           panzer::_buffer<T>& buffer,
+                                           jrSTL::_buffer<T>& buffer,
                                            UnaryPredicate p ) {
         BidirIt it, ret;
         int i = 0, len = buffer.length();
@@ -1369,25 +1369,25 @@ namespace panzer {
             if(!p(*first)) {
                 BidirIt tmp = first;
                 for(; (first != last) && !p(*first); ++first);
-                panzer::rotate(tmp, first, last);
+                jrSTL::rotate(tmp, first, last);
             } else {
                 ++first;
             }
         }
-        return panzer::partition_point(ret, last, p);
+        return jrSTL::partition_point(ret, last, p);
     }
 
     template< class BidirIt, class UnaryPredicate >
     BidirIt stable_partition( BidirIt first, BidirIt last, UnaryPredicate p ) {
         typedef typename iterator_traits<BidirIt>::value_type type;
-        size_t len = panzer::distance(first, last);
-        panzer::_buffer<type> buffer(len);
+        size_t len = jrSTL::distance(first, last);
+        jrSTL::_buffer<type> buffer(len);
         if(buffer.is_valid()) {
             // 内存充足，可分配缓冲区
-            return panzer::_stable_partition_with_buffer(first, last, buffer, p);
+            return jrSTL::_stable_partition_with_buffer(first, last, buffer, p);
         } else {
             // 内存不足，不可分配缓冲区
-            return panzer::_stable_partition_without_buffer(first, last, p);
+            return jrSTL::_stable_partition_without_buffer(first, last, p);
         }
     }
 
@@ -1413,7 +1413,7 @@ namespace panzer {
                    InputIt2 first2, InputIt2 last2 ) {
         typedef typename iterator_traits<InputIt1>::value_type type1;
         typedef typename iterator_traits<InputIt2>::value_type type2;
-        return panzer::includes(first1, last1, first2, last2,
+        return jrSTL::includes(first1, last1, first2, last2,
                                 [](const type1& a, const type2& b)
                                 ->bool { return a < b; });
     }
@@ -1450,7 +1450,7 @@ namespace panzer {
                              OutputIt d_first ) {
         typedef typename iterator_traits<InputIt1>::value_type type1;
         typedef typename iterator_traits<InputIt2>::value_type type2;
-        return panzer::set_difference(first1, last1,
+        return jrSTL::set_difference(first1, last1,
                                       first2, last2,
                                       d_first,
                                       [](const type1& a, const type2& b)
@@ -1486,7 +1486,7 @@ namespace panzer {
                                OutputIt d_first ) {
         typedef typename iterator_traits<InputIt1>::value_type type1;
         typedef typename iterator_traits<InputIt2>::value_type type2;
-        return panzer::set_intersection(first1, last1,
+        return jrSTL::set_intersection(first1, last1,
                                         first2, last2,
                                         d_first,
                                         [](const type1& a, const type2& b)
@@ -1527,7 +1527,7 @@ namespace panzer {
                                        OutputIt d_first ) {
         typedef typename iterator_traits<InputIt1>::value_type type1;
         typedef typename iterator_traits<InputIt2>::value_type type2;
-        return panzer::set_symmetric_difference(first1, last1,
+        return jrSTL::set_symmetric_difference(first1, last1,
                                                 first2, last2,
                                                 d_first,
                                                 [](const type1& a, const type2& b)
@@ -1569,7 +1569,7 @@ namespace panzer {
                         OutputIt d_first ) {
         typedef typename iterator_traits<InputIt1>::value_type type1;
         typedef typename iterator_traits<InputIt2>::value_type type2;
-        return panzer::set_union(first1, last1,
+        return jrSTL::set_union(first1, last1,
                                  first2, last2,
                                  d_first,
                                  [](const type1& a, const type2& b)
@@ -1585,8 +1585,8 @@ namespace panzer {
         int cnt = 0;
         ForwardIt2 last2 = first2;
         typename iterator_traits<ForwardIt1>::difference_type len;
-        len = panzer::distance(first1, last1);
-        panzer::advance(last2, len);
+        len = jrSTL::distance(first1, last1);
+        jrSTL::advance(last2, len);
         for(; first1 != last1; ++first1) {
             for(ForwardIt2 it = first2; it != last2; ++it) {
                 if(p(*first1, *it)) {
@@ -1603,7 +1603,7 @@ namespace panzer {
                          ForwardIt2 first2 ) {
         typedef typename iterator_traits<ForwardIt1>::value_type type1;
         typedef typename iterator_traits<ForwardIt2>::value_type type2;
-        return panzer::is_permutation(first1, last1, first2,
+        return jrSTL::is_permutation(first1, last1, first2,
                                       [](const type1& a, const type2& b)
                                       ->bool { return a == b; });
     }
@@ -1623,19 +1623,19 @@ namespace panzer {
                 --j;
                 while(!comp(*lit, *j))
                     --j;
-                panzer::iter_swap(lit, j);
-                panzer::reverse(rit, last);
+                jrSTL::iter_swap(lit, j);
+                jrSTL::reverse(rit, last);
                 return true;
             }
         }
-        panzer::reverse(first, last);
+        jrSTL::reverse(first, last);
         return false;
     }
 
     template< class BidirIt >
     bool next_permutation( BidirIt first, BidirIt last ) {
         typedef typename iterator_traits<BidirIt>::value_type type;
-        return panzer::next_permutation(first, last,
+        return jrSTL::next_permutation(first, last,
                                         [](const type& a, const type& b)
                                         ->bool { return a < b; });
     }
@@ -1655,19 +1655,19 @@ namespace panzer {
                 --j;
                 while((j != rit) && !comp(*j, *lit))
                     --j;
-                panzer::iter_swap(lit, j);
-                panzer::reverse(rit, last);
+                jrSTL::iter_swap(lit, j);
+                jrSTL::reverse(rit, last);
                 return true;
             }
         }
-        panzer::reverse(first, last);
+        jrSTL::reverse(first, last);
         return false;
     }
 
     template< class BidirIt >
     bool prev_permutation( BidirIt first, BidirIt last) {
         typedef typename iterator_traits<BidirIt>::value_type type;
-        return panzer::prev_permutation(first, last,
+        return jrSTL::prev_permutation(first, last,
                                         [](const type& a, const type& b)
                                         ->bool { return a < b; });
     }
@@ -1689,7 +1689,7 @@ namespace panzer {
     template< class ForwardIt >
     bool is_sorted( ForwardIt first, ForwardIt last ) {
         typedef typename iterator_traits<ForwardIt>::value_type type;
-        return panzer::is_sorted(first, last,
+        return jrSTL::is_sorted(first, last,
                                  [](const type& a, const type& b)
                                  ->bool { return a < b; });
     }
@@ -1711,7 +1711,7 @@ namespace panzer {
     template< class ForwardIt >
     ForwardIt is_sorted_until( ForwardIt first, ForwardIt last ) {
         typedef typename iterator_traits<ForwardIt>::value_type type;
-        return panzer::is_sorted_until(first, last,
+        return jrSTL::is_sorted_until(first, last,
                                        [](const type& a, const type& b)
                                        ->bool { return a < b; });
     }
@@ -1720,21 +1720,21 @@ namespace panzer {
     void partial_sort( RandomIt first, RandomIt middle, RandomIt last,
                        Compare comp ) {
         // first到middle建最大堆
-        panzer::make_heap(first, middle, comp);
+        jrSTL::make_heap(first, middle, comp);
         for(RandomIt it = middle; it != last; ++it) {
             if(comp(*it, *first)) {
                 // 将前半部分最大元素与后半部分小于它的元素互换
-                panzer::iter_swap(first, it);
-                panzer::make_heap(first, middle, comp);
+                jrSTL::iter_swap(first, it);
+                jrSTL::make_heap(first, middle, comp);
             }
         }
-        panzer::sort_heap(first, middle, comp);
+        jrSTL::sort_heap(first, middle, comp);
     }
 
     template< class RandomIt >
     void partial_sort( RandomIt first, RandomIt middle, RandomIt last ) {
         typedef typename iterator_traits<RandomIt>::value_type type;
-        panzer::partial_sort(first, middle, last,
+        jrSTL::partial_sort(first, middle, last,
                              [](const type& a, const type& b)
                              ->bool { return a < b; });
     }
@@ -1743,9 +1743,9 @@ namespace panzer {
     RandomIt partial_sort_copy( InputIt first, InputIt last,
                                 RandomIt d_first, RandomIt d_last,
                                 Compare comp ) {
-        typedef typename panzer::iterator_traits<InputIt>::value_type type;
-        typename panzer::iterator_traits<InputIt>::difference_type len;
-        len = panzer::distance(first, last);
+        typedef typename jrSTL::iterator_traits<InputIt>::value_type type;
+        typename jrSTL::iterator_traits<InputIt>::difference_type len;
+        len = jrSTL::distance(first, last);
         type *buffer = nullptr, *b = nullptr;
         buffer = new type[len];
         // 缓冲区分配失败，原样返回
@@ -1755,7 +1755,7 @@ namespace panzer {
         for(b = buffer; first != last; ++first, ++b) {
             *b = *first;
         }
-        panzer::partial_sort(buffer, buffer + len, b, comp);
+        jrSTL::partial_sort(buffer, buffer + len, b, comp);
         while((d_first != d_last) && (buffer != b)) {
             *d_first = *buffer;
             ++d_first;
@@ -1768,7 +1768,7 @@ namespace panzer {
     RandomIt partial_sort_copy( InputIt first, InputIt last,
                                 RandomIt d_first, RandomIt d_last ) {
         typedef typename iterator_traits<RandomIt>::value_type type;
-        return panzer::partial_sort_copy(first, last, d_first, d_last,
+        return jrSTL::partial_sort_copy(first, last, d_first, d_last,
                                          [](const type& a, const type& b)
                                          ->bool { return a < b; });
     }
@@ -1777,7 +1777,7 @@ namespace panzer {
     template< class RandomIt, class Compare >
     void _insertion_sort( RandomIt first, RandomIt last, Compare comp ) {
         for(RandomIt i = first; i != last; ++i) {
-            typename panzer::iterator_traits<RandomIt>::value_type t;
+            typename jrSTL::iterator_traits<RandomIt>::value_type t;
             t = *i;
             RandomIt j;
             for(j = i; (j != first) && comp(t, *(j - 1)); j--) {
@@ -1816,19 +1816,19 @@ namespace panzer {
     void _quick_sort( RandomIt first, RandomIt last, Compare comp, int depth ) {
         if(last - first <= 5) {
             // 当前区间长度小于阈值，则转为插入排序
-            panzer::_insertion_sort(first, last, comp);
+            jrSTL::_insertion_sort(first, last, comp);
             return;
         }
         if(depth > 16) {
             // 递归深度超过阈值，则转为堆排序
-            panzer::partial_sort(first, last, last, comp);
+            jrSTL::partial_sort(first, last, last, comp);
             return;
         }
         RandomIt middle = first + (last - first) / 2;
         // 寻找主元
-        RandomIt pivot = panzer::_find_pivot(first, middle, last - 1, comp);
+        RandomIt pivot = jrSTL::_find_pivot(first, middle, last - 1, comp);
         // 划分区间
-        panzer::iter_swap(pivot, last - 1);  // 将主元放在末尾，简化区间划分过程
+        jrSTL::iter_swap(pivot, last - 1);  // 将主元放在末尾，简化区间划分过程
         RandomIt low = first, high = last - 2;
         while(true) {     // 左右两边同时扫描，交换不满足条件的两个元素
             while(comp(*low, *(last - 1)))
@@ -1836,11 +1836,11 @@ namespace panzer {
             while(comp(*(last - 1), *high))
                 --high;
             if(low < high)
-                panzer::iter_swap(low, high);
+                jrSTL::iter_swap(low, high);
             else
                 break;
         }
-        panzer::iter_swap(low, last - 1);  // 将主元交换至原位置
+        jrSTL::iter_swap(low, last - 1);  // 将主元交换至原位置
         // 递归排序
         _quick_sort(first, low, comp, ++depth);
         _quick_sort(low + 1, last, comp, ++depth);
@@ -1849,13 +1849,13 @@ namespace panzer {
     // Intro排序
     template< class RandomIt, class Compare >
     void sort( RandomIt first, RandomIt last, Compare comp ) {
-        panzer::_quick_sort(first, last, comp, 0); // 初始递归深度为0
+        jrSTL::_quick_sort(first, last, comp, 0); // 初始递归深度为0
     }
 
     template< class RandomIt >
     void sort( RandomIt first, RandomIt last ) {
         typedef typename iterator_traits<RandomIt>::value_type type;
-        panzer::sort(first, last,
+        jrSTL::sort(first, last,
                     [](const type& a, const type& b)
                     ->bool { return a < b; });
     }
@@ -1866,15 +1866,15 @@ namespace panzer {
         if(last - first <= 1)
             return;
         RandomIt middle = first + (last - first) / 2;
-        panzer::stable_sort(first, middle, comp);
-        panzer::stable_sort(middle, last, comp);
-        panzer::inplace_merge(first, middle, last, comp);
+        jrSTL::stable_sort(first, middle, comp);
+        jrSTL::stable_sort(middle, last, comp);
+        jrSTL::inplace_merge(first, middle, last, comp);
     }
 
     template< class RandomIt >
     void stable_sort( RandomIt first, RandomIt last ) {
         typedef typename iterator_traits<RandomIt>::value_type type;
-        panzer::stable_sort(first, last,
+        jrSTL::stable_sort(first, last,
                            [](const type& a, const type& b)
                            ->bool { return a < b; });
     }
@@ -1885,11 +1885,11 @@ namespace panzer {
         if(nth == last)
             return;
         // 利用最大堆找到排序后的第n个元素（即第(长度-n)个最大元素）
-        typename panzer::iterator_traits<RandomIt>::difference_type n;
+        typename jrSTL::iterator_traits<RandomIt>::difference_type n;
         n = last - nth;
-        panzer::make_heap(first, last, comp);
+        jrSTL::make_heap(first, last, comp);
         for(RandomIt t = last; n; --n, --t) {
-            panzer::pop_heap(first, t, comp);
+            jrSTL::pop_heap(first, t, comp);
         }
         // 左右两边同时遍历，交换不符合大小要求的元素
         RandomIt low = first, high = last - 1;
@@ -1899,7 +1899,7 @@ namespace panzer {
             while((nth < high) && comp(*high, *nth))
                 --high;
             if((low < nth) && (nth < high))
-                panzer::iter_swap(low, high);
+                jrSTL::iter_swap(low, high);
             else
                 break;
         }
@@ -1908,7 +1908,7 @@ namespace panzer {
     template< class RandomIt >
     void nth_element( RandomIt first, RandomIt nth, RandomIt last ) {
         typedef typename iterator_traits<RandomIt>::value_type type;
-        panzer::nth_element(first, nth, last,
+        jrSTL::nth_element(first, nth, last,
                            [](const type& a, const type& b)
                            ->bool { return a < b; });
     }

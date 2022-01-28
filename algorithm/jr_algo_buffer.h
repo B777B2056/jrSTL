@@ -3,7 +3,7 @@
 
 #include <cstddef>
 
-namespace panzer {
+namespace jrSTL {
     /* RAII方式管理algorithm中分配的缓存空间 */
     template< class T >
     class _buffer {

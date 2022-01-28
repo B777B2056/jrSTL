@@ -5,7 +5,7 @@
 #include "../../memory/jr_allocator.h"
 #include "jr_nodes.h"
 
-namespace panzer {
+namespace jrSTL {
     // 平衡二叉搜索树（AVL树）
     template<class T,
              bool isMulti,

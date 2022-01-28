@@ -8,7 +8,7 @@
 #include "../utils/jr_hashtable.h"
 #include "../utils/jr_iterators.h"
 
-namespace panzer {
+namespace jrSTL {
   template<class Key,
            class Hash,
            class Pred,
@@ -73,7 +73,7 @@ namespace panzer {
                   const key_equal& eql = key_equal(),
                   const allocator_type& a = allocator_type())
         : _hf(hf), _eql(eql),
-          _tab(panzer::distance(first, last) + 5, hf, eql),
+          _tab(jrSTL::distance(first, last) + 5, hf, eql),
           _alloc_data(a), _num_of_elem(0) {
         insert(first, last);
     }
@@ -290,11 +290,11 @@ namespace panzer {
     }
 
     iterator erase(const_iterator position) {
-        difference_type dis = panzer::distance(cbegin(), position);
+        difference_type dis = jrSTL::distance(cbegin(), position);
         _tab.erase(position.index, position.cur);
         --_num_of_elem;
         iterator r = begin();
-        panzer::advance(r, dis);
+        jrSTL::advance(r, dis);
         return r;
     }
 
@@ -305,12 +305,12 @@ namespace panzer {
     }
 
     iterator erase(const_iterator first, const_iterator last) {
-        difference_type dis = panzer::distance(cbegin(), first);
+        difference_type dis = jrSTL::distance(cbegin(), first);
         while(first != last) {
             first = erase(first);
         }
         iterator r = begin();
-        panzer::advance(r, dis);
+        jrSTL::advance(r, dis);
         return r;
     }
 
@@ -475,8 +475,8 @@ namespace panzer {
 
   template<class Key,
            class Hash = std::hash<Key>,
-           class Pred = panzer::equal_to<Key>,
-           class Allocator = panzer::allocator<Key> >
+           class Pred = jrSTL::equal_to<Key>,
+           class Allocator = jrSTL::allocator<Key> >
   class unordered_set
           : public _hashset_base<Key, Hash, Pred, Allocator, false> {
   private:
@@ -555,8 +555,8 @@ namespace panzer {
 
   template<class Key,
            class Hash = std::hash<Key>,
-           class Pred = panzer::equal_to<Key>,
-           class Allocator = panzer::allocator<Key>>
+           class Pred = jrSTL::equal_to<Key>,
+           class Allocator = jrSTL::allocator<Key>>
   class unordered_multiset
           : public _hashset_base<Key, Hash, Pred, Allocator, true> {
   private:

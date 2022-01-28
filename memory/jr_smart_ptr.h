@@ -7,7 +7,7 @@
 #include <type_traits>
 #include "jr_allocator.h"
 
-namespace panzer {
+namespace jrSTL {
     template< class T >
     struct default_delete {
         constexpr default_delete() noexcept = default;
@@ -38,7 +38,7 @@ namespace panzer {
     /*==============unique ptr==============*/
 
     template< class T,
-              class Deleter = panzer::default_delete<T> >
+              class Deleter = jrSTL::default_delete<T> >
     class unique_ptr {
     public:
         typedef T* pointer;
@@ -320,116 +320,116 @@ namespace panzer {
     };
 
     template< class T, class D >
-    void swap( panzer::unique_ptr<T, D>& lhs,
-               panzer::unique_ptr<T, D>& rhs ) noexcept {
+    void swap( jrSTL::unique_ptr<T, D>& lhs,
+               jrSTL::unique_ptr<T, D>& rhs ) noexcept {
         lhs.swap(rhs);
     }
 
     template<class T1, class D1, class T2, class D2>
-    bool operator==(const panzer::unique_ptr<T1, D1>& x,
-                    const panzer::unique_ptr<T2, D2>& y) {
+    bool operator==(const jrSTL::unique_ptr<T1, D1>& x,
+                    const jrSTL::unique_ptr<T2, D2>& y) {
         return x.get() == y.get();
     }
 
     template<class T1, class D1, class T2, class D2>
-    bool operator!=(const panzer::unique_ptr<T1, D1>& x,
-                    const panzer::unique_ptr<T2, D2>& y) {
+    bool operator!=(const jrSTL::unique_ptr<T1, D1>& x,
+                    const jrSTL::unique_ptr<T2, D2>& y) {
         return !(x == y);
     }
 
     template<class T1, class D1, class T2, class D2>
-    bool operator<(const panzer::unique_ptr<T1, D1>& x,
-                   const panzer::unique_ptr<T2, D2>& y) {
+    bool operator<(const jrSTL::unique_ptr<T1, D1>& x,
+                   const jrSTL::unique_ptr<T2, D2>& y) {
         return *x < *y;
     }
 
     template<class T1, class D1, class T2, class D2>
-    bool operator<=(const panzer::unique_ptr<T1, D1>& x,
-                    const panzer::unique_ptr<T2, D2>& y) {
+    bool operator<=(const jrSTL::unique_ptr<T1, D1>& x,
+                    const jrSTL::unique_ptr<T2, D2>& y) {
         return !(y < x);
     }
 
     template<class T1, class D1, class T2, class D2>
-    bool operator>(const panzer::unique_ptr<T1, D1>& x,
-                   const panzer::unique_ptr<T2, D2>& y) {
+    bool operator>(const jrSTL::unique_ptr<T1, D1>& x,
+                   const jrSTL::unique_ptr<T2, D2>& y) {
         return y < x;
     }
 
     template<class T1, class D1, class T2, class D2>
-    bool operator>=(const panzer::unique_ptr<T1, D1>& x,
-                    const panzer::unique_ptr<T2, D2>& y) {
+    bool operator>=(const jrSTL::unique_ptr<T1, D1>& x,
+                    const jrSTL::unique_ptr<T2, D2>& y) {
         return !(x < y);
     }
 
     template <class T, class D>
-    bool operator==(const panzer::unique_ptr<T, D>& x,
+    bool operator==(const jrSTL::unique_ptr<T, D>& x,
                     std::nullptr_t) noexcept {
         return !x;
     }
 
     template <class T, class D>
     bool operator==(std::nullptr_t,
-                    const panzer::unique_ptr<T, D>& x) noexcept {
+                    const jrSTL::unique_ptr<T, D>& x) noexcept {
         return !x;
     }
 
     template <class T, class D>
-    bool operator!=(const panzer::unique_ptr<T, D>& x,
+    bool operator!=(const jrSTL::unique_ptr<T, D>& x,
                     std::nullptr_t) noexcept {
         return static_cast<bool>(x);
     }
 
     template <class T, class D>
     bool operator!=(std::nullptr_t,
-                    const panzer::unique_ptr<T, D>& x) noexcept {
+                    const jrSTL::unique_ptr<T, D>& x) noexcept {
         return static_cast<bool>(x);
     }
 
     template <class T, class D>
-    bool operator<(const panzer::unique_ptr<T, D>& x,
+    bool operator<(const jrSTL::unique_ptr<T, D>& x,
                    std::nullptr_t) {
         return x.get() < nullptr;
     }
 
     template <class T, class D>
     bool operator<(std::nullptr_t,
-                   const panzer::unique_ptr<T, D>& y) {
+                   const jrSTL::unique_ptr<T, D>& y) {
         return nullptr < y.get();
     }
 
     template <class T, class D>
-    bool operator<=(const panzer::unique_ptr<T, D>& x,
+    bool operator<=(const jrSTL::unique_ptr<T, D>& x,
                     std::nullptr_t) {
         return !(nullptr < x);
     }
 
     template <class T, class D>
     bool operator<=(std::nullptr_t,
-                    const panzer::unique_ptr<T, D>& y) {
+                    const jrSTL::unique_ptr<T, D>& y) {
         return !(y < nullptr);
     }
 
     template <class T, class D>
-    bool operator>(const panzer::unique_ptr<T, D>& x,
+    bool operator>(const jrSTL::unique_ptr<T, D>& x,
                    std::nullptr_t) {
         return nullptr < x;
     }
 
     template <class T, class D>
     bool operator>(std::nullptr_t,
-                   const panzer::unique_ptr<T, D>& y) {
+                   const jrSTL::unique_ptr<T, D>& y) {
         return y < nullptr;
     }
 
     template <class T, class D>
-    bool operator>=(const panzer::unique_ptr<T, D>& x,
+    bool operator>=(const jrSTL::unique_ptr<T, D>& x,
                     std::nullptr_t) {
         return !(x < nullptr);
     }
 
     template <class T, class D>
     bool operator>=(std::nullptr_t,
-                    const panzer::unique_ptr<T, D>& y) {
+                    const jrSTL::unique_ptr<T, D>& y) {
         return !(nullptr < y);
     }
 
@@ -525,12 +525,12 @@ namespace panzer {
 
             _control_block()
                 : _cnt(new _shared_count()),
-                  _deleter(new _shared_deleter<T, panzer::default_delete<T> >(panzer::default_delete<T>()))
+                  _deleter(new _shared_deleter<T, jrSTL::default_delete<T> >(jrSTL::default_delete<T>()))
             {}
 
             _control_block(_shared_count *cnt)
                 : _cnt(cnt),
-                  _deleter(new _shared_deleter<T, panzer::default_delete<T> >(panzer::default_delete<T>()))
+                  _deleter(new _shared_deleter<T, jrSTL::default_delete<T> >(jrSTL::default_delete<T>()))
             {}
 
             template< class Deleter>
@@ -711,7 +711,7 @@ namespace panzer {
             }
 
             template< class Y >
-            explicit shared_ptr( const panzer::weak_ptr<Y>& r )
+            explicit shared_ptr( const jrSTL::weak_ptr<Y>& r )
                 : _ptr(static_cast<element_type*>(r._ptr)),
                   _cb(r._cb) {
                 if(_cb)
@@ -719,7 +719,7 @@ namespace panzer {
             }
 
             template< class Y, class Deleter >
-            shared_ptr( panzer::unique_ptr<Y, Deleter>&& r )
+            shared_ptr( jrSTL::unique_ptr<Y, Deleter>&& r )
                 : _ptr(static_cast<element_type*>(r.release())),
                   _cb(new _control_block<element_type>(r.get_deleter(), 0)) {
                 _cb->add_strong_cnt();
@@ -774,7 +774,7 @@ namespace panzer {
             }
 
             template< class Y, class Deleter >
-            shared_ptr& operator=( panzer::unique_ptr<Y, Deleter>&& r ) {
+            shared_ptr& operator=( jrSTL::unique_ptr<Y, Deleter>&& r ) {
                 if(std::is_same<T, Y>::value) {
                     _ptr = static_cast<element_type*>(r.release());
                     _drop_strong_count();
@@ -856,7 +856,7 @@ namespace panzer {
             }
 
             template< class Y >
-            bool owner_before( const panzer::weak_ptr<Y>& other) const noexcept {
+            bool owner_before( const jrSTL::weak_ptr<Y>& other) const noexcept {
                 return _cb < other._cb;
             }
     };
@@ -871,9 +871,9 @@ namespace panzer {
 
     template< class T, class... Args >
     shared_ptr<T> make_shared( Args&&... args ) {
-        auto a = panzer::allocator<T>();
+        auto a = jrSTL::allocator<T>();
         return allocate_shared< T,
-                                panzer::allocator<T>,
+                                jrSTL::allocator<T>,
                                 Args...
                               >(a,
                                 std::forward<Args>(args)...);
@@ -913,110 +913,110 @@ namespace panzer {
     }
 
     template<class T1, class T2>
-    bool operator==(const panzer::shared_ptr<T1>& x,
-                    const panzer::shared_ptr<T2>& y) {
+    bool operator==(const jrSTL::shared_ptr<T1>& x,
+                    const jrSTL::shared_ptr<T2>& y) {
         return x.get() == y.get();
     }
 
     template<class T1, class T2>
-    bool operator!=(const panzer::shared_ptr<T1>& x,
-                    const panzer::shared_ptr<T2>& y) {
+    bool operator!=(const jrSTL::shared_ptr<T1>& x,
+                    const jrSTL::shared_ptr<T2>& y) {
         return !(x == y);
     }
 
     template<class T1, class T2>
-    bool operator<(const panzer::shared_ptr<T1>& x,
-                   const panzer::shared_ptr<T2>& y) {
+    bool operator<(const jrSTL::shared_ptr<T1>& x,
+                   const jrSTL::shared_ptr<T2>& y) {
         return *x < *y;
     }
 
     template<class T1, class T2>
-    bool operator<=(const panzer::shared_ptr<T1>& x,
-                    const panzer::shared_ptr<T2>& y) {
+    bool operator<=(const jrSTL::shared_ptr<T1>& x,
+                    const jrSTL::shared_ptr<T2>& y) {
         return !(y < x);
     }
 
     template<class T1, class T2>
-    bool operator>(const panzer::shared_ptr<T1>& x,
-                   const panzer::shared_ptr<T2>& y) {
+    bool operator>(const jrSTL::shared_ptr<T1>& x,
+                   const jrSTL::shared_ptr<T2>& y) {
         return y < x;
     }
 
     template<class T1, class T2>
-    bool operator>=(const panzer::shared_ptr<T1>& x,
-                    const panzer::shared_ptr<T2>& y) {
+    bool operator>=(const jrSTL::shared_ptr<T1>& x,
+                    const jrSTL::shared_ptr<T2>& y) {
         return !(x < y);
     }
 
     template <class T>
-    bool operator==(const panzer::shared_ptr<T>& x,
+    bool operator==(const jrSTL::shared_ptr<T>& x,
                     std::nullptr_t) noexcept {
         return !x;
     }
 
     template <class T>
     bool operator==(std::nullptr_t,
-                    const panzer::shared_ptr<T>& x) noexcept {
+                    const jrSTL::shared_ptr<T>& x) noexcept {
         return !x;
     }
 
     template <class T>
-    bool operator!=(const panzer::shared_ptr<T>& x,
+    bool operator!=(const jrSTL::shared_ptr<T>& x,
                     std::nullptr_t) noexcept {
         return static_cast<bool>(x);
     }
 
     template <class T>
     bool operator!=(std::nullptr_t,
-                    const panzer::shared_ptr<T>& x) noexcept {
+                    const jrSTL::shared_ptr<T>& x) noexcept {
         return static_cast<bool>(x);
     }
 
     template <class T>
-    bool operator<(const panzer::shared_ptr<T>& x,
+    bool operator<(const jrSTL::shared_ptr<T>& x,
                    std::nullptr_t) {
         return x.get() < nullptr;
     }
 
     template <class T>
     bool operator<(std::nullptr_t,
-                   const panzer::shared_ptr<T>& y) {
+                   const jrSTL::shared_ptr<T>& y) {
         return nullptr < y.get();
     }
 
     template <class T>
-    bool operator<=(const panzer::shared_ptr<T>& x,
+    bool operator<=(const jrSTL::shared_ptr<T>& x,
                     std::nullptr_t) {
         return !(nullptr < x);
     }
 
     template <class T>
     bool operator<=(std::nullptr_t,
-                    const panzer::shared_ptr<T>& y) {
+                    const jrSTL::shared_ptr<T>& y) {
         return !(y < nullptr);
     }
 
     template <class T>
-    bool operator>(const panzer::shared_ptr<T>& x,
+    bool operator>(const jrSTL::shared_ptr<T>& x,
                    std::nullptr_t) {
         return nullptr < x;
     }
 
     template <class T>
     bool operator>(std::nullptr_t,
-                   const panzer::shared_ptr<T>& y) {
+                   const jrSTL::shared_ptr<T>& y) {
         return y < nullptr;
     }
 
     template <class T>
-    bool operator>=(const panzer::shared_ptr<T>& x,
+    bool operator>=(const jrSTL::shared_ptr<T>& x,
                     std::nullptr_t) {
         return !(x < nullptr);
     }
 
     template <class T>
     bool operator>=(std::nullptr_t,
-                    const panzer::shared_ptr<T>& y) {
+                    const jrSTL::shared_ptr<T>& y) {
         return !(nullptr < y);
     }
 
@@ -1181,8 +1181,8 @@ namespace panzer {
     };
 
     template< class T >
-    void swap( panzer::weak_ptr<T>& lhs,
-               panzer::weak_ptr<T>& rhs ) noexcept {
+    void swap( jrSTL::weak_ptr<T>& lhs,
+               jrSTL::weak_ptr<T>& rhs ) noexcept {
         lhs.swap(rhs);
     }
 }

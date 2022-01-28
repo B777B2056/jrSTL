@@ -1,7 +1,7 @@
 #ifndef JR_NODES_H
 #define JR_NODES_H
 
-namespace panzer {
+namespace jrSTL {
     // 单向链表节点定义
     template<class U>
     struct _forward_node {

@@ -54,19 +54,19 @@ TEST(testCase, shared_ptr_ctor_test)
     }
 
     {
-        panzer::shared_ptr<Foo_j> sh1_j;
+        jrSTL::shared_ptr<Foo_j> sh1_j;
     }
 
     {
-        panzer::shared_ptr<Foo_j> sh2_j(new Foo_j);
-        panzer::shared_ptr<Foo_j> sh3_j(sh2_j);
+        jrSTL::shared_ptr<Foo_j> sh2_j(new Foo_j);
+        jrSTL::shared_ptr<Foo_j> sh3_j(sh2_j);
         ctor0 += std::to_string(sh2_j.use_count());
         ctor0 += std::to_string(sh3_j.use_count());
     }
 
     {
-        panzer::shared_ptr<Foo_j> sh4_j(new Foo_j, D_j());
-        panzer::shared_ptr<Foo_j> sh5_j(new Foo_j, [](Foo_j *p) {
+        jrSTL::shared_ptr<Foo_j> sh4_j(new Foo_j, D_j());
+        jrSTL::shared_ptr<Foo_j> sh5_j(new Foo_j, [](Foo_j *p) {
            delete p;
         });
     }
@@ -110,7 +110,7 @@ TEST(testCase, shared_ptr_reset_test)
     sptr.reset(new Foo);
     reset += ("The second Foo's bar is " + std::to_string(sptr->getBar()));
 
-    panzer::shared_ptr<Foo_j> sptr_j = panzer::make_shared<Foo_j>(1);
+    jrSTL::shared_ptr<Foo_j> sptr_j = jrSTL::make_shared<Foo_j>(1);
     reset0 += ("The first Foo's bar is " + std::to_string(sptr_j->getBar()));
 
     // 重置，交与新的 Foo 实例
@@ -129,7 +129,7 @@ void fun(std::shared_ptr<int> sp)
     ref_cnt += ("fun: sp.use_count() == " + std::to_string(sp.use_count()));
 }
 
-void fun(panzer::shared_ptr<int> sp)
+void fun(jrSTL::shared_ptr<int> sp)
 {
     ref_cnt0 += ("fun: sp.use_count() == " + std::to_string(sp.use_count()));
 }
@@ -140,7 +140,7 @@ TEST(testCase, shared_ptr_use_count_test)
     ref_cnt += ("sp.use_count() == " + std::to_string(sp1.use_count()));
     fun(sp1);
 
-    auto sp2 = panzer::make_shared<int>(5);
+    auto sp2 = jrSTL::make_shared<int>(5);
     ref_cnt0 += ("sp.use_count() == " + std::to_string(sp2.use_count()));
     fun(sp2);
 
@@ -185,9 +185,9 @@ TEST(testCase, shared_ptr_type_cast_test) {
     static_cast<DerivedClass*>(ptr_to_base.get())->f(); // 亦 OK
     // （直接转型，不构造临时 shared_ptr ）
 
-    panzer::shared_ptr<BaseClass_j> ptr_to_base0(panzer::make_shared<DerivedClass_j>());
+    jrSTL::shared_ptr<BaseClass_j> ptr_to_base0(jrSTL::make_shared<DerivedClass_j>());
 
-    panzer::static_pointer_cast<DerivedClass_j>(ptr_to_base0)->f(); // OK
+    jrSTL::static_pointer_cast<DerivedClass_j>(ptr_to_base0)->f(); // OK
     // （构造临时 shared_ptr ，然后调用 operator-> ）
 
     static_cast<DerivedClass_j*>(ptr_to_base0.get())->f(); // 亦 OK

@@ -7,7 +7,7 @@
 
 #define USE_STD_TRAITS
 
-namespace panzer {
+namespace jrSTL {
 #ifndef USE_STD_TRAITS
     /*Tags of different type iterator_category, for function overload*/
     struct input_iterator_tag {};
@@ -72,7 +72,7 @@ namespace panzer {
     /*Reverse Iterator Adapter*/
     template< class Iter >
     class reverse_iterator
-            : public iterator< typename panzer::iterator_traits<Iter>::iterator_category,
+            : public iterator< typename jrSTL::iterator_traits<Iter>::iterator_category,
                                typename iterator_traits<Iter>::value_type,
                                typename iterator_traits<Iter>::difference_type,
                                typename iterator_traits<Iter>::pointer,
@@ -82,7 +82,7 @@ namespace panzer {
 
       private:
         Iter current;
-        typedef iterator< typename panzer::iterator_traits<Iter>::iterator_category,
+        typedef iterator< typename jrSTL::iterator_traits<Iter>::iterator_category,
                           typename iterator_traits<Iter>::value_type,
                           typename iterator_traits<Iter>::difference_type,
                           typename iterator_traits<Iter>::pointer,

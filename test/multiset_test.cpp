@@ -16,7 +16,7 @@ TEST(testCase,multiset_iterator_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 1);
-    panzer::deque<int> src;
+    jrSTL::deque<int> src;
     for(size_t i = 0; i < cnt; i++) {
         int t = var;
         src.push_back(t);
@@ -24,7 +24,7 @@ TEST(testCase,multiset_iterator_ctor_test) {
         --var;
     }
     // 迭代器范围构造函数
-    panzer::multiset<int> des(src.begin(), src.end());
+    jrSTL::multiset<int> des(src.begin(), src.end());
     std::sort(src.begin(), src.end());
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
@@ -38,7 +38,7 @@ TEST(testCase,multiset_copy_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(50, cnt, var);
-    panzer::multiset<int> src;
+    jrSTL::multiset<int> src;
     for(size_t i = 0; i < cnt; i++) {
         int t = var;
         src.insert(t);
@@ -46,7 +46,7 @@ TEST(testCase,multiset_copy_ctor_test) {
         --var;
     }
     // 拷贝构造函数
-    panzer::multiset<int> des(src);
+    jrSTL::multiset<int> des(src);
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     auto dit = des.begin();
@@ -59,7 +59,7 @@ TEST(testCase,multiset_move_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::multiset<int> src;
+    jrSTL::multiset<int> src;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         src.insert(t);
@@ -67,14 +67,14 @@ TEST(testCase,multiset_move_ctor_test) {
         --var;
     }
     // 移动构造函数
-    panzer::multiset<int> des(std::move(src));
+    jrSTL::multiset<int> des(std::move(src));
     ASSERT_EQ(src.empty(), true);
 }
 
 // 初始化列表构造函数测试
 TEST(testCase,multiset_initializer_list_ctor_test) {
     std::multiset<int> src{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
-    panzer::multiset<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::multiset<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
     auto dit = des.begin();
@@ -87,8 +87,8 @@ TEST(testCase, multiset_operator_copy_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::multiset<int> src{var, var, var};
-    panzer::multiset<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::multiset<int> src{var, var, var};
+    jrSTL::multiset<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     des = src;
     ASSERT_EQ(src.size(), des.size());
     auto it = src.begin();
@@ -102,8 +102,8 @@ TEST(testCase, multiset_operator_move_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::multiset<int> src{var, var, var};
-    panzer::multiset<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::multiset<int> src{var, var, var};
+    jrSTL::multiset<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     des = std::move(src);
     ASSERT_EQ(src.empty(), true);
 }
@@ -113,7 +113,7 @@ TEST(testCase, multiset_clear_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::multiset<int> des;
+    jrSTL::multiset<int> des;
     for(size_t i = 0; i < cnt; i++){
         int t = var;
         des.insert(t);
@@ -127,7 +127,7 @@ TEST(testCase, multiset_clear_test) {
 // insert测试
 TEST(testCase, multiset_insert_test) {
     std::multiset<int> src;
-    panzer::multiset<int> des;
+    jrSTL::multiset<int> des;
     // 拷贝insert
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         auto s = src.insert(n);
@@ -167,7 +167,7 @@ TEST(testCase, multiset_insert_test) {
     for(; dit != des.end(); ++dit, ++it)
         EXPECT_EQ(*it, *dit);
     // 迭代器insert
-    panzer::set<int> tmp{1,1,1,4,5};
+    jrSTL::set<int> tmp{1,1,1,4,5};
     std::set<int> tmp0{1,1,1,4,5};
     src.insert(tmp0.begin(), tmp0.end());
     des.insert(tmp.begin(), tmp.end());
@@ -181,12 +181,12 @@ TEST(testCase, multiset_insert_test) {
 // insert hint测试
 TEST(testCase, multiset_insert_hint_test) {
     std::set<int> src{1,2,3,4,8,9};
-    panzer::set<int> des{1,2,3,4,8,9};
+    jrSTL::set<int> des{1,2,3,4,8,9};
     // insert hint
     auto s_pos = src.begin();
     auto d_pos = des.begin();
     std::advance(s_pos, 4);
-    panzer::advance(d_pos, 4);
+    jrSTL::advance(d_pos, 4);
     auto s = src.insert(s_pos, 5);
     auto d = des.insert(d_pos, 5);
     if(s == src.end())
@@ -203,7 +203,7 @@ TEST(testCase, multiset_insert_hint_test) {
 // emplace测试
 TEST(testCase, multiset_emplace_test) {
     std::multiset<int> src;
-    panzer::multiset<int> des;
+    jrSTL::multiset<int> des;
     // emplace
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         auto s = src.emplace(n);
@@ -224,12 +224,12 @@ TEST(testCase, multiset_emplace_test) {
 // emplace hint测试
 TEST(testCase, multiset_emplace_hint_test) {
     std::set<int> src{1,2,3,4,8,9};
-    panzer::set<int> des{1,2,3,4,8,9};
+    jrSTL::set<int> des{1,2,3,4,8,9};
     // insert hint
     auto s_pos = src.begin();
     auto d_pos = des.begin();
     std::advance(s_pos, 4);
-    panzer::advance(d_pos, 4);
+    jrSTL::advance(d_pos, 4);
     auto s = src.emplace_hint(s_pos, 5);
     auto d = des.emplace_hint(d_pos, 5);
     if(s == src.end())
@@ -248,7 +248,7 @@ TEST(testCase, multiset_erase_test) {
     size_t cnt;
     int var;
     get_random_size_var(15, cnt, var, 10);
-    panzer::multiset<int> des;
+    jrSTL::multiset<int> des;
     std::multiset<int> src;
     for(size_t i = 0; i < cnt; i++) {
         src.insert(i);
@@ -263,7 +263,7 @@ TEST(testCase, multiset_erase_test) {
     auto i = src.begin();
     auto j = des.cbegin();
     std::advance(i, 2);
-    panzer::advance(j, 2);
+    jrSTL::advance(j, 2);
     EXPECT_EQ(*(src.erase(i)),
               *(des.erase(j)));
     ASSERT_EQ(src.size(), des.size());
@@ -275,11 +275,11 @@ TEST(testCase, multiset_erase_test) {
     i = src.begin();
     j = des.begin();
     std::advance(i, 2);
-    panzer::advance(j, 2);
+    jrSTL::advance(j, 2);
     auto i0 = src.begin();
     auto j0 = des.begin();
     std::advance(i0, 6);
-    panzer::advance(j0, 6);
+    jrSTL::advance(j0, 6);
     EXPECT_EQ(*(src.erase(i, i0)),
               *(des.erase(j, j0)));
     ASSERT_EQ(src.size(), des.size());
@@ -291,7 +291,7 @@ TEST(testCase, multiset_erase_test) {
     i0 = src.begin();
     j0 = des.begin();
     std::advance(i0, 6);
-    panzer::advance(j0, 6);
+    jrSTL::advance(j0, 6);
     EXPECT_EQ(*(src.erase(src.begin(), i0)),
               *(des.erase(des.begin(), j0)));
     ASSERT_EQ(src.size(), des.size());
@@ -302,7 +302,7 @@ TEST(testCase, multiset_erase_test) {
     i = src.begin();
     j = des.cbegin();
     std::advance(i, 2);
-    panzer::advance(j, 2);
+    jrSTL::advance(j, 2);
     src.erase(i, src.end());
     des.erase(j, des.cend());
     ASSERT_EQ(src.size(), des.size());
@@ -321,8 +321,8 @@ TEST(testCase, multiset_swap_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::multiset<int> src;
-    panzer::multiset<int> des;
+    jrSTL::multiset<int> src;
+    jrSTL::multiset<int> des;
     for(size_t i = 0; i < cnt; i++) {
         src.insert(var + 1);
         des.insert(var - 1);
@@ -330,7 +330,7 @@ TEST(testCase, multiset_swap_test) {
         des.insert(var - 1);
         --var;
     }
-    panzer::multiset<int> tmp = src;
+    jrSTL::multiset<int> tmp = src;
     src.swap(des);
     ASSERT_EQ(tmp.size(), des.size());
     auto it = tmp.begin();
@@ -351,7 +351,7 @@ TEST(testCase, multiset_reverse_index_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::multiset<int> src;
-    panzer::multiset<int> des;
+    jrSTL::multiset<int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
@@ -373,7 +373,7 @@ TEST(testCase, multiset_iterator_sub_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 20);
     std::multiset<int> src;
-    panzer::multiset<int> des;
+    jrSTL::multiset<int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
@@ -383,9 +383,9 @@ TEST(testCase, multiset_iterator_sub_test) {
     auto it = src.begin();
     auto rit = des.begin();
     std::advance(it, 12);
-    panzer::advance(rit, 12);
+    jrSTL::advance(rit, 12);
     std::advance(it, -5);
-    panzer::advance(rit, -5);
+    jrSTL::advance(rit, -5);
     EXPECT_EQ(*it, *rit);
 }
 
@@ -395,7 +395,7 @@ TEST(testCase, multiset_count) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::multiset<int> src;
-    panzer::multiset<int> des;
+    jrSTL::multiset<int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
@@ -416,7 +416,7 @@ TEST(testCase, multiset_find) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::multiset<int> src;
-    panzer::multiset<int> des;
+    jrSTL::multiset<int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
@@ -438,7 +438,7 @@ TEST(testCase, multiset_range) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::multiset<int> src;
-    panzer::multiset<int> des;
+    jrSTL::multiset<int> des;
     for(int i = 0; i < static_cast<int>(cnt); i++) {
         src.insert(i);
         des.insert(i);
@@ -448,8 +448,8 @@ TEST(testCase, multiset_range) {
     size_t v;
     get_random_size_var(MAX_SIZE, v, var, 20);
     auto p1 = src.equal_range(static_cast<int>(v));
-    std::pair<panzer::multiset<int>::iterator,
-            panzer::multiset<int>::iterator>
+    std::pair<jrSTL::multiset<int>::iterator,
+            jrSTL::multiset<int>::iterator>
     p2 = des.equal_range(static_cast<int>(v));
     if(p1.first == src.end())
         EXPECT_EQ(p2.first == des.end(), true);

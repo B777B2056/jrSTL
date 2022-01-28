@@ -15,7 +15,7 @@ TEST(testCase,priority_queue_mem_fn_test){
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::priority_queue<int> src;
-    panzer::priority_queue<int> des;
+    jrSTL::priority_queue<int> des;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(i);
         des.push(i);
@@ -35,11 +35,11 @@ TEST(testCase,priority_queue_copy_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::priority_queue<int> src;
+    jrSTL::priority_queue<int> src;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(i);
     }
-    panzer::priority_queue<int> des(src);
+    jrSTL::priority_queue<int> des(src);
     ASSERT_EQ(src.size(), des.size());
     while(!des.empty()) {
         EXPECT_EQ(src.top(), des.top());
@@ -53,11 +53,11 @@ TEST(testCase,priority_queue_move_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::priority_queue<int> src;
+    jrSTL::priority_queue<int> src;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(var);
     }
-    panzer::priority_queue<int> des(std::move(src));
+    jrSTL::priority_queue<int> des(std::move(src));
     ASSERT_EQ(src.empty(), true);
     while(!des.empty()) {
         EXPECT_EQ(var, des.top());
@@ -70,8 +70,8 @@ TEST(testCase,priority_queue_copy_operator_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::priority_queue<int> src;
-    panzer::priority_queue<int> des;
+    jrSTL::priority_queue<int> src;
+    jrSTL::priority_queue<int> des;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(i + 1);
         des.push(i - 1);
@@ -90,8 +90,8 @@ TEST(testCase,priority_queue_move_operator_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::priority_queue<int> src;
-    panzer::priority_queue<int> des;
+    jrSTL::priority_queue<int> src;
+    jrSTL::priority_queue<int> des;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(var - 1);
         des.push(var + 1);
@@ -109,13 +109,13 @@ TEST(testCase, priority_queue_swap_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::priority_queue<int> src;
-    panzer::priority_queue<int> des;
+    jrSTL::priority_queue<int> src;
+    jrSTL::priority_queue<int> des;
     for(size_t i = 0 ; i < cnt; i++) {
         src.push(i + 1);
         des.push(i - 1);
     }
-    panzer::priority_queue<int> tmp = src, tmp0 = des;
+    jrSTL::priority_queue<int> tmp = src, tmp0 = des;
     src.swap(des);
     ASSERT_EQ(tmp.size(), des.size());
     while(!des.empty()) {

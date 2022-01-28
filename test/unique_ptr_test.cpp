@@ -40,7 +40,7 @@ struct D_j : B_j
 };
 
 // 消费 unique_ptr 的函数能以值或以右值引用接收它
-panzer::unique_ptr<D_j> pass_through(panzer::unique_ptr<D_j> p)
+jrSTL::unique_ptr<D_j> pass_through(jrSTL::unique_ptr<D_j> p)
 {
     p->bar();
     return p;
@@ -90,25 +90,25 @@ std::shared_ptr<D>();
 
 void jr_std_unique() {
     {
-        auto p = panzer::unique_ptr<D_j>(new D_j()); // p 是占有 D 的 unique_ptr
+        auto p = jrSTL::unique_ptr<D_j>(new D_j()); // p 是占有 D 的 unique_ptr
         auto q = pass_through(std::move(p));
         assert(!p); // 现在 p 不占有任何内容并保有空指针
         q->bar();   // 而 q 占有 D 对象
     } // ~D 调用于此
     {
-      panzer::unique_ptr<B_j> p = panzer::unique_ptr<D_j>(new D_j()); // p 是占有 D 的 unique_ptr
+      jrSTL::unique_ptr<B_j> p = jrSTL::unique_ptr<D_j>(new D_j()); // p 是占有 D 的 unique_ptr
                                                     // 作为指向基类的指针
       p->bar(); // 虚派发
 
-      std::vector<panzer::unique_ptr<B_j>> v;  // unique_ptr 能存储于容器
-      v.push_back(panzer::unique_ptr<D_j>(new D_j()));
+      std::vector<jrSTL::unique_ptr<B_j>> v;  // unique_ptr 能存储于容器
+      v.push_back(jrSTL::unique_ptr<D_j>(new D_j()));
       v.push_back(std::move(p));
       v.emplace_back(new D_j());
       for(auto& p: v) p->bar(); // 虚派发
     } // ~D called 3 times
     std::ofstream("demo.txt") << 'x'; // 准备要读的文件
     {
-        panzer::unique_ptr<std::FILE, void (*)(std::FILE*) > fp(std::fopen("demo.txt", "r"),
+        jrSTL::unique_ptr<std::FILE, void (*)(std::FILE*) > fp(std::fopen("demo.txt", "r"),
                                                              close_file);
         if(fp) // fopen 可以打开失败；该情况下 fp 保有空指针
           (char)std::fgetc(fp.get());
@@ -116,7 +116,7 @@ void jr_std_unique() {
       // （即 fopen 成功）
 
     {
-      panzer::unique_ptr<D_j, std::function<void(D_j*)>> p(new D_j, [](D_j* ptr)
+      jrSTL::unique_ptr<D_j, std::function<void(D_j*)>> p(new D_j, [](D_j* ptr)
           {
               delete ptr;
           });  // p 占有 D
@@ -124,7 +124,7 @@ void jr_std_unique() {
     } // 调用上述 lambda 并销毁 D
 
     {
-        panzer::unique_ptr<D_j[]> p(new D_j[3]);
+        jrSTL::unique_ptr<D_j[]> p(new D_j[3]);
     } // 调用 ~D 3 次
 }
 

@@ -22,7 +22,7 @@ TEST(testCase,vector_assign_ctor_test){
     get_random_size_var(MAX_SIZE, cnt, var);
     // 赋值构造函数测试
     std::vector<int> src(cnt, var);
-    panzer::vector<int> des(cnt, var);
+    jrSTL::vector<int> des(cnt, var);
     ASSERT_EQ(src.size(), des.size());
     // 索引遍历测试
     for(size_t i = 0; i < src.size(); i++)
@@ -45,9 +45,9 @@ TEST(testCase,vector_iterator_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::vector<int> src(cnt, var);
+    jrSTL::vector<int> src(cnt, var);
     // 迭代器范围构造函数
-    panzer::vector<int> des(src.begin(), src.end());
+    jrSTL::vector<int> des(src.begin(), src.end());
     ASSERT_EQ(src.size(), des.size());
     for(size_t i = 0; i < src.size(); i++)
         EXPECT_EQ(src[i], des[i]);
@@ -58,9 +58,9 @@ TEST(testCase,vector_copy_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::vector<int> src(cnt, var);
+    jrSTL::vector<int> src(cnt, var);
     // 拷贝构造函数
-    panzer::vector<int> des(src);
+    jrSTL::vector<int> des(src);
     ASSERT_EQ(src.size(), des.size());
     for(size_t i = 0; i < src.size(); i++)
         EXPECT_EQ(src[i], des[i]);
@@ -71,9 +71,9 @@ TEST(testCase,vector_move_ctor_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::vector<int> src(cnt, var);
+    jrSTL::vector<int> src(cnt, var);
     // 移动构造函数
-    panzer::vector<int> des(std::move(src));
+    jrSTL::vector<int> des(std::move(src));
     ASSERT_EQ(src.empty(), true);
 }
 
@@ -81,7 +81,7 @@ TEST(testCase,vector_move_ctor_test) {
 TEST(testCase,vector_initializer_list_ctor_test) {
     std::vector<int> src{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     // 迭代器范围构造函数
-    panzer::vector<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::vector<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     ASSERT_EQ(src.size(), des.size());
     for(size_t i = 0; i < src.size(); i++)
         EXPECT_EQ(src[i], des[i]);
@@ -92,8 +92,8 @@ TEST(testCase, vector_operator_copy_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::vector<int> src(cnt, var);
-    panzer::vector<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::vector<int> src(cnt, var);
+    jrSTL::vector<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     des = src;
     ASSERT_EQ(src.size(), des.size());
     for(size_t i = 0; i < src.size(); i++)
@@ -105,8 +105,8 @@ TEST(testCase, vector_operator_move_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::vector<int> src(cnt, var);
-    panzer::vector<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::vector<int> src(cnt, var);
+    jrSTL::vector<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     des = std::move(src);
     EXPECT_EQ(src.empty(), true);
     ASSERT_EQ(cnt, des.size());
@@ -120,7 +120,7 @@ TEST(testCase, vector_assign_mem_fn_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::vector<int> src(10, -1);
-    panzer::vector<int> des(15, -4);
+    jrSTL::vector<int> des(15, -4);
     // 重复赋值测试
     src.assign(cnt, var);
     des.assign(cnt, var);
@@ -133,7 +133,7 @@ TEST(testCase, vector_assign_mem_fn_test) {
     for(size_t i = 0; i < des.size(); ++i)
         EXPECT_EQ(src[i], des[i]);
     // 迭代器赋值测试
-    panzer::vector<int> tmp(6, -100);
+    jrSTL::vector<int> tmp(6, -100);
     des.assign(tmp.begin(), tmp.end());
     ASSERT_EQ(tmp.size(), des.size());
     for(size_t i = 0; i < des.size(); ++i)
@@ -145,7 +145,7 @@ TEST(testCase, vector_clear_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::vector<int> des(cnt, var);
+    jrSTL::vector<int> des(cnt, var);
     des.clear();
     EXPECT_EQ(des.size(), 0);
 }
@@ -155,7 +155,7 @@ TEST(testCase, vector_resize_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::vector<int> des(cnt, var);
+    jrSTL::vector<int> des(cnt, var);
     std::vector<int> tmp(cnt, var);
     // 新size小于旧size
     des.resize(cnt / 2);
@@ -177,7 +177,7 @@ TEST(testCase, vector_resize_test) {
 // push_back测试
 TEST(testCase, vector_push_back_test) {
     std::vector<int> src;
-    panzer::vector<int> des;
+    jrSTL::vector<int> des;
     // 拷贝push
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         src.push_back(n);
@@ -199,7 +199,7 @@ TEST(testCase, vector_push_back_test) {
 // pop_back测试
 TEST(testCase, vector_pop_back_test) {
     std::vector<int> src{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
-    panzer::vector<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
+    jrSTL::vector<int> des{32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2};
     src.pop_back();
     des.pop_back();
     ASSERT_EQ(src.size(), des.size());
@@ -211,7 +211,7 @@ TEST(testCase, vector_pop_back_test) {
 // 原位构造push测试
 TEST(testCase, vector_emplace_back_test) {
     std::vector<int> src;
-    panzer::vector<int> des;
+    jrSTL::vector<int> des;
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         src.emplace_back(n);
         des.emplace_back(n);
@@ -224,7 +224,7 @@ TEST(testCase, vector_emplace_back_test) {
 // insert测试
 TEST(testCase, vector_insert_test) {
     std::vector<int> src;
-    panzer::vector<int> des;
+    jrSTL::vector<int> des;
     // 拷贝insert
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         EXPECT_EQ(*(src.insert(src.begin(), n)),
@@ -265,7 +265,7 @@ TEST(testCase, vector_insert_test) {
 // emplace测试
 TEST(testCase, vector_emplace_test) {
     std::vector<int> src;
-    panzer::vector<int> des;
+    jrSTL::vector<int> des;
     // 拷贝emplace
     for(int n : {32,53423,4245,25,234,25,45,2,235,23,24,6,47,6,5224,2}) {
         EXPECT_EQ(*(src.emplace(src.begin(), n)),
@@ -289,7 +289,7 @@ TEST(testCase, vector_erase_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var, 20);
-    panzer::vector<int> des(cnt, var);
+    jrSTL::vector<int> des(cnt, var);
     std::vector<int> src(cnt, var);
     // 单位置erase
     EXPECT_EQ(*(src.erase(src.begin() + 2)),
@@ -325,9 +325,9 @@ TEST(testCase, vector_swap_test) {
     size_t cnt;
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
-    panzer::vector<int> src(cnt, var - 1);
-    panzer::vector<int> des(cnt, var + 1);
-    panzer::vector<int> tmp = src;
+    jrSTL::vector<int> src(cnt, var - 1);
+    jrSTL::vector<int> des(cnt, var + 1);
+    jrSTL::vector<int> tmp = src;
     src.swap(des);
     ASSERT_EQ(tmp.size(), des.size());
     EXPECT_EQ(tmp.capacity(), des.capacity());
@@ -342,7 +342,7 @@ TEST(testCase, vector_swap_test) {
 
 // reserve与shrink_to_fit测试
 TEST(testCase, vector_shrink_to_fit_test) {
-    panzer::vector<int> des(5, 1);
+    jrSTL::vector<int> des(5, 1);
     des.reserve(100);
     EXPECT_EQ(des.capacity(), 100);
     des.shrink_to_fit();
@@ -355,7 +355,7 @@ TEST(testCase, vector_reverse_test) {
     int var;
     get_random_size_var(MAX_SIZE, cnt, var);
     std::vector<unsigned int> src;
-    panzer::vector<unsigned int> des;
+    jrSTL::vector<unsigned int> des;
     for(unsigned int i = 0; i < cnt; i++) {
         src.push_back(i);
         des.push_back(i);

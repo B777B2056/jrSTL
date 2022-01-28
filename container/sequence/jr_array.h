@@ -10,7 +10,7 @@
  * 也没有非public的成员。
  */
 
-namespace panzer {
+namespace jrSTL {
   template<class T, size_t N>
   struct array {
     // 类型
@@ -23,8 +23,8 @@ namespace panzer {
     typedef const T* const_pointer;
     typedef T* iterator;
     typedef const T* const_iterator;
-    typedef panzer::reverse_iterator<iterator> reverse_iterator;
-    typedef panzer::reverse_iterator<const_iterator> const_reverse_iterator	;
+    typedef jrSTL::reverse_iterator<iterator> reverse_iterator;
+    typedef jrSTL::reverse_iterator<const_iterator> const_reverse_iterator	;
     value_type _base_array[N];
     // 聚合类型无显式的构造/复制/销毁
     void fill(const T& u) {
@@ -148,14 +148,14 @@ namespace panzer {
 
   // 同大小的两array才可交换
   template< class T, std::size_t N >
-  void swap( panzer::array<T,N>& lhs,
-             panzer::array<T,N>& rhs ) {
+  void swap( jrSTL::array<T,N>& lhs,
+             jrSTL::array<T,N>& rhs ) {
       lhs.swap(rhs);
   }
 
   template< class T, std::size_t N >
-  bool operator==( const panzer::array<T,N>& lhs,
-                   const panzer::array<T,N>& rhs ) {
+  bool operator==( const jrSTL::array<T,N>& lhs,
+                   const jrSTL::array<T,N>& rhs ) {
       for(int i = 0; i < N; i++) {
           if(lhs[i] != rhs[i])
               return false;
@@ -164,14 +164,14 @@ namespace panzer {
   }
 
   template< class T, std::size_t N >
-  bool operator!=( const panzer::array<T,N>& lhs,
-                   const panzer::array<T,N>& rhs ) {
+  bool operator!=( const jrSTL::array<T,N>& lhs,
+                   const jrSTL::array<T,N>& rhs ) {
       return !(lhs == rhs);
   }
 
   template< class T, std::size_t N >
-  bool operator<( const panzer::array<T,N>& lhs,
-                  const panzer::array<T,N>& rhs ) {
+  bool operator<( const jrSTL::array<T,N>& lhs,
+                  const jrSTL::array<T,N>& rhs ) {
       for(int i = 0; i < N; i++) {
           if(lhs[i] >= rhs[i])
               return false;
@@ -180,8 +180,8 @@ namespace panzer {
   }
 
   template< class T, std::size_t N >
-  bool operator>( const panzer::array<T,N>& lhs,
-                  const panzer::array<T,N>& rhs ) {
+  bool operator>( const jrSTL::array<T,N>& lhs,
+                  const jrSTL::array<T,N>& rhs ) {
       for(int i = 0; i < N; i++) {
           if(lhs[i] <= rhs[i])
               return false;
@@ -190,37 +190,37 @@ namespace panzer {
   }
 
   template< class T, std::size_t N >
-  bool operator<=( const panzer::array<T,N>& lhs,
-                   const panzer::array<T,N>& rhs ) {
+  bool operator<=( const jrSTL::array<T,N>& lhs,
+                   const jrSTL::array<T,N>& rhs ) {
       return !(lhs > rhs);
   }
 
   template< class T, std::size_t N >
-  bool operator>=( const panzer::array<T,N>& lhs,
-                   const panzer::array<T,N>& rhs ) {
+  bool operator>=( const jrSTL::array<T,N>& lhs,
+                   const jrSTL::array<T,N>& rhs ) {
       return !(lhs < rhs);
   }
 
   template< size_t I, class T, size_t N >
-  T& get( panzer::array<T,N>& a ) noexcept {
+  T& get( jrSTL::array<T,N>& a ) noexcept {
       static_assert (I >= 0 && I < N, "Index out of range");
       return a[I];
   }
 
   template< size_t I, class T, size_t N >
-  const T& get( const panzer::array<T,N>& a ) noexcept {
+  const T& get( const jrSTL::array<T,N>& a ) noexcept {
       static_assert (I >= 0 && I < N, "Index out of range");
       return a[I];
   }
 
   template< std::size_t I, class T, std::size_t N >
-  T&& get( panzer::array<T,N>&& a ) noexcept {
+  T&& get( jrSTL::array<T,N>&& a ) noexcept {
       static_assert (I >= 0 && I < N, "Index out of range");
       return a[I];
   }
 
   template< std::size_t I, class T, std::size_t N >
-  const T&& get( const panzer::array<T,N>&& a ) noexcept {
+  const T&& get( const jrSTL::array<T,N>&& a ) noexcept {
       static_assert (I >= 0 && I < N, "Index out of range");
       return a[I];
   }

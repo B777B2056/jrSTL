@@ -7,7 +7,7 @@
 #include "../../container/utils/jr_iterators.h"
 #include "../../container/utils/jr_tree.h"
 
-namespace panzer {
+namespace jrSTL {
     template<class Key, class T, class Compare,
              class Allocator, bool isMultiMap>
     class _map_base {
@@ -26,8 +26,8 @@ namespace panzer {
           typedef ptrdiff_t difference_type;
           typedef _balance_bst_iterator<value_type, value_type&, value_type*> iterator;
           typedef _balance_bst_iterator<value_type, const value_type&, const value_type*> const_iterator;
-          typedef panzer::reverse_iterator<const_iterator> const_reverse_iterator;
-          typedef panzer::reverse_iterator<iterator> reverse_iterator;
+          typedef jrSTL::reverse_iterator<const_iterator> const_reverse_iterator;
+          typedef jrSTL::reverse_iterator<iterator> reverse_iterator;
 
         class value_compare {
           friend class _map_base;
@@ -284,26 +284,26 @@ namespace panzer {
             }
 
             iterator erase(const_iterator position) {
-                difference_type dis = panzer::distance(cbegin(), position);
+                difference_type dis = jrSTL::distance(cbegin(), position);
                 if(isMultiMap)
                     t.erase(*position, position._node);
                 else
                     t.erase(*position);
                 --_size;
                 iterator result = begin();
-                panzer::advance(result, dis);
+                jrSTL::advance(result, dis);
                 return result;
             }
 
             iterator erase(const_iterator first, const_iterator last) {
-                difference_type dis = panzer::distance(cbegin(), first);
+                difference_type dis = jrSTL::distance(cbegin(), first);
                 while(first != last) {
                     iterator it = erase(first);
                     first = cbegin();
-                    panzer::advance(first, panzer::distance(begin(), it));
+                    jrSTL::advance(first, jrSTL::distance(begin(), it));
                 }
                 iterator ret = begin();
-                panzer::advance(ret, dis);
+                jrSTL::advance(ret, dis);
                 return ret;
             }
 
@@ -417,8 +417,8 @@ namespace panzer {
             }
     };
 
-    template<class Key, class T, class Compare = panzer::less<Key>,
-             class Allocator = panzer::allocator<std::pair<const Key, T> > >
+    template<class Key, class T, class Compare = jrSTL::less<Key>,
+             class Allocator = jrSTL::allocator<std::pair<const Key, T> > >
     class map : public _map_base<Key, T, Compare, Allocator, false> {
       private:
           typedef _map_base<Key, T, Compare, Allocator, false> _base;
